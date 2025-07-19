@@ -1,0 +1,8 @@
+{"level":"info","message":"::1 - - [18/Jul/2025:08:10:19 +0000] \"POST /user/auth/logout HTTP/1.1\" 200 38 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 13:40:19"}
+{"level":"info","message":"::1 - - [18/Jul/2025:08:10:23 +0000] \"POST /user/auth/login HTTP/1.1\" 200 103 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 13:40:23"}
+{"level":"info","message":"::1 - - [18/Jul/2025:08:10:26 +0000] \"POST /user/auth/login HTTP/1.1\" 200 103 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 13:40:26"}
+{"level":"info","message":"::1 - - [18/Jul/2025:08:10:27 +0000] \"POST /user/auth/login HTTP/1.1\" 200 103 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 13:40:27"}
+{"level":"info","message":"::1 - - [18/Jul/2025:08:10:28 +0000] \"POST /user/auth/login HTTP/1.1\" 200 103 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 13:40:28"}
+{"level":"info","message":"::1 - - [18/Jul/2025:08:10:29 +0000] \"POST /user/auth/login HTTP/1.1\" 200 103 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 13:40:29"}
+{"level":"info","message":"::1 - - [18/Jul/2025:09:36:13 +0000] \"POST /user/auth/Signup HTTP/1.1\" 200 90 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 15:06:13"}
+{"level":"info","message":"::1 - - [18/Jul/2025:09:39:28 +0000] \"POST /user/auth/verify-otp HTTP/1.1\" 200 114 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-18 15:09:28"}
