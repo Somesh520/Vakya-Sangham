@@ -18,7 +18,7 @@ import logger from './src/utils/logger.js';
 import authroute from './src/Routes/authroute.js';               // 🔐 Manual login/signup
 import googleAuthRoute from './src/Routes/googleAuthRoute.js';   // 🌐 Google OAuth
 import userroute from './src/Routes/userroute.js';               // 👤 User profile/info
-
+import adminRoutes from './src/Routes/adminroutes.js'; 
 // ------------------- ⚙️ Initial Setup -------------------
 dotenv.config();
 import './src/config/passport.js'; // ⬅️ Passport config must be loaded before usage
@@ -83,7 +83,7 @@ app.use(passport.session());
 app.use('/user/auth/google', googleAuthRoute);  // 🌐 Google OAuth
 app.use('/user/auth', authroute);               // 🔐 Manual auth (login/signup)
 app.use('/user/info', userroute);               // 👤 Profile, user data, etc.
-
+app.use('/api/admin', adminRoutes);
 // ------------------- 🛑 Error Handling Middleware -------------------
 app.use(errorHandler);
 

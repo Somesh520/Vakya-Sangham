@@ -9,16 +9,21 @@ import crypto from 'crypto';
 
 // ✅ Signup Controller
 export const signup = async (req, res) => {
-  const { fullname, email, password, phoneNumber, referralCode } = req.body;
+ const { fullname, email, password, phone, referralCode } = req.body;
+
 
   try {
-    if (!fullname || !email || !password) {
+    if (!fullname || !email || !password || !phone ) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters long." });
-    }
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+if (!passwordRegex.test(password)) {
+  return res.status(400).json({
+    message: "Password must include uppercase, lowercase, number & special character.",
+  });
+}
+
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -32,8 +37,8 @@ export const signup = async (req, res) => {
       fullName: fullname,
       email,
       password: hashedPassword,
-      phoneNumber,
-      referralCode,
+      phoneNumber: phone,
+  referralCode: referralCode || null,
       isVerified: false,
     });
 
