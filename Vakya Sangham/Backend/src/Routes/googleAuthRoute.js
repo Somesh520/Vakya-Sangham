@@ -1,51 +1,50 @@
-import express from 'express';
-import passport from 'passport';
-import '../config/passport.js'; // ✅ import your passport strategy config
-// or '../../config/passport.js' depending on your folder structure
+// src/controller/authcontroller.js
+import { OAuth2Client } from 'google-auth-library';
+import User from '../models/usermodel.js';
+import { generatetoken } from '../utils/generatetoken.js';
 
-const router = express.Router();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// 🔗 Start Google OAuth
-router.get('/', passport.authenticate('google', { scope: ['profile', 'email'] }));
+export const googleLogin = async (req, res) => {
+  const { token } = req.body;
 
-// 🔁 Callback
-router.get(
-  '/callback',
-  passport.authenticate('google', {
-    failureRedirect: '/auth.html',
-    successRedirect: '/user/auth/google/success',
-    session: true, // 🔥 REQUIRED if using serializeUser/deserializeUser
-  })
-);
-
-// ✅ Success Route
-router.get('/success', (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-
-  res.status(200).json({
-    message: 'Google login successful',
-    user: {
-      id: req.user._id,
-      fullName: req.user.fullName,
-      email: req.user.email,
-    },
-  });
-});
-
-// 🚪 Logout
-router.get('/logout', (req, res) => {
-  req.logout(err => {
-    if (err) {
-      console.error('Logout error:', err);
-      return res.status(500).json({ message: 'Logout error' });
-    }
-    req.session.destroy(() => {
-      res.clearCookie('connect.sid');
-      res.status(200).json({ message: 'Logged out' });
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
-  });
-});
+    const { sub: googleId, email, name: fullName } = ticket.getPayload();
 
-export default router;
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+        user.googleId = googleId;
+      } else {
+        user = new User({
+          fullName,
+          email,
+          googleId,
+          isVerified: true,
+        });
+      }
+      await user.save();
+    }
+
+   
+    generatetoken(user._id, res);
+
+    res.status(200).json({
+      message: "Google login successful.",
+      user: { fullname,
+        email,
+        googleId,
+        role
+       },
+    });
+
+  } catch (error) {
+    res.status(401).json({ message: "Invalid Google token." });
+  }
+};

@@ -16,9 +16,10 @@ import rateLimit from 'express-rate-limit';
 import { errorHandler } from './src/middleware/errorMiddleware.js';
 import logger from './src/utils/logger.js';
 import authroute from './src/Routes/authroute.js';               // 🔐 Manual login/signup
-import googleAuthRoute from './src/Routes/googleAuthRoute.js';   // 🌐 Google OAuth
+// import googleAuthRoute from './src/Routes/googleAuthRoute.js';   // 🌐 Google OAuth
 import userroute from './src/Routes/userroute.js';               // 👤 User profile/info
 import adminRoutes from './src/Routes/adminroutes.js'; 
+import teacherRoutes from './src/Routes/Teacherroute.js';
 // ------------------- ⚙️ Initial Setup -------------------
 dotenv.config();
 import './src/config/passport.js'; // ⬅️ Passport config must be loaded before usage
@@ -80,10 +81,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ------------------- 🧩 Route Mounting -------------------
-app.use('/user/auth/google', googleAuthRoute);  // 🌐 Google OAuth
+// app.use('/user/auth/google', googleAuthRoute);  // 🌐 Google OAuth
 app.use('/user/auth', authroute);               // 🔐 Manual auth (login/signup)
 app.use('/user/info', userroute);               // 👤 Profile, user data, etc.
 app.use('/api/admin', adminRoutes);
+app.use('/api/teacher', teacherRoutes); 
 // ------------------- 🛑 Error Handling Middleware -------------------
 app.use(errorHandler);
 

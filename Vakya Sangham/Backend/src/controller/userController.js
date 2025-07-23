@@ -27,14 +27,12 @@ export const updateOnboarding = async (req, res) => {
         const userId = req.user.id;
         const files = req.files;
 
-        // BUG FIX: Added your new fields to the list
-       // Inside your updateOnboarding function
-
+    
 const allProfileFields = [
     "dateOfBirth", "education", "state", "goal", "contentPreference", 
     "timeAvailability", "level", "bio", "socialLinks", "profileImageURL", 
     "resumeURL", "preferredLanguage", "avatar", "city", "District", "interest",
-    "hasTakenOnlineCourses" // ✅ ADD THIS LINE
+    "hasTakenOnlineCourses"
 ];
 
         const existingUser = await User.findById(userId);

@@ -6,7 +6,8 @@ import { sendMail } from '../utils/sendEmail.js';
 import bcrypt from 'bcrypt';
 import redisClient from '../config/redisClient.js';
 import crypto from 'crypto';
-
+import { OAuth2Client } from 'google-auth-library';
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // ✅ Signup Controller
 export const signup = async (req, res) => {
  const { fullname, email, password, phone, referralCode } = req.body;
@@ -144,6 +145,7 @@ export const login = async (req, res) => {
       user: {
         fullName: user.fullName,
         email: user.email,
+         role: user.role, 
       },
     });
   } catch (error) {
@@ -294,3 +296,64 @@ export const resendOTP = async (req, res) => {
     res.status(500).json({ message: "Failed to resend OTP." });
   }
 };
+//google login 
+
+
+export const googleLogin = async (req, res) => {
+  const { token } = req.body; // Get the token from the frontend
+
+  try {
+    // 1. Verify the token from Google
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name: fullName, picture: profileImageURL } = payload;
+
+    // 2. Check if the user already exists in your database
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      // 3. If user doesn't exist, check if they signed up with the same email
+      user = await User.findOne({ email });
+      
+      if (user) {
+        // If they exist via email, link the Google ID to their account
+        user.googleId = googleId;
+        user.profileImageURL = user.profileImageURL || profileImageURL; // Update image if they don't have one
+      } else {
+        // 4. If they are a completely new user, create a new account
+        user = new User({
+          fullName,
+          email,
+          googleId,
+          profileImageURL,
+          isVerified: true, // Google accounts are already verified
+          isOnboarded: false, // They still need to complete your app's onboarding
+        });
+      }
+      
+      await user.save();
+    }
+
+    // 5. Generate your application's token and send it back
+    generatetoken(user._id, res);
+
+    res.status(200).json({
+      message: "Google login successful.",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        profileImageURL: user.profileImageURL,
+      },
+    });
+
+  } catch (error) {
+    console.error("❌ Google Login Error:", error.message);
+    res.status(401).json({ message: "Invalid Google token or server error." });
+  }
+};
+

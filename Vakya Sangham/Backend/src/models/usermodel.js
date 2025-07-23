@@ -24,7 +24,11 @@ const userSchema = new mongoose.Schema({
   otpExpiry: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
-
+ teacherProfile: {
+      qualifications: String, 
+      subjects: [String],   
+      experience: String,     
+  },
   // ✅ Onboarding Fields
   dateOfBirth: Date,
   education: {
