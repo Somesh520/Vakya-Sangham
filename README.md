@@ -15,7 +15,8 @@
 
 Designed using Figma with a minimal and intuitive interface.  
 🔗 [Figma Design Link](https://www.figma.com/design/8FcwosASXuWLHT5LyZPSTU/Regional-Lang-App?node-id=0-1&t=9EEq9HIJ8diS8iQE-1)
-🔗 [Backend Working-]((https://www.notion.so/Backend-2415443cce5080d9b6bef7af13f6f12f?source=copy_link))
+
+🔗 [Backend Working](https://www.notion.so/Backend-2415443cce5080d9b6bef7af13f6f12f?source=copy_link)
 
 
 ## 📁 Project Structure
