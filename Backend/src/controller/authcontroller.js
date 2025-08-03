@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 import jwt from 'jsonwebtoken';
+=======
+
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
 import User from '../models/usermodel.js';
 import { generatetoken } from '../utils/generatetoken.js';
 import { sendMail } from '../utils/sendEmail.js';
@@ -35,7 +39,11 @@ if (!passwordRegex.test(password)) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 
     const newUser = new User({
+<<<<<<< HEAD
       fullname: fullname,
+=======
+      fullName: fullname,
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
       email,
       password: hashedPassword,
       phoneNumber: phone,
@@ -91,6 +99,7 @@ export const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
+<<<<<<< HEAD
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
@@ -110,10 +119,20 @@ export const verifyOTP = async (req, res) => {
 
     if (!storedOtp || storedOtp !== otp.toString()) {
       return res.status(400).json({ message: 'Invalid or expired OTP.' });
+=======
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (user.isVerified) return res.status(400).json({ message: "User is already verified." });
+
+    const storedOtp = await redisClient.get(`otp:${email}`);
+    if (!storedOtp || storedOtp !== otp) {
+      return res.status(400).json({ message: "Invalid or expired OTP." });
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
     }
 
     user.isVerified = true;
     await user.save();
+<<<<<<< HEAD
     await redisClient.del(`otp:${normalizedEmail}`);
 
     // UPDATED: Assume generatetoken returns the token string
@@ -140,6 +159,25 @@ export const verifyOTP = async (req, res) => {
 
 
 
+=======
+    await redisClient.del(`otp:${email}`);
+
+    generatetoken(user._id, res);
+
+    res.status(200).json({
+      message: "Email verified successfully.",
+      user: {
+        fullName: user.fullName,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("❌ OTP Verification Error:", error.message);
+    res.status(500).json({ message: "OTP verification failed." });
+  }
+};
+
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
 // ✅ Login Controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -159,6 +197,7 @@ export const login = async (req, res) => {
       return res.status(403).json({ message: "Please verify your email before login." });
     }
 
+<<<<<<< HEAD
     // generatetoken(user._id, res);
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d',
@@ -166,11 +205,20 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful.",
        token: token,
+=======
+    generatetoken(user._id, res);
+
+    res.status(200).json({
+      message: "Login successful.",
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
       user: {
         fullName: user.fullName,
         email: user.email,
          role: user.role, 
+<<<<<<< HEAD
         isOnboarded: user.isOnboarded,
+=======
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
       },
     });
   } catch (error) {

@@ -7,7 +7,11 @@ import {
     createCourse, 
     updateCourse, 
     deleteCourse 
+<<<<<<< HEAD
 } from '../controller/coursecontroller.js';
+=======
+} from '../controller/courseController.js';
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
 
 
 import { 

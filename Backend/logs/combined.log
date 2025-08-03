@@ -210,6 +210,7 @@
 {"level":"info","message":"::1 - - [23/Jul/2025:06:53:24 +0000] \"POST /api/teacher/courses HTTP/1.1\" 201 563 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-23 12:23:24"}
 {"level":"info","message":"::1 - - [23/Jul/2025:06:54:59 +0000] \"GET /api/teacher/courses HTTP/1.1\" 200 542 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-23 12:24:59"}
 {"level":"info","message":"::1 - - [23/Jul/2025:06:56:42 +0000] \"GET /api/teacher/courses/688086e4d7252c03ca44e75e HTTP/1.1\" 200 537 \"-\" \"PostmanRuntime/7.44.1\"","timestamp":"2025-07-23 12:26:42"}
+<<<<<<< HEAD
 {"level":"info","message":"::ffff:127.0.0.1 - - [28/Jul/2025:19:38:26 +0000] \"POST /user/auth/signup HTTP/1.1\" 400 38 \"-\" \"okhttp/4.9.2\"","timestamp":"2025-07-29 01:08:26"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [28/Jul/2025:19:38:35 +0000] \"POST /user/auth/signup HTTP/1.1\" 400 38 \"-\" \"okhttp/4.9.2\"","timestamp":"2025-07-29 01:08:35"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [28/Jul/2025:19:38:36 +0000] \"POST /user/auth/signup HTTP/1.1\" 400 38 \"-\" \"okhttp/4.9.2\"","timestamp":"2025-07-29 01:08:36"}
@@ -509,3 +510,5 @@
 {"level":"info","message":"::ffff:127.0.0.1 - - [02/Aug/2025:13:30:15 +0000] \"PATCH /user/info/onboarding HTTP/1.1\" 200 1236 \"-\" \"okhttp/4.9.2\"","timestamp":"2025-08-02 19:00:15"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [02/Aug/2025:13:30:25 +0000] \"GET /user/info/onboarding HTTP/1.1\" 200 239 \"-\" \"okhttp/4.9.2\"","timestamp":"2025-08-02 19:00:25"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [02/Aug/2025:13:30:40 +0000] \"PATCH /user/info/onboarding HTTP/1.1\" 200 1236 \"-\" \"okhttp/4.9.2\"","timestamp":"2025-08-02 19:00:40"}
+=======
+>>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
