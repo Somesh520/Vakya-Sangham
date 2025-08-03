@@ -1,0 +1,7 @@
+{
+  "name": "Yt",
+  "displayName": "Yt",
+  "android": {
+    "package": "com.anonymous.yt"
+  }
+}
