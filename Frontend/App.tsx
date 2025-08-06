@@ -6,9 +6,14 @@ import { createStackNavigator } from '@react-navigation/stack';
 // ✅ Import the new providers
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PaperProvider } from 'react-native-paper';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
+// ✅ सुनिश्चित करें कि सभी पाथ सही हैं
 import { AuthProvider, useAuth } from './AuthContext';
-import AppNavigator from './AppNavigator'; 
+import AdminTabNavigator from './AdminNavigator';
+import AppNavigator from './AppNavigator';
+
+// स्क्रीन इम्पोर्ट्स...
 import CreateAccountScreen from './screens/CreateAccountScreen';
 import LoginScreen from './screens/LoginScreen';
 import OTPVerificationScreen from './screens/OTPVerificationScreen';
@@ -21,7 +26,7 @@ import { RootStackParamList } from './types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-// This stack is for users who are not logged in
+// AuthStack और OnboardingStack में कोई बदलाव नहीं...
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={LoginScreen} />
@@ -30,7 +35,6 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// This stack is for users who are logged in but not onboarded
 const OnboardingStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="DateOfBirth" component={DateOfBirthScreen} />
@@ -41,39 +45,52 @@ const OnboardingStack = () => (
   </Stack.Navigator>
 );
 
-// This component decides which stack to show
+// ✅ यह कंपोनेंट अब सिर्फ नेविगेटर चुनेगा, NavigationContainer को रेंडर नहीं करेगा
 const RootNavigator = () => {
-  const { userToken, user } = useAuth();
+  const { userToken, user, isLoading } = useAuth(); // ✅ isLoading को भी context से लें
 
-  const getActiveStack = () => {
-    if (!userToken || !user) {
-      return <AuthStack />;
-    }
-    if (!user.isOnboarded) {
-      return <OnboardingStack />;
-    }
-  
-    return <AppNavigator />; 
-  };
+  // जब तक context डेटा लोड कर रहा है, लोडिंग स्क्रीन दिखाएं
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFA500" />
+      </View>
+    );
+  }
 
-  return (
-    <NavigationContainer>
-      {getActiveStack()}
-    </NavigationContainer>
-  );
+  if (!userToken || !user) {
+    return <AuthStack />;
+  }
+
+  if (!user.isOnboarded) {
+    return <OnboardingStack />;
+  }
+
+  return user.role === 'admin' ? <AdminTabNavigator /> : <AppNavigator />;
 };
 
-// ✅ The main App component is now wrapped with the required providers
 const App = () => {
   return (
+    // ✅ सही क्रम: Providers सबसे बाहर
     <SafeAreaProvider>
       <PaperProvider>
         <AuthProvider>
-          <RootNavigator />
+          {/* ✅ NavigationContainer AuthProvider के अंदर */}
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
         </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );
 };
+
+const styles = StyleSheet.create({
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
+});
 
 export default App;

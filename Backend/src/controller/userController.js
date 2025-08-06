@@ -1,8 +1,5 @@
 import User from "../models/usermodel.js";
-<<<<<<< HEAD
 import Enrollment from "../models/enrollmentModel.js";
-=======
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
 import cloudinary from '../config/cloudinary.js';
 import streamifier from 'streamifier';
 import path from 'path';
@@ -123,7 +120,6 @@ const allProfileFields = [
 
 
 export const getOnboardingInfo = async (req, res) => {
-<<<<<<< HEAD
      try {
      const userId = req.user.id;
 // const user = await User.findById(userId);
@@ -162,21 +158,10 @@ export const getStudentDashboard = async (req, res) => {
         const userId = req.user.id;
 
         const user = await User.findById(userId).select("fullName");
-=======
-    try {
-        const userId = req.user.id;
-
-        
-        const user = await User.findById(userId).select(
-            "dateOfBirth education goal streak timeAvailability contentPreference level preferredLanguage avatar bio profileImageURL socialLinks resumeURL state city District interest profileProgress isOnboarded"
-        );
-
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
-<<<<<<< HEAD
         const enrollments = await Enrollment.find({ student: userId }).populate({
             path: 'course',
             select: 'title description thumbnailURL category level' 
@@ -197,14 +182,3 @@ export const getStudentDashboard = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error while fetching dashboard data." });
     }
 };
-=======
-        res.status(200).json({
-            success: true,
-            user,
-        });
-    } catch (error) {
-        console.error("Onboarding Info Error:", error);
-        res.status(500).json({ success: false, message: "Server error." });
-    }
-};
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d

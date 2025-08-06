@@ -3,18 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../App'; // Path ko adjust karein
+import { RootStackParamList } from '../types'; // Adjust path if necessary
 
-// ✅ Navigation ke liye Props define karein
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'DateOfBirth'>;
 };
 
 const DateOfBirthScreen: React.FC<Props> = ({ navigation }) => {
   const today = new Date();
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [selectedDate, setSelectedDate] = useState(new Date(2000, 0, 1));
+  const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
+  const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
 
   // Generate calendar data for the current month and year
   const generateCalendar = (month: number, year: number) => {
@@ -75,23 +74,10 @@ const DateOfBirthScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-  // ✅ Is function ko update kiya gaya hai
   const handleContinue = () => {
-    // User ki age calculate karein
-    const birthDate = new Date(selectedDate);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-
-    if (age < 13) {
-        Alert.alert('Age Restriction', 'You must be at least 13 years old to use this app.');
-        return;
-    }
-
-    // ✅ Ab 'AboutYou' screen par navigate karo
-    // Hum date ko params me bhej sakte hain taki agli screen par use ho sake
+    // ✅ Age restriction has been removed as requested.
+    
+    // The date is converted to a standard ISO string, which is perfect for MongoDB.
     // @ts-ignore
     navigation.navigate('AboutYou', { dateOfBirth: selectedDate.toISOString() });
   };
@@ -215,7 +201,7 @@ const DateOfBirthScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
           style={styles.okButton}
-          onPress={handleContinue} // ✅ Isse update kiya gaya hai
+          onPress={handleContinue}
           accessibilityLabel="Submit date of birth"
         >
           <Text style={styles.okButtonText}>Continue</Text>
@@ -225,11 +211,12 @@ const DateOfBirthScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
+// These are your original styles
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: '#F5E8C7', // Light beige background
+    backgroundColor: '#F5E8C7',
   },
   header: {
     marginBottom: 20,
@@ -365,7 +352,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedDayCell: {
-    backgroundColor: '#000000', // Black for selected day
+    backgroundColor: '#000000',
   },
   selectedDayText: {
     color: '#fff',
@@ -381,7 +368,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   okButton: {
-    backgroundColor: '#F4A261', // Orange for "Next" button
+    backgroundColor: '#F4A261',
     padding: 16,
     borderRadius: 10,
     flex: 1,

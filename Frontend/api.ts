@@ -8,11 +8,11 @@ const api = axios.create({
   },
 });
 
-// Attach token to every request
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('userToken');
     if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

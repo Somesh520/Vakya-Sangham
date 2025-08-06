@@ -1,9 +1,18 @@
 // src/screens/CreateAccountScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Alert, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types'; // Path ko adjust karein
+import { RootStackParamList } from '../types';
 import api from '../api';
+import { View as MotiView } from 'moti'; // For animations
+
+// --- Import components from React Native Paper ---
+import {
+  TextInput,
+  Button,
+  Text,
+  HelperText,
+} from 'react-native-paper';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'CreateAccount'>;
@@ -17,6 +26,7 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // --- Your validation and signup logic remains unchanged ---
   const validateForm = () => {
     if (!fullName.trim() || !email.trim() || !phone.trim() || !password.trim()) {
       setError('All fields are required.');
@@ -44,7 +54,6 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
     if (!validateForm()) {
       return;
     }
-
     setLoading(true);
     try {
       await api.post('/user/auth/signup', {
@@ -53,14 +62,11 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
         phone: phone.trim(),
         password: password,
       });
-
-      // Signup safal hone par OTP screen par bhejein
       Alert.alert(
         'Account Created',
         'Please check your email for the verification OTP.',
         [{ text: 'OK', onPress: () => navigation.navigate('OTPVerification', { email: email.trim().toLowerCase() }) }]
       );
-
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'An unknown error occurred.';
       setError(errorMessage);
@@ -71,87 +77,122 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Create Your Account</Text>
+    <ScrollView 
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500 }}
+      >
+        <Text variant="headlineLarge" style={styles.title}>Create Your Account</Text>
+      </MotiView>
+      
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500, delay: 100 }}
+      >
+        <TextInput
+          label="Full Name"
+          value={fullName}
+          onChangeText={setFullName}
+          autoCapitalize="words"
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="account-outline" />}
+        />
+        <TextInput
+          label="Email Address"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="email-outline" />}
+        />
+        <TextInput
+          label="10-Digit Phone Number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          maxLength={10}
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="phone-outline" />}
+        />
+        <TextInput
+          label="Password (min. 8 characters)"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="lock-outline" />}
+        />
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+        <HelperText type="error" visible={!!error} style={styles.errorText}>
+          {error}
+        </HelperText>
+      </MotiView>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={fullName}
-        onChangeText={setFullName}
-        autoCapitalize="words"
-        placeholderTextColor="#888"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email Address"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        placeholderTextColor="#888"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="10-Digit Phone Number"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        maxLength={10}
-        placeholderTextColor="#888"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password (min. 8 characters)"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholderTextColor="#888"
-      />
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500, delay: 200 }}
+      >
+        <Button
+          mode="contained"
+          onPress={handleSignUp}
+          disabled={loading}
+          loading={loading}
+          style={styles.button}
+          labelStyle={styles.buttonText}
+          // Here we use your specific color for the button
+          buttonColor={styles.button.backgroundColor}
+        >
+          {loading ? 'Creating Account...' : 'Create Account'}
+        </Button>
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Create Account'}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.linkButton}>
-        <Text style={styles.linkText}>Already have an account? Login</Text>
-      </TouchableOpacity>
+        <Button
+          mode="text"
+          onPress={() => navigation.navigate('Login')}
+          disabled={loading}
+          style={styles.linkButton}
+          // Here we use your specific color for the link text
+          textColor={styles.linkText.color}
+        >
+          Already have an account? Login
+        </Button>
+      </MotiView>
     </ScrollView>
   );
 };
 
+// Styles have been adjusted slightly for Paper components
+// while keeping your color scheme
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#F5E8C7',
+    backgroundColor: '#F5E8C7', // Your color
   },
   title: {
-    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
     textAlign: 'center',
     marginBottom: 30,
+    color: '#333',
   },
   input: {
-    height: 50,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
+    marginBottom: 12, // Adjusted spacing
   },
   button: {
-    backgroundColor: '#ff0033ff',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
+    paddingVertical: 8,
     marginTop: 10,
+    backgroundColor: '#ff0033ff', // Your color
   },
   buttonText: {
     color: '#FFF',
@@ -159,18 +200,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
+    marginTop: 15,
   },
   linkText: {
-    color: '#A7727D',
+    color: '#A7727D', // Your color
     fontSize: 14,
     fontWeight: '600',
   },
   errorText: {
     color: 'red',
     textAlign: 'center',
-    marginBottom: 10,
+    fontSize: 14,
   },
 });
 

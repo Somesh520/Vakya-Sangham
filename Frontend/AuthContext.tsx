@@ -6,7 +6,8 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 interface User {
   id: string;
   name?: string;
-  username?: string;
+  //  fullName: string; 
+ fullname: string;
   email: string;
   role: 'student' | 'teacher' | 'admin';
   isOnboarded: boolean;

@@ -1,20 +1,15 @@
-// src/screens/LoginScreen.tsx
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types'; // Adjust path if necessary
+import { RootStackParamList } from '../types'; // ✅ पाथ सही करें
 import api from '../api';
-import { useAuth } from '../AuthContext';
-import { View as MotiView } from 'moti'; // Import Moti for animations
+import { useAuth } from '../AuthContext'; // ✅ पाथ सही करें
+import { View as MotiView } from 'moti';
+import { TextInput, Button, Text, HelperText, useTheme } from 'react-native-paper';
 
-// --- Import components from React Native Paper ---
-import {
-  TextInput,
-  Button,
-  Text,
-  HelperText,
-  useTheme,
-} from 'react-native-paper';
+// ✅ Google Sign-In के लिए इम्पोर्ट्स
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Login'>;
@@ -24,11 +19,20 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
-  const { colors } = useTheme(); // Access the theme colors
+  const { colors } = useTheme();
 
-  // --- Your handleLogin function remains unchanged ---
+  // ✅ Google Sign-In को कॉन्फ़िगर करें
+  useEffect(() => {
+    GoogleSignin.configure({
+      // ❗ बहुत ज़रूरी: यहाँ अपनी Web Client ID डालें जो आपने Google Cloud Console से बनाई थी
+      webClientId: '276801846363-8sm834529hakg3b769j1oteacg7akdpk.apps.googleusercontent.com', 
+      offlineAccess: true,
+    });
+  }, []);
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.');
@@ -37,7 +41,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post('/user/auth/login', {
+      const response = await api.post('/user/auth/login', { // ✅ API पाथ सही किया गया
         email: email.trim().toLowerCase(),
         password: password,
       });
@@ -56,11 +60,46 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  // ✅ Google साइन-इन को हैंडल करने का फंक्शन
+// LoginScreen.tsx में
+
+
+const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+     const userInfo: any = await GoogleSignin.signIn();
+      const idToken = userInfo.idToken;
+console.log("hello");
+      if (idToken) {
+        const response = await api.post('/user/auth/google', { idToken });
+        if (response.data.success) {
+          const { token, user } = response.data;
+          await signIn(token, user);
+        } else {
+          throw new Error(response.data.message);
+        }
+      } else {
+        throw new Error('Could not get idToken from Google.');
+      }
+    } catch (error: any) {
+      if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Google Sign-In Failed', 'Please check your configuration and try again.');
+        console.error(error);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+// अब अपने Google बटन के onPress को इस नए फंक्शन पर पॉइंट करें:
+// <Button onPress={handleGoogleSignIn_TEST} ... />
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled">
-      <MotiView // Animation for the title
+      <MotiView
         from={{ opacity: 0, translateY: -20 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 500 }}>
@@ -72,8 +111,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </Text>
       </MotiView>
 
-      {/* --- Using Paper.TextInput for a modern look with icons --- */}
-      <MotiView // Animation for the inputs
+      <MotiView
         from={{ opacity: 0, translateY: -20 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 500, delay: 100 }}>
@@ -105,8 +143,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </HelperText>
       </MotiView>
 
-      {/* --- Using Paper.Button which has a built-in loading indicator --- */}
-      <MotiView // Animation for the buttons
+      <MotiView
         from={{ opacity: 0, translateY: -20 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ type: 'timing', duration: 500, delay: 200 }}>
@@ -114,16 +151,28 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           mode="contained"
           onPress={handleLogin}
           loading={loading}
-          disabled={loading}
+          disabled={loading || googleLoading}
           style={styles.button}
           labelStyle={styles.buttonText}>
           Login
         </Button>
 
         <Button
+          mode="outlined"
+          onPress={handleGoogleSignIn}
+          loading={googleLoading}
+          disabled={loading || googleLoading}
+          style={styles.googleButton}
+          icon="google"
+          labelStyle={styles.googleButtonText}
+        >
+          Sign in with Google
+        </Button>
+
+        <Button
           mode="text"
           onPress={() => navigation.navigate('CreateAccount')}
-          disabled={loading}
+          disabled={loading || googleLoading}
           style={styles.linkButton}>
           Don't have an account? Sign Up
         </Button>
@@ -137,7 +186,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#F5F5F5', // A light, neutral background
+    backgroundColor: '#F5F5F5',
   },
   title: {
     fontWeight: 'bold',
@@ -146,6 +195,7 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     marginBottom: 40,
+    color: '#616161',
   },
   input: {
     marginBottom: 12,
@@ -157,6 +207,15 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  googleButton: {
+    marginTop: 15,
+    paddingVertical: 8,
+    borderColor: '#E0E0E0',
+  },
+  googleButtonText: {
+    fontSize: 16,
+    color: '#424242',
   },
   linkButton: {
     marginTop: 15,

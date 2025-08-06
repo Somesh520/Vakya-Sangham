@@ -12,4 +12,5 @@ export type RootStackParamList = {
   StudentHome: undefined;
   TeacherHome: undefined;
   AdminHome: undefined;
+ 
 };

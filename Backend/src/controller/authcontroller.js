@@ -1,10 +1,6 @@
 
-<<<<<<< HEAD
 import jwt from 'jsonwebtoken';
-=======
-
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
-import User from '../models/usermodel.js';
+import User from '../models/userModel.js';
 import { generatetoken } from '../utils/generatetoken.js';
 import { sendMail } from '../utils/sendEmail.js';
 import bcrypt from 'bcrypt';
@@ -39,11 +35,7 @@ if (!passwordRegex.test(password)) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 
     const newUser = new User({
-<<<<<<< HEAD
       fullname: fullname,
-=======
-      fullName: fullname,
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
       email,
       password: hashedPassword,
       phoneNumber: phone,
@@ -99,7 +91,6 @@ export const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-<<<<<<< HEAD
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
 
@@ -119,20 +110,10 @@ export const verifyOTP = async (req, res) => {
 
     if (!storedOtp || storedOtp !== otp.toString()) {
       return res.status(400).json({ message: 'Invalid or expired OTP.' });
-=======
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
-    if (user.isVerified) return res.status(400).json({ message: "User is already verified." });
-
-    const storedOtp = await redisClient.get(`otp:${email}`);
-    if (!storedOtp || storedOtp !== otp) {
-      return res.status(400).json({ message: "Invalid or expired OTP." });
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
     }
 
     user.isVerified = true;
     await user.save();
-<<<<<<< HEAD
     await redisClient.del(`otp:${normalizedEmail}`);
 
     // UPDATED: Assume generatetoken returns the token string
@@ -159,25 +140,6 @@ export const verifyOTP = async (req, res) => {
 
 
 
-=======
-    await redisClient.del(`otp:${email}`);
-
-    generatetoken(user._id, res);
-
-    res.status(200).json({
-      message: "Email verified successfully.",
-      user: {
-        fullName: user.fullName,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    console.error("❌ OTP Verification Error:", error.message);
-    res.status(500).json({ message: "OTP verification failed." });
-  }
-};
-
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
 // ✅ Login Controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -197,7 +159,6 @@ export const login = async (req, res) => {
       return res.status(403).json({ message: "Please verify your email before login." });
     }
 
-<<<<<<< HEAD
     // generatetoken(user._id, res);
   const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '1d',
@@ -205,20 +166,11 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful.",
        token: token,
-=======
-    generatetoken(user._id, res);
-
-    res.status(200).json({
-      message: "Login successful.",
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
       user: {
-        fullName: user.fullName,
+         fullname: user.fullname,
         email: user.email,
          role: user.role, 
-<<<<<<< HEAD
         isOnboarded: user.isOnboarded,
-=======
->>>>>>> 613bbb4c0073d8a42f746877835fb7060a2b698d
       },
     });
   } catch (error) {
@@ -373,60 +325,64 @@ export const resendOTP = async (req, res) => {
 
 
 export const googleLogin = async (req, res) => {
-  const { token } = req.body; // Get the token from the frontend
+    // ✅ FIX 1: फ्रंटएंड 'idToken' भेजता है, 'token' नहीं।
+    const { idToken } = req.body;
 
-  try {
-    // 1. Verify the token from Google
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { sub: googleId, email, name: fullName, picture: profileImageURL } = payload;
-
-    // 2. Check if the user already exists in your database
-    let user = await User.findOne({ googleId });
-
-    if (!user) {
-      // 3. If user doesn't exist, check if they signed up with the same email
-      user = await User.findOne({ email });
-      
-      if (user) {
-        // If they exist via email, link the Google ID to their account
-        user.googleId = googleId;
-        user.profileImageURL = user.profileImageURL || profileImageURL; // Update image if they don't have one
-      } else {
-        // 4. If they are a completely new user, create a new account
-        user = new User({
-          fullName,
-          email,
-          googleId,
-          profileImageURL,
-          isVerified: true, // Google accounts are already verified
-          isOnboarded: false, // They still need to complete your app's onboarding
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
-      }
-      
-      await user.save();
+        const payload = ticket.getPayload();
+        
+        // ✅ FIX 2: आपके मॉडल के अनुसार 'fullname' (छोटा n) का इस्तेमाल करें
+        const { sub: googleId, email, name: fullname, picture: profileImageURL } = payload;
+
+        let user = await User.findOne({ googleId });
+
+        if (!user) {
+            user = await User.findOne({ email });
+            
+            if (user) {
+                user.googleId = googleId;
+                user.profileImageURL = user.profileImageURL || profileImageURL;
+            } else {
+                user = new User({
+                    fullname,
+                    email,
+                    googleId,
+                    profileImageURL,
+                    isVerified: true,
+                    isOnboarded: false,
+                });
+            }
+            await user.save();
+        }
+
+        // ✅ FIX 3: टोकन को यहीं बनाएं
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+            expiresIn: '1d',
+        });
+
+        // ❌ FIX 4: generatetoken(...) को हटा दिया गया है
+
+        res.status(200).json({
+            success: true, // ✅ 'success' फील्ड जोड़ना एक अच्छी प्रैक्टिस है
+            message: "Google login successful.",
+            token: token, // ✅ FIX 5: टोकन को रिस्पांस में जोड़ा गया
+            user: {
+                _id: user._id,
+                fullname: user.fullname, // ✅ FIX 2: fullname का इस्तेमाल
+                email: user.email,
+                role: user.role,
+                isOnboarded: user.isOnboarded,
+                profileImageURL: user.profileImageURL,
+            },
+        });
+
+    } catch (error) {
+        console.error("❌ Google Login Error:", error.message);
+        res.status(401).json({ success: false, message: "Invalid Google token or server error." });
     }
-
-    // 5. Generate your application's token and send it back
-    generatetoken(user._id, res);
-
-    res.status(200).json({
-      message: "Google login successful.",
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        profileImageURL: user.profileImageURL,
-      },
-    });
-
-  } catch (error) {
-    console.error("❌ Google Login Error:", error.message);
-    res.status(401).json({ message: "Invalid Google token or server error." });
-  }
 };
 

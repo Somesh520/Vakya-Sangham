@@ -7,7 +7,7 @@ import {
     getUserById,
     updateUser,
     deleteUser,
-    promoteToTeacher 
+    promoteToTeacher ,searchUsers
 } from '../controller/adminController.js';
 import { verifyUser } from '../middleware/protect.js';
 import { isAdmin } from '../middleware/isadmin.js';
@@ -20,7 +20,7 @@ router.use(verifyUser, isAdmin);
 
 router.get('/stats', getDashboardStats);
 router.get('/activities', getRecentActivities);
-
+router.get('/users/search', searchUsers);
 
 router.get('/users', getAllUsers);        
 router.get('/users/:id', getUserById);    

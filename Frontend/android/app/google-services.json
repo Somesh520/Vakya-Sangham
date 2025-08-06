@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "276801846363",
+    "project_id": "vakya-sangham",
+    "storage_bucket": "vakya-sangham.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:276801846363:android:29b32d05c2a83fbcb5537e",
+        "android_client_info": {
+          "package_name": "com.yt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "276801846363-jdoba4ohrc1ivjd3uq879sro47ngn6rp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yt",
+            "certificate_hash": "0d3190f8f5ce12260ae0ae01191009995fb61fb0"
+          }
+        },
+        {
+          "client_id": "276801846363-8sm834529hakg3b769j1oteacg7akdpk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkIwOOUM4v2aXBuC8DtD0-ZjjhbkEUMCY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "276801846363-8sm834529hakg3b769j1oteacg7akdpk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
