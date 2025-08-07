@@ -6,7 +6,12 @@ import AboutYouScreen from './AboutYouScreen';
 import GetStartedScreen from './GetStartedScreen';
 import SkillLevelScreen from './SkillLevelScreen';
 import ProfileScreen from './ProfileScreen';
+import EditProfileScreen from './EditProfileScreen';
+import LanguageSelectionScreen from './LanguageSelectionScreen';
+import AIChatScreen from './AIChatScreen';
+
 const Stack = createStackNavigator();
+
 const OnboardingNavigator = () => {
   return (
     <Stack.Navigator
@@ -27,7 +32,15 @@ const OnboardingNavigator = () => {
       <Stack.Screen name="GetStarted" component={GetStartedScreen} />
       <Stack.Screen name="SkillLevel" component={SkillLevelScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen 
+        name="EditProfile" 
+        component={EditProfileScreen}
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen name="LanguageSelection" component={LanguageSelectionScreen} />
+      <Stack.Screen name="AIChat" component={AIChatScreen} />
     </Stack.Navigator>
   );
 };
+
 export default OnboardingNavigator;

@@ -15,7 +15,6 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
     phone: '',
     referralCode: ''
   });
-
   const handleSubmit = () => {
     navigation.navigate('DateOfBirth');
   };

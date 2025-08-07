@@ -2,12 +2,15 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
+
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Profile'>;
 };
+
 const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
+      {/* Header with message and notification icons */}
       <View style={styles.header}>
         <TouchableOpacity>
           <Image source={require('./assets/message-icon.png')} style={styles.icon} />
@@ -17,9 +20,16 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Image source={require('./assets/bell-icon.png')} style={styles.icon} />
         </TouchableOpacity>
       </View>
-      <Image source={require('./assets/profile-pic.png')} style={styles.profilePic} />
+      
+      {/* Profile picture - now clickable */}
+      <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
+        <Image source={require('./assets/profile-pic.png')} style={styles.profilePic} />
+      </TouchableOpacity>
+      
       <Text style={styles.name}>Sophia Carter</Text>
       <Text style={styles.username}>@sophia_carter</Text>
+      
+      {/* Stats section */}
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>15</Text>
@@ -34,10 +44,14 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.statText}>Streak</Text>
         </View>
       </View>
+      
+      {/* Progress section */}
       <View style={styles.progressSection}>
         <Text style={styles.sectionTitle}>Progress</Text>
         <View style={styles.progressCircle}></View>
       </View>
+      
+      {/* Subjects section */}
       <View style={styles.subjectsSection}>
         <Text style={styles.sectionTitle}>Subjects</Text>
         <View style={styles.subjectTabs}>
@@ -47,6 +61,8 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.tabText}>History</Text>
         </View>
       </View>
+      
+      {/* Subjects grid */}
       <View style={styles.subjectsGrid}>
         <View style={styles.subjectCard}>
           <Image source={require('./assets/algebra.jpg')} style={styles.subjectImage} />
@@ -65,18 +81,20 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.subjectText}>Geometry</Text>
         </View>
       </View>
+      
+      {/* Navigation bar */}
       <View style={styles.navBar}>
         <TouchableOpacity>
           <Image source={require('./assets/home-icon.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('LanguageSelection')}>
           <Image source={require('./assets/subjects-icon.png')} style={styles.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity>
           <Image source={require('./assets/doubt-icon.png')} style={styles.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('./assets/progress-icon.png')} style={styles.navIcon} />
+        <TouchableOpacity onPress={() => navigation.navigate('AIChat')}>
+          <Image source={require('./assets/aibot-icon.png')} style={styles.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity>
           <Image source={require('./assets/profile-icon.png')} style={styles.navIcon} />
@@ -106,20 +124,6 @@ const styles = StyleSheet.create({
   icon: {
     width: 24,
     height: 24,
-  },
-  addImageButton: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: '#ddd',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  addImageText: {
-    fontSize: 16,
-    color: '#666',
   },
   profilePic: {
     width: 100,
@@ -222,4 +226,5 @@ const styles = StyleSheet.create({
     height: 24,
   },
 });
+
 export default ProfileScreen;
