@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Yt</string>
+
+    <!-- Replace this with your actual Web Client ID from Google Cloud Console -->
+    <string name="default_web_client_id">
+        701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com
+    </string>
 </resources>

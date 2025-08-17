@@ -1,134 +1,137 @@
-// src/context/AuthContext.tsx
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import api from './api';
 
-interface User {
-  id: string;
-  name?: string;
-  //  fullName: string; 
- fullname: string;
+// --- FIXED: User interface
+export interface User {
+  _id: string;
+  fullname: string;
   email: string;
   role: 'student' | 'teacher' | 'admin';
   isOnboarded: boolean;
-  bio?: string;
-  avatar?: string;
-  socialLinks?: string;
-  preferredLanguage?: string;
+  profileImageURL?: string;
+  token: string; // JWT token for auth
+  enrolledCourses: string[]; // array of course IDs
 }
 
-// ✅ State ke liye ek naya interface banayein
 interface AuthState {
   userToken: string | null;
   user: User | null;
   isLoading: boolean;
+  isDataDirty: boolean;
 }
 
-interface AuthContextType extends AuthState {
+export interface AuthContextType extends AuthState {
   signIn: (token: string, userData: User) => Promise<void>;
   signOut: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => void;
+  setDataDirty: (isDirty: boolean) => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // ✅ Sabhi states ko ek object me rakhein
   const [authState, setAuthState] = useState<AuthState>({
     userToken: null,
     user: null,
     isLoading: true,
+    isDataDirty: true,
   });
 
+  // Load stored user + token
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
         const token = await AsyncStorage.getItem('userToken');
         const userDataJson = await AsyncStorage.getItem('userData');
+
         if (token && userDataJson) {
+          const userFromStorage: User = JSON.parse(userDataJson);
+
+          // Ensure token is included in user object
+          const userWithToken = { ...userFromStorage, token };
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
           setAuthState({
             userToken: token,
-            user: JSON.parse(userDataJson),
+            user: userWithToken,
             isLoading: false,
+            isDataDirty: true,
           });
         } else {
           setAuthState(s => ({ ...s, isLoading: false }));
         }
       } catch (e) {
-        console.error('Failed to load data from storage', e);
+        console.error('Auth bootstrap error:', e);
         setAuthState(s => ({ ...s, isLoading: false }));
       }
     };
-
     bootstrapAsync();
   }, []);
 
-  const signIn = async (token: string, userData: User) => {
-    try {
-      // ✅ Ek saath state update karein
-      setAuthState({ userToken: token, user: userData, isLoading: false });
-      
-      // Fir background me data save karo
-      await AsyncStorage.setItem('userToken', token);
-      await AsyncStorage.setItem('userData', JSON.stringify(userData));
-      
-      console.log('AuthContext: User state updated successfully.');
+  const signIn = useCallback(async (token: string, userData: User) => {
+    const userWithToken = { ...userData, token }; // Include token in user object
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    } catch (e) {
-      console.error('Failed to save auth data', e);
-    }
-  };
+    setAuthState({ userToken: token, user: userWithToken, isLoading: false, isDataDirty: true });
+    await AsyncStorage.setItem('userToken', token);
+    await AsyncStorage.setItem('userData', JSON.stringify(userWithToken));
+  }, []);
 
-  const signOut = async () => {
-    try {
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
-      // ✅ State ko reset karein
-      setAuthState({ userToken: null, user: null, isLoading: false });
-    } catch (e) {
-      console.error('Failed to remove auth data', e);
-    }
-  };
-  
-  const updateUser = (updatedData: Partial<User>) => {
-      setAuthState(currentState => {
-          if (!currentState.user) return currentState;
-          const newUser = { ...currentState.user, ...updatedData };
-          AsyncStorage.setItem('userData', JSON.stringify(newUser));
-          return { ...currentState, user: newUser };
-      });
-  };
+  const signOut = useCallback(async () => {
+    delete api.defaults.headers.common['Authorization'];
+    await AsyncStorage.multiRemove(['userToken', 'userData']);
+    setAuthState({ userToken: null, user: null, isLoading: false, isDataDirty: true });
+  }, []);
 
-  // ✅ isLoading ko authState se lein
+  const updateUser = useCallback((updatedData: Partial<User>) => {
+    setAuthState(currentState => {
+      if (!currentState.user) return currentState;
+      const newUser = { ...currentState.user, ...updatedData };
+      AsyncStorage.setItem('userData', JSON.stringify(newUser));
+      return { ...currentState, user: newUser, isDataDirty: true };
+    });
+  }, []);
+
+  const setDataDirty = useCallback((isDirty: boolean) => {
+    setAuthState(prevState => ({ ...prevState, isDataDirty: isDirty }));
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    ...authState,
+    signIn,
+    signOut,
+    updateUser,
+    setDataDirty,
+  }), [authState, signIn, signOut, updateUser, setDataDirty]);
+
   if (authState.isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007BFF" />
+        <ActivityIndicator size="large" color="#FFA500" />
       </View>
     );
   }
 
   return (
-    // ✅ Provider value me authState ko spread karein
-    <AuthContext.Provider value={{ ...authState, signIn, signOut, updateUser }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F5FCFF',
-    }
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+  }
 });

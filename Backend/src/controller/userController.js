@@ -1,4 +1,4 @@
-import User from "../models/usermodel.js";
+import User from "../models/userModel.js";
 import Enrollment from "../models/enrollmentModel.js";
 import cloudinary from '../config/cloudinary.js';
 import streamifier from 'streamifier';
@@ -157,7 +157,7 @@ export const getStudentDashboard = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const user = await User.findById(userId).select("fullName");
+        const user = await User.findById(userId).select("fullname");
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
         }
@@ -180,5 +180,18 @@ export const getStudentDashboard = async (req, res) => {
     } catch (error) {
         console.error("Student Dashboard Error:", error);
         res.status(500).json({ success: false, message: "Server error while fetching dashboard data." });
+    }
+};
+export const getUserProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).select('fullname email profileImageURL profileProgress');
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 };

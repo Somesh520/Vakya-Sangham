@@ -20,6 +20,11 @@ import authroute from './src/Routes/authroute.js';               // 🔐 Manual 
 import userroute from './src/Routes/userroute.js';               // 👤 User profile/info
 import adminRoutes from './src/Routes/adminroutes.js'; 
 import teacherRoutes from './src/Routes/Teacherroute.js';
+import { googleLogin } from './src/Routes/googleAuthRoute.js';
+import courseController from './src/Routes/courseRoute.js';
+import userRoutes from './src/Routes/usercourseRoutes.js';
+import CourseEnrollment from './src/Routes/CourseEnrollment.js';
+ // User's courses and learning progress
 // ------------------- ⚙️ Initial Setup -------------------
 dotenv.config();
 import './src/config/passport.js'; // ⬅️ Passport config must be loaded before usage
@@ -84,13 +89,20 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ------------------- 🧩 Route Mounting -------------------
-// app.use('/user/auth/google', googleAuthRoute);  // 🌐 Google OAuth
+// app.use('/user/auth/google', googleAuthRoute);
+//   // 🌐 Google OAuth
+app.use('/api/auth', googleLogin); // 🔐 Manual login
 app.use('/user/auth', authroute);               // 🔐 Manual auth (login/signup)
 app.use('/user/info', userroute);               // 👤 Profile, user data, etc.
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes); 
 // ------------------- 🛑 Error Handling Middleware -------------------
-app.use(errorHandler);
+//----------------courseController
 
+app.use('/api', courseController); // Course related routes
+// app.use('/api/reviews', reviewController); // Review related routess
+app.use('/api/users', userRoutes); 
+app.use('/api/enrollment', CourseEnrollment); // User's courses and learning progress
+app.use(errorHandler);
 
 export default app;

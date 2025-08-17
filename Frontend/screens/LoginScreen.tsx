@@ -1,14 +1,14 @@
-
+// src/screens/LoginScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Alert, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types'; // ✅ पाथ सही करें
+import { RootStackParamList } from '../types';
 import api from '../api';
-import { useAuth } from '../AuthContext'; // ✅ पाथ सही करें
+import { useAuth } from '../AuthContext';
 import { View as MotiView } from 'moti';
 import { TextInput, Button, Text, HelperText, useTheme } from 'react-native-paper';
 
-// ✅ Google Sign-In के लिए इम्पोर्ट्स
+// ✅ Only Google Sign-In
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 type Props = {
@@ -24,15 +24,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { signIn } = useAuth();
   const { colors } = useTheme();
 
-  // ✅ Google Sign-In को कॉन्फ़िगर करें
   useEffect(() => {
     GoogleSignin.configure({
-      // ❗ बहुत ज़रूरी: यहाँ अपनी Web Client ID डालें जो आपने Google Cloud Console से बनाई थी
-      webClientId: '276801846363-8sm834529hakg3b769j1oteacg7akdpk.apps.googleusercontent.com', 
-      offlineAccess: true,
-    });
+  webClientId: "701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com",
+  offlineAccess: true,
+});
+
   }, []);
 
+  // ✅ Normal login (email + password)
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.');
@@ -41,7 +41,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post('/user/auth/login', { // ✅ API पाथ सही किया गया
+      const response = await api.post('/user/auth/login', {
         email: email.trim().toLowerCase(),
         password: password,
       });
@@ -49,10 +49,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       if (token && user) {
         await signIn(token, user);
       } else {
-        throw new Error('Login successful, but token or user data was not received.');
+        throw new Error(
+          'Login successful, but token or user data was not received.'
+        );
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Invalid credentials. Please try again.';
+      const errorMessage =
+        err.response?.data?.message ||
+        'Invalid credentials. Please try again.';
       setError(errorMessage);
       Alert.alert('Login Failed', errorMessage);
     } finally {
@@ -60,40 +64,43 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // ✅ Google साइन-इन को हैंडल करने का फंक्शन
-// LoginScreen.tsx में
-
-
+  // ✅ Google Sign-In (direct backend verify)
 const handleGoogleSignIn = async () => {
+  try {
     setGoogleLoading(true);
-    try {
-      await GoogleSignin.hasPlayServices();
-     const userInfo: any = await GoogleSignin.signIn();
-      const idToken = userInfo.idToken;
-console.log("hello");
-      if (idToken) {
-        const response = await api.post('/user/auth/google', { idToken });
-        if (response.data.success) {
-          const { token, user } = response.data;
-          await signIn(token, user);
-        } else {
-          throw new Error(response.data.message);
-        }
-      } else {
-        throw new Error('Could not get idToken from Google.');
-      }
-    } catch (error: any) {
-      if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
-        Alert.alert('Google Sign-In Failed', 'Please check your configuration and try again.');
-        console.error(error);
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
-// अब अपने Google बटन के onPress को इस नए फंक्शन पर पॉइंट करें:
-// <Button onPress={handleGoogleSignIn_TEST} ... />
+    // Check Google Play Services
+    await GoogleSignin.hasPlayServices();
+
+    // Sign in and get ID token
+    const userInfo: any = await GoogleSignin.signIn();
+    const idToken = userInfo.idToken;
+
+    if (!idToken) {
+      throw new Error("No ID token received from Google");
+    }
+
+    // Send token to your backend (note the name: `token`)
+    const response = await api.post("/user/auth/google", { token: idToken });
+
+    const { token, user } = response.data;
+
+    // Save token/user in app state
+    await signIn(token, user);
+
+    console.log("Google login successful:", user);
+
+  } catch (err: any) {
+    console.log("Google Sign-In Error:", err);
+
+    // User cancelled
+    if (err.code === statusCodes.SIGN_IN_CANCELLED) return;
+
+    Alert.alert("Google Sign-In Failed", err.message || "Try again");
+  } finally {
+    setGoogleLoading(false);
+  }
+};
 
   return (
     <ScrollView
@@ -137,7 +144,7 @@ console.log("hello");
           left={<TextInput.Icon icon="lock-outline" />}
           error={!!error}
         />
-        
+
         <HelperText type="error" visible={!!error} style={styles.errorText}>
           {error}
         </HelperText>
@@ -164,8 +171,7 @@ console.log("hello");
           disabled={loading || googleLoading}
           style={styles.googleButton}
           icon="google"
-          labelStyle={styles.googleButtonText}
-        >
+          labelStyle={styles.googleButtonText}>
           Sign in with Google
         </Button>
 

@@ -8,7 +8,7 @@ import {
     updateCourse, 
     deleteCourse 
 
-} from '../controller/courseController.js';
+} from '../controller/coursecontroller.js';
 
 
 

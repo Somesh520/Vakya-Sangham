@@ -1,6 +1,6 @@
 
 import jwt from 'jsonwebtoken';
-import User from '../models/userModel.js';
+import User from '../models/usermodel.js';
 import { generatetoken } from '../utils/generatetoken.js';
 import { sendMail } from '../utils/sendEmail.js';
 import bcrypt from 'bcrypt';
@@ -171,6 +171,7 @@ export const login = async (req, res) => {
         email: user.email,
          role: user.role, 
         isOnboarded: user.isOnboarded,
+         profileImageURL: user.profileImageURL
       },
     });
   } catch (error) {
@@ -321,68 +322,50 @@ export const resendOTP = async (req, res) => {
     res.status(500).json({ message: "Failed to resend OTP." });
   }
 };
-//google login 
 
 
 export const googleLogin = async (req, res) => {
-    // ✅ FIX 1: फ्रंटएंड 'idToken' भेजता है, 'token' नहीं।
-    const { idToken } = req.body;
+  const { token } = req.body;
 
-    try {
-        const ticket = await client.verifyIdToken({
-            idToken: idToken,
-            audience: process.env.GOOGLE_CLIENT_ID,
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { sub: googleId, email, name: fullName } = ticket.getPayload();
+
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+        user.googleId = googleId;
+      } else {
+        user = new User({
+          fullName,
+          email,
+          googleId,
+          isVerified: true,
         });
-        const payload = ticket.getPayload();
-        
-        // ✅ FIX 2: आपके मॉडल के अनुसार 'fullname' (छोटा n) का इस्तेमाल करें
-        const { sub: googleId, email, name: fullname, picture: profileImageURL } = payload;
-
-        let user = await User.findOne({ googleId });
-
-        if (!user) {
-            user = await User.findOne({ email });
-            
-            if (user) {
-                user.googleId = googleId;
-                user.profileImageURL = user.profileImageURL || profileImageURL;
-            } else {
-                user = new User({
-                    fullname,
-                    email,
-                    googleId,
-                    profileImageURL,
-                    isVerified: true,
-                    isOnboarded: false,
-                });
-            }
-            await user.save();
-        }
-
-        // ✅ FIX 3: टोकन को यहीं बनाएं
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-            expiresIn: '1d',
-        });
-
-        // ❌ FIX 4: generatetoken(...) को हटा दिया गया है
-
-        res.status(200).json({
-            success: true, // ✅ 'success' फील्ड जोड़ना एक अच्छी प्रैक्टिस है
-            message: "Google login successful.",
-            token: token, // ✅ FIX 5: टोकन को रिस्पांस में जोड़ा गया
-            user: {
-                _id: user._id,
-                fullname: user.fullname, // ✅ FIX 2: fullname का इस्तेमाल
-                email: user.email,
-                role: user.role,
-                isOnboarded: user.isOnboarded,
-                profileImageURL: user.profileImageURL,
-            },
-        });
-
-    } catch (error) {
-        console.error("❌ Google Login Error:", error.message);
-        res.status(401).json({ success: false, message: "Invalid Google token or server error." });
+      }
+      await user.save();
     }
+
+   
+    generatetoken(user._id, res);
+
+ res.status(200).json({
+  message: "Google login successful.",
+  user: {
+    fullName: user.fullName,
+    email: user.email,
+    googleId: user.googleId,
+    role: user.role || "student", // default role
+  },
+});
+
+  } catch (error) {
+    res.status(401).json({ message: "Invalid Google token." });
+  }
 };
 

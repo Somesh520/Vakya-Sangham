@@ -2,26 +2,20 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    ActivityIndicator,
-    SafeAreaView,
-    Image,
-    Alert,
-    TouchableOpacity,
+    View, Text, StyleSheet, ScrollView,
+    ActivityIndicator, SafeAreaView, Image, Alert, TouchableOpacity,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { UserManagementStackParamList } from '../UserManagementNavigator'; // ✅ सुनिश्चित करें कि यह पाथ सही है
+import { UserManagementStackParamList } from '../UserManagementNavigator'; // ✅ पाथ सही किया गया
+import { useAuth } from '../AuthContext'; // ✅ 'स्मार्ट रिफ्रेश' के लिए इम्पोर्ट करें
 import api from '../api';
 import { format } from 'date-fns';
 
-// ✅ FIX 1: UserDetails इंटरफ़ेस को बैकएंड के अनुसार 'fullName' किया गया
+// User का टाइप, आपके 'fullname' नियम के अनुसार
 interface UserDetails {
     _id: string;
-    fullName: string;
+    fullname: string;
     email: string;
     role: 'student' | 'teacher' | 'admin';
     phoneNumber?: string;
@@ -58,6 +52,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value }) => (
 const UserDetailsScreen: React.FC = () => {
     const route = useRoute<UserDetailsRouteProp>();
     const navigation = useNavigation<UserDetailsNavigationProp>();
+    const { setDataDirty } = useAuth(); // ✅ 'स्मार्ट रिफ्रेश' के लिए फंक्शन लें
     const { userId } = route.params;
 
     const [user, setUser] = useState<UserDetails | null>(null);
@@ -81,7 +76,6 @@ const UserDetailsScreen: React.FC = () => {
         }
     }, [userId]);
 
-    // useFocusEffect का इस्तेमाल करें ताकि जब भी स्क्रीन पर वापस आएं, डेटा रिफ्रेश हो
     useFocusEffect(
         useCallback(() => {
             fetchUserDetails();
@@ -91,8 +85,7 @@ const UserDetailsScreen: React.FC = () => {
     const handleDeleteUser = () => {
         Alert.alert(
             "Delete User",
-            // ✅ FIX 1: user?.fullName का इस्तेमाल
-            `Are you sure you want to delete ${user?.fullName}? This action cannot be undone.`,
+            `Are you sure you want to delete ${user?.fullname}? This action cannot be undone.`,
             [
                 { text: "Cancel", style: "cancel" },
                 {
@@ -103,6 +96,7 @@ const UserDetailsScreen: React.FC = () => {
                         try {
                             await api.delete(`/api/admin/users/${userId}`);
                             Alert.alert("Success", "User has been deleted.");
+                            setDataDirty(true); // ✅ डैशबोर्ड को बताएं कि डेटा बदल गया है
                             navigation.goBack();
                         } catch (err) {
                             Alert.alert("Error", "Failed to delete user.");
@@ -118,8 +112,7 @@ const UserDetailsScreen: React.FC = () => {
     const handlePromoteToTeacher = () => {
         Alert.alert(
             "Promote User",
-             // ✅ FIX 1: user?.fullName का इस्तेमाल
-            `Are you sure you want to promote ${user?.fullName} to a Teacher?`,
+            `Are you sure you want to promote ${user?.fullname} to a Teacher?`,
             [
                 { text: "Cancel", style: "cancel" },
                 {
@@ -127,10 +120,10 @@ const UserDetailsScreen: React.FC = () => {
                     onPress: async () => {
                         setActionLoading(true);
                         try {
-                            // ✅ FIX 2: API पाथ को बैकएंड के अनुसार ठीक किया गया
                             const response = await api.patch(`/api/admin/users/${userId}/promote`);
                             setUser(response.data.user);
                             Alert.alert("Success", "User has been promoted to teacher.");
+                            setDataDirty(true); // ✅ डैशबोर्ड को बताएं कि डेटा बदल गया है
                         } catch (err) {
                             Alert.alert("Error", "Failed to promote user.");
                         } finally {
@@ -155,12 +148,10 @@ const UserDetailsScreen: React.FC = () => {
             <ScrollView>
                  <View style={styles.profileHeader}>
                     <Image
-                        // ✅ FIX 1: user.fullName का इस्तेमाल
-                        source={{ uri: user.profileImageURL || `https://ui-avatars.com/api/?name=${(user.fullName || 'N A').replace(' ', '+')}&size=128` }}
+                        source={{ uri: user.profileImageURL || `https://ui-avatars.com/api/?name=${(user.fullname || 'N A').replace(' ', '+')}&size=128` }}
                         style={styles.avatar}
                     />
-                    {/* ✅ FIX 1: user.fullName का इस्तेमाल */}
-                    <Text style={styles.userName}>{user.fullName}</Text>
+                    <Text style={styles.userName}>{user.fullname}</Text>
                     <Text style={styles.userEmail}>{user.email}</Text>
                 </View>
 

@@ -1,13 +1,11 @@
-// import User from "../models/usermodel.js";
-// import Course from "../models/courseModel.js"; 
-// import Activity from "../models/activityModel.js"; 
-// // ========== GET: Enhanced Dashboard Stats ==========
+
 
 import User from "../models/userModel.js";
 import Course from "../models/courseModel.js";
 import Activity from "../models/activityModel.js";
 
 // ========== GET: Enhanced Dashboard Stats ==========
+// यह फंक्शन सही है, इसमें कोई बदलाव नहीं।
 export const getDashboardStats = async (req, res) => {
     try {
         const [totalUsers, totalCourses, totalTeachers] = await Promise.all([
@@ -37,7 +35,7 @@ export const getRecentActivities = async (req, res) => {
         let activities = await Activity.find({})
             .sort({ createdAt: -1 })
             .limit(7) // थोड़ा ज़्यादा डेटा भेजें ताकि विविधता दिखे
-            .populate("user", "fullname profileImageURL")
+            .populate("user", "fullname profileImageURL") // आपके मॉडल के अनुसार 'fullname'
             .lean(); 
 
         // ✅ IMPROVEMENT: डिलीट हो चुके यूज़र्स को शालीनता से हैंडल करें
@@ -71,7 +69,7 @@ export const getAllUsers = async (req, res) => {
 
         // ✅ FIX: 'fullName' को 'fullname' किया गया
         const users = await User.find()
-            .select("fullname email role profileImageURL isOnboarded progress createdAt")
+            .select("fullname email role phoneNumber profileImageURL isOnboarded progress createdAt")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -99,15 +97,16 @@ export const searchUsers = async (req, res) => {
         if (!query) {
             return res.status(400).json({ success: false, message: "Search query is required." });
         }
+
         const users = await User.find({
             $or: [
-                // ✅ FIX: 'fullName' को 'fullname' किया गया
+                 // ✅ FIX: 'fullName' को 'fullname' किया गया
                 { fullname: { $regex: query, $options: "i" } },
                 { email: { $regex: query, $options: "i" } }
             ]
         })
-        // ✅ FIX: 'fullName' को 'fullname' किया गया
-        .select("fullname email role profileImageURL isOnboarded progress createdAt")
+        // ✅ FIX: यहाँ भी 'fullName' को 'fullname' किया गया
+        .select("fullname email role phoneNumber profileImageURL isOnboarded progress createdAt")
         .limit(20);
         res.status(200).json({ success: true, users });
     } catch (error) {
@@ -120,8 +119,8 @@ export const searchUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
-            // ✅ FIX: 'fullName' को 'fullname' किया गया
-            .select("fullname email role profileImageURL isOnboarded progress createdAt");
+           
+            .select("fullname email role phoneNumber profileImageURL isOnboarded progress createdAt");
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found.' });
@@ -169,7 +168,6 @@ export const updateUser = async (req, res) => {
 };
 
 
-
 export const promoteToTeacher = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -202,13 +200,23 @@ export const promoteToTeacher = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
+        // डिलीट किया गया यूज़र 'user' वेरिएबल में सेव होता है
         const user = await User.findByIdAndDelete(req.params.id);
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
+        // एक्टिविटी बनाने के लिए 'user' वेरिएबल का इस्तेमाल करें
+        await Activity.create({
+            // ✅ FIX: यहाँ 'userToDelete' को 'user' से बदल दिया गया है
+            description: `User '${user.fullname}' was deleted by an admin.`,
+            type: 'user_deletion',
+            user: req.user.id 
+        });
+
         res.status(200).json({ success: true, message: "User deleted successfully." });
+        
     } catch (error) {
         console.error("Delete User Error:", error);
         res.status(500).json({ success: false, message: "Server error." });

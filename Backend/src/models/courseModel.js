@@ -1,5 +1,30 @@
 import mongoose from 'mongoose';
 
+const lessonSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    videoURL: {
+        type: String,
+        required: true
+    },
+    duration: { // in minutes
+        type: Number,
+        required: true
+    }
+});
+
+const moduleSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    lessons: [lessonSchema] // ✅ हर मॉड्यूल के अंदर कई लेसन होंगे
+});
+
 const courseSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -15,12 +40,10 @@ const courseSchema = new mongoose.Schema({
         ref: 'User', 
         required: true,
     },
-    isActive: {
+    isPublished: { // ✅ 'isActive' की जगह 'isPublished' ज़्यादा स्पष्ट है
         type: Boolean,
-        default: true,
+        default: false,
     },
-
-  
     category: {
         type: String,
         required: true,
@@ -32,7 +55,7 @@ const courseSchema = new mongoose.Schema({
     },
     thumbnailURL: {
         type: String,
-        default: 'default_thumbnail_url_here' 
+        default: '' 
     },
     language: {
         type: String,
@@ -43,8 +66,14 @@ const courseSchema = new mongoose.Schema({
         enum: ["Beginner", "Intermediate", "Advanced"],
         required: true,
     },
+    modules: [moduleSchema],
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
+    }]
 
 }, { timestamps: true });
 
-const Course = mongoose.model('Course', courseSchema);
+const Course = mongoose.models.Course || mongoose.model('Course', courseSchema);
+
 export default Course;

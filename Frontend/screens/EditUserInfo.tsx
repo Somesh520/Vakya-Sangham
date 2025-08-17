@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React,{ useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { AdminStackParamList } from '../navigation/AdminNavigator'; // पाथ सही करें
+import { UserManagementStackParamList } from '../UserManagementNavigator'; // ✅ पाथ सही करें
 import api from '../api';
-import { TextInput, Button, Text, Switch, Title } from 'react-native-paper';
+import { TextInput, Button, Text, Switch, Title, Menu, Divider } from 'react-native-paper'; // ✅ Menu, Divider इम्पोर्ट करें
 
 // User का पूरा टाइप
 interface UserDetails {
@@ -24,21 +24,24 @@ interface UserDetails {
     isOnboarded: boolean;
 }
 
-type EditProfileRouteProp = RouteProp<AdminStackParamList, 'EditProfile'>;
-type EditProfileNavigationProp = StackNavigationProp<AdminStackParamList, 'EditProfile'>;
+type EditProfileRouteProp = RouteProp<UserManagementStackParamList, 'EditProfile'>;
+type EditProfileNavigationProp = StackNavigationProp<UserManagementStackParamList, 'EditProfile'>;
 
 const EditProfileScreen: React.FC = () => {
     const route = useRoute<EditProfileRouteProp>();
     const navigation = useNavigation<EditProfileNavigationProp>();
     const { userId } = route.params;
 
-    // --- State Management ---
     const [formData, setFormData] = useState<Partial<UserDetails>>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    
+    // ✅ 1. मेन्यू को खोलने और बंद करने के लिए स्टेट
+    const [menuVisible, setMenuVisible] = useState(false);
+    const openMenu = () => setMenuVisible(true);
+    const closeMenu = () => setMenuVisible(false);
 
-    // --- Fetch Initial Data ---
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -57,7 +60,6 @@ const EditProfileScreen: React.FC = () => {
         fetchUserData();
     }, [userId]);
 
-    // --- Handlers ---
     const handleInputChange = (name: keyof UserDetails, value: any) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -65,7 +67,6 @@ const EditProfileScreen: React.FC = () => {
     const handleSaveChanges = async () => {
         setSaving(true);
         try {
-            // Backend को सिर्फ वही फील्ड्स भेजें जो बदलने लायक हैं
             const updatePayload = {
                 fullname: formData.fullname,
                 email: formData.email,
@@ -78,7 +79,7 @@ const EditProfileScreen: React.FC = () => {
 
             if (response.data.success) {
                 Alert.alert("Success", "User profile updated successfully!");
-                navigation.goBack(); // वापस Details स्क्रीन पर जाएं
+                navigation.goBack();
             } else {
                 Alert.alert("Error", response.data.message || "Could not update profile.");
             }
@@ -103,7 +104,7 @@ const EditProfileScreen: React.FC = () => {
                 <Title style={styles.headerTitle}>Edit Profile</Title>
                 
                 <TextInput
-                    label="Full Name"
+                    label="Full name"
                     value={formData.fullname}
                     onChangeText={(text) => handleInputChange('fullname', text)}
                     style={styles.input}
@@ -125,23 +126,46 @@ const EditProfileScreen: React.FC = () => {
                     mode="outlined"
                     keyboardType="phone-pad"
                 />
-                {/* Note: A picker would be better for 'role', but TextInput is simpler for this example */}
-                 <TextInput
-                    label="Role (student, teacher, admin)"
-                    value={formData.role}
-                    onChangeText={(text) => handleInputChange('role', text as 'student' | 'teacher' | 'admin')}
-                    style={styles.input}
-                    mode="outlined"
-                />
+                
+                {/* ✅ 2. Role के लिए TextInput को Menu से बदल दिया गया है */}
+                <Menu
+                    visible={menuVisible}
+                    onDismiss={closeMenu}
+                    anchor={
+                        <Button 
+                            onPress={openMenu} 
+                            mode="outlined" 
+                            icon="chevron-down"
+                            contentStyle={styles.dropdownButton}
+                            style={styles.dropdown}
+                            labelStyle={styles.dropdownLabel}
+                        >
+                            {`Role: ${formData.role || 'Select'}`}
+                        </Button>
+                    }
+                >
+                    <Menu.Item 
+                        onPress={() => { handleInputChange('role', 'student'); closeMenu(); }} 
+                        title="Student" 
+                    />
+                    <Divider />
+                    <Menu.Item 
+                        onPress={() => { handleInputChange('role', 'teacher'); closeMenu(); }} 
+                        title="Teacher" 
+                    />
+                    <Divider />
+                    <Menu.Item 
+                        onPress={() => { handleInputChange('role', 'admin'); closeMenu(); }} 
+                        title="Admin" 
+                    />
+                </Menu>
 
                 <View style={styles.switchContainer}>
-                    <Text style={styles.switchLabel}>Email Verified</Text>
-                    <Switch value={formData.isVerified} onValueChange={(value) => handleInputChange('isVerified', value)} />
-                </View>
-                 <View style={styles.switchContainer}>
                     <Text style={styles.switchLabel}>Is Onboarded</Text>
                     <Switch value={formData.isOnboarded} onValueChange={(value) => handleInputChange('isOnboarded', value)} />
                 </View>
+                
+             
 
                 <Button
                     mode="contained"
@@ -158,8 +182,6 @@ const EditProfileScreen: React.FC = () => {
     );
 };
 
-
-// Styles
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -177,8 +199,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 4,
         marginBottom: 15,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 4,
+        backgroundColor: '#FFF'
     },
     switchLabel: {
         fontSize: 16,
@@ -195,7 +222,24 @@ const styles = StyleSheet.create({
     },
     errorText: {
         color: 'red',
-        fontSize: 16
+        fontSize: 16,
+        textAlign: 'center'
+    },
+    // ✅ 3. ड्रॉपडाउन के लिए नए स्टाइल्स
+    dropdown: {
+        marginTop: 5,
+        marginBottom: 15,
+        borderColor: '#888', // React Native Paper 'outlined' mode color
+    },
+    dropdownButton: {
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+    },
+    dropdownLabel: {
+        fontSize: 16,
+        textTransform: 'capitalize',
+        color: '#333'
     }
 });
 
