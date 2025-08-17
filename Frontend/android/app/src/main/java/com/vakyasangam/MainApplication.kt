@@ -1,4 +1,4 @@
-package com.yt
+package com.vakyasangam
 
 import android.app.Application
 import com.facebook.react.PackageList

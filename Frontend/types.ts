@@ -1,4 +1,3 @@
-// types.ts
 export type RootStackParamList = {
   CreateAccount: undefined;
   DateOfBirth: undefined;
@@ -8,5 +7,6 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   LanguageSelection: undefined;
-  AIChat: undefined; // Add this for the new language selection screen
+  AIChat: undefined;
+  Notes: undefined; // Add the new screen here
 };

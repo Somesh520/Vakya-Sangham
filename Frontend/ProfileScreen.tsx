@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Profile'>;
@@ -10,18 +11,16 @@ type Props = {
 const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      {/* Header with message and notification icons */}
       <View style={styles.header}>
         <TouchableOpacity>
-          <Image source={require('./assets/message-icon.png')} style={styles.icon} />
+          <Icon name="mail" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Profile</Text>
         <TouchableOpacity>
-          <Image source={require('./assets/bell-icon.png')} style={styles.icon} />
+          <Icon name="notifications" size={24} color="#000" />
         </TouchableOpacity>
       </View>
       
-      {/* Profile picture - now clickable */}
       <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
         <Image source={require('./assets/profile-pic.png')} style={styles.profilePic} />
       </TouchableOpacity>
@@ -29,7 +28,6 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <Text style={styles.name}>Sophia Carter</Text>
       <Text style={styles.username}>@sophia_carter</Text>
       
-      {/* Stats section */}
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>15</Text>
@@ -45,24 +43,25 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
       
-      {/* Progress section */}
-      <View style={styles.progressSection}>
-        <Text style={styles.sectionTitle}>Progress</Text>
-        <View style={styles.progressCircle}></View>
-      </View>
-      
-      {/* Subjects section */}
-      <View style={styles.subjectsSection}>
+      <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionTitle}>Subjects</Text>
+        <TouchableOpacity style={styles.progressSection} onPress={() => navigation.navigate('AIChat')}>
+          <Text style={styles.sectionTitle}>Progress</Text>
+          <View style={styles.progressCircle}>
+            <View style={styles.progressInnerCircle}></View>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.subjectsSection}>
         <View style={styles.subjectTabs}>
-          <Text style={styles.tabText}>All</Text>
+          <Text style={styles.selectedTabText}>All</Text>
           <Text style={styles.tabText}>Math</Text>
           <Text style={styles.tabText}>Science</Text>
           <Text style={styles.tabText}>History</Text>
         </View>
       </View>
       
-      {/* Subjects grid */}
       <View style={styles.subjectsGrid}>
         <View style={styles.subjectCard}>
           <Image source={require('./assets/algebra.jpg')} style={styles.subjectImage} />
@@ -82,22 +81,26 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
       
-      {/* Navigation bar */}
       <View style={styles.navBar}>
-        <TouchableOpacity>
-          <Image source={require('./assets/home-icon.png')} style={styles.navIcon} />
+        <TouchableOpacity style={styles.navBarItem}>
+          <Icon name="home" size={24} color="#000" />
+          <Text style={styles.navBarText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('LanguageSelection')}>
-          <Image source={require('./assets/subjects-icon.png')} style={styles.navIcon} />
+        <TouchableOpacity style={styles.navBarItem} onPress={() => navigation.navigate('LanguageSelection')}>
+          <Icon name="bookmark" size={24} color="#000" />
+          <Text style={styles.navBarText}>Subjects</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('./assets/doubt-icon.png')} style={styles.navIcon} />
+        <TouchableOpacity style={styles.navBarItem}>
+          <Icon name="help-outline" size={24} color="#000" />
+          <Text style={styles.navBarText}>Doubt Clearing</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('AIChat')}>
-          <Image source={require('./assets/aibot-icon.png')} style={styles.navIcon} />
+        <TouchableOpacity style={styles.navBarItem} onPress={() => navigation.navigate('AIChat')}>
+          <Icon name="smart-toy" size={24} color="#000" />
+          <Text style={styles.navBarText}>AI Chat Bot</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Image source={require('./assets/profile-icon.png')} style={styles.navIcon} />
+        <TouchableOpacity style={styles.navBarItem}>
+          <Icon name="person" size={24} color="#000" />
+          <Text style={styles.navBarText}>Profile</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -117,13 +120,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 20,
   },
+  headerIcon: {
+    width: 24,
+    height: 24,
+  },
   headerText: {
     fontSize: 20,
     fontWeight: 'bold',
-  },
-  icon: {
-    width: 24,
-    height: 24,
   },
   profilePic: {
     width: 100,
@@ -146,10 +149,21 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    paddingHorizontal: 15,
     marginBottom: 20,
   },
   statBox: {
+    flex: 1,
+    backgroundColor: '#F7F7F7',
+    borderRadius: 10,
+    paddingVertical: 15,
+    marginHorizontal: 5,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   statNumber: {
     fontSize: 20,
@@ -159,22 +173,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  progressSection: {
+  sectionHeaderRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
   },
+  progressSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
   progressCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 3,
+    borderColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+  },
+  progressInnerCircle: {
     width: 20,
     height: 20,
     borderRadius: 10,
     backgroundColor: '#000',
-    marginLeft: 10,
   },
   subjectsSection: {
     paddingHorizontal: 15,
@@ -185,6 +214,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
   },
+  selectedTabText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
   tabText: {
     fontSize: 16,
     color: '#666',
@@ -192,22 +226,30 @@ const styles = StyleSheet.create({
   subjectsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     paddingHorizontal: 15,
   },
   subjectCard: {
-    width: '45%',
+    width: '48%',
     marginBottom: 20,
     alignItems: 'center',
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   subjectImage: {
     width: '100%',
     height: 100,
-    borderRadius: 10,
   },
   subjectText: {
     fontSize: 16,
     marginTop: 5,
+    paddingBottom: 10,
   },
   navBar: {
     flexDirection: 'row',
@@ -221,9 +263,12 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#F5E8C7',
   },
-  navIcon: {
-    width: 24,
-    height: 24,
+  navBarItem: {
+    alignItems: 'center',
+  },
+  navBarText: {
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

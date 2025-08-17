@@ -2,7 +2,8 @@ import React from 'react';
 import { SafeAreaView, ScrollView, View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Import Font Awesome icons
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 import { RootStackParamList } from './types';
 
 const EditProfileScreen: React.FC = () => {
@@ -13,7 +14,7 @@ const EditProfileScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollView}>
         {/* Header Section */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.closeButton}
             onPress={() => {
               console.log('Navigation state:', navigation.getState());
@@ -34,7 +35,7 @@ const EditProfileScreen: React.FC = () => {
         {/* Profile Header Section */}
         <View style={styles.profileHeader}>
           <Image
-            source={{ uri: 'profile_image_url' }} // Replace with actual image source
+            source={{ uri: 'profile_image_url' }}
             style={styles.profileImage}
           />
           <Text style={styles.profileName}>Sophia Carter</Text>
@@ -77,7 +78,7 @@ const EditProfileScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resume</Text>
           <View style={styles.buttonWithIcon}>
-            <Icon name="paperclip" size={20} color="#000" style={styles.icon} />
+            {/* The "paperclip" icon has been removed from here. */}
             <Icon name="sticky-note" size={20} color="#000" style={styles.icon} />
             <TouchableOpacity style={styles.addButton}>
               <Text style={styles.addButtonText}>Add resume</Text>
@@ -101,7 +102,7 @@ const EditProfileScreen: React.FC = () => {
             {[1, 2, 3, 4, 5, 6].map((item) => (
               <TouchableOpacity key={item} style={styles.avatarItem}>
                 <Image
-                  source={{ uri: `avatar_${item}_url` }} // Replace with actual avatar URLs
+                  source={{ uri: `avatar_${item}_url` }}
                   style={styles.avatarImage}
                 />
               </TouchableOpacity>
@@ -111,7 +112,7 @@ const EditProfileScreen: React.FC = () => {
 
         {/* Save Button Section */}
         <View style={styles.saveButtonContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.saveButton}
             onPress={() => {
               console.log('Save button pressed');
@@ -136,7 +137,7 @@ const EditProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5E8C7', // Light yellow background
+    backgroundColor: '#F5E8C7',
   },
   scrollView: {
     paddingHorizontal: 16,
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     zIndex: 1000,
-    marginTop: 20, // Added to push the header downward
+    marginTop: 20,
   },
   closeButton: {
     padding: 10,
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 5,
-    marginLeft: 60, // Maintain alignment with other sections
+    marginLeft: 10,
   },
   addButton: {
     padding: 20,
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     borderColor: '#000',
     borderRadius: 5,
     alignItems: 'center',
-    flex: 1, // Take remaining space
+    flex: 1,
   },
   addButtonText: {
     fontSize: 14,
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   icon: {
-    marginRight: 8, // Space between icon and button
+    marginRight: 8,
   },
   iconText: {
     fontSize: 20,

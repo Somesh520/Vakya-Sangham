@@ -77,9 +77,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.yt"
+    namespace "com.vakyasangam"
     defaultConfig {
-        applicationId "com.yt"
+        applicationId "com.vakyasangam"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -117,3 +117,11 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Copy vector icons fonts
+task copyFonts(type: Copy) {
+    from '../../node_modules/react-native-vector-icons/Fonts'
+    into 'src/main/assets/fonts'
+}
+
+preBuild.dependsOn copyFonts

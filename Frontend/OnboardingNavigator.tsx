@@ -9,6 +9,7 @@ import ProfileScreen from './ProfileScreen';
 import EditProfileScreen from './EditProfileScreen';
 import LanguageSelectionScreen from './LanguageSelectionScreen';
 import AIChatScreen from './AIChatScreen';
+import NotesScreen from './NotesScreen';
 
 const Stack = createStackNavigator();
 
@@ -37,8 +38,13 @@ const OnboardingNavigator = () => {
         component={EditProfileScreen}
         options={{ headerShown: false }} 
       />
-      <Stack.Screen name="LanguageSelection" component={LanguageSelectionScreen} />
-      <Stack.Screen name="AIChat" component={AIChatScreen} />
+      <Stack.Screen name="LanguageSelection" component={LanguageSelectionScreen} options={{ headerShown: false }}/>
+      <Stack.Screen 
+        name="AIChat" 
+        component={AIChatScreen}
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen name="Notes" component={NotesScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };
