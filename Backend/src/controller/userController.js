@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import Enrollment from "../models/enrollmentModel.js";
+import Enrollment from "../models/enrollmentmodel.js";
 import cloudinary from '../config/cloudinary.js';
 import streamifier from 'streamifier';
 import path from 'path';
