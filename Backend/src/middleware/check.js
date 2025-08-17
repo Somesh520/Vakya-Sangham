@@ -1,4 +1,4 @@
-import User from '../models/userModel.js';
+import User from '../models/usermodel.js';
 
 export const isTeacherOrAdmin = async (req, res, next) => {
     try {
