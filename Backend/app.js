@@ -20,7 +20,7 @@ import authroute from './src/Routes/authroute.js';               // 🔐 Manual 
 import userroute from './src/Routes/userroute.js';               // 👤 User profile/info
 import adminRoutes from './src/Routes/adminroutes.js'; 
 import teacherRoutes from './src/Routes/Teacherroute.js';
-import { googleLogin } from './src/Routes/googleAuthRoute.js';
+
 import courseController from './src/Routes/courseRoute.js';
 import userRoutes from './src/Routes/usercourseRoutes.js';
 import CourseEnrollment from './src/Routes/CourseEnrollment.js';
@@ -91,7 +91,7 @@ app.use(passport.session());
 // ------------------- 🧩 Route Mounting -------------------
 // app.use('/user/auth/google', googleAuthRoute);
 //   // 🌐 Google OAuth
-app.use('/api/auth', googleLogin); // 🔐 Manual login
+
 app.use('/user/auth', authroute);               // 🔐 Manual auth (login/signup)
 app.use('/user/info', userroute);               // 👤 Profile, user data, etc.
 app.use('/api/admin', adminRoutes);
