@@ -1,6 +1,6 @@
 
 
-import User from "../models/userModel.js";
+import User from "../models/usermodel.js";
 import Course from "../models/courseModel.js";
 import Activity from "../models/activityModel.js";
 
