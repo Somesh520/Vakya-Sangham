@@ -1,8 +1,7 @@
 import Course from '../models/courseModel.js';
 import Activity from '../models/activityModel.js';
-import Review from '../models/Review.js'; // ✅ रिव्यू के लिए मॉडल इम्पोर्ट करें
+import Review from '../models/Review.js';
 
-// ========== POST: Create a new course ==========
 // ========== POST: Create a new course ==========
 export const createCourse = async (req, res) => {
     try {
@@ -10,7 +9,10 @@ export const createCourse = async (req, res) => {
         const instructorId = req.user.id;
 
         if (!title || !description || !category || !language || !level) {
-            return res.status(400).json({ success: false, message: 'Please provide all required course details.' });
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide all required course details.'
+            });
         }
 
         const newCourse = await Course.create({
@@ -21,37 +23,33 @@ export const createCourse = async (req, res) => {
             language,
             level,
             instructor: instructorId,
-            isPublished: true // ✅ Auto publish
+            isPublished: true
         });
-        
+
         await Activity.create({
             type: 'course_creation',
             description: `Course "${newCourse.title}" was created by ${req.user.fullname}.`,
             user: req.user.id
         });
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             message: "Course created successfully.",
-            course: newCourse 
+            course: newCourse
         });
     } catch (error) {
-        console.error("Create Course Error:", error);
+        console.error("🔥 Create Course Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
-
 
 // ========== GET: Get all courses with filtering ==========
 export const getAllCourses = async (req, res) => {
     try {
         const { q, language, level, category } = req.query;
 
-        // Agar admin hai -> sari courses, warna sirf published
         const query = {};
-        if (req.user?.role !== 'admin') {
-            query.isPublished = true;
-        }
+        if (req.user?.role !== 'admin') query.isPublished = true;
 
         if (q) query.title = { $regex: q, $options: 'i' };
         if (language) query.language = language;
@@ -62,22 +60,20 @@ export const getAllCourses = async (req, res) => {
         res.status(200).json({ success: true, courses });
     } catch (error) {
         console.error("🔥 Get All Courses Error:", error);
-        res.status(500).json({ success: false, message: "Server error.", error: error.message });
+        res.status(500).json({ success: false, message: "Server error." });
     }
 };
 
-
-// ========== GET: Get featured courses for home screen ==========
+// ========== GET: Get featured courses ==========
 export const getFeaturedCourses = async (req, res) => {
     try {
-        // उदाहरण: 4 सबसे नए कोर्स को फीचर्ड दिखाएं
         const courses = await Course.find({ isPublished: true })
             .sort({ createdAt: -1 })
             .limit(4)
             .populate('instructor', 'fullname');
         res.status(200).json({ success: true, courses });
     } catch (error) {
-        console.error("Get Featured Courses Error:", error);
+        console.error("🔥 Get Featured Courses Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
@@ -97,7 +93,7 @@ export const getCourseById = async (req, res) => {
         }
         res.status(200).json({ success: true, course });
     } catch (error) {
-        console.error("Get Course By ID Error:", error);
+        console.error("🔥 Get Course By ID Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
@@ -110,12 +106,22 @@ export const updateCourse = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Course not found.' });
         }
         if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(403).json({ success: false, message: 'You are not authorized to update this course.' });
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
         }
-        const updatedCourse = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-        res.status(200).json({ success: true, message: "Course updated successfully.", course: updatedCourse });
+
+        const updatedCourse = await Course.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Course updated successfully.",
+            course: updatedCourse
+        });
     } catch (error) {
-        console.error("Update Course Error:", error);
+        console.error("🔥 Update Course Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
@@ -128,50 +134,125 @@ export const deleteCourse = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Course not found.' });
         }
         if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(403).json({ success: false, message: 'You are not authorized to delete this course.' });
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
         }
-        
-        // --- THIS IS THE FIX ---
-        // Store the title in a variable BEFORE deleting the course.
-        const courseTitle = course.title;
 
+        const courseTitle = course.title;
         await course.deleteOne();
-        
-        // Now, use the saved variable for the activity log.
+
         await Activity.create({
             type: 'course_deletion',
             description: `Course "${courseTitle}" was deleted by ${req.user.fullname}.`,
             user: req.user.id
         });
-    
+
         res.status(200).json({ success: true, message: 'Course deleted successfully.' });
     } catch (error) {
-        console.error("Delete Course Error:", error);
+        console.error("🔥 Delete Course Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
 
-// ========== POST: Create a new review for a course ==========
+// ========== POST: Create a review ==========
 export const createCourseReview = async (req, res) => {
     try {
         const { rating, comment } = req.body;
         const course = await Course.findById(req.params.id);
 
-        if (course) {
-            const review = await Review.create({
-                user: req.user.id,
-                course: req.params.id,
-                rating,
-                comment,
-            });
-            course.reviews.push(review._id);
-            await course.save();
-            res.status(201).json({ success: true, message: 'Review added successfully.' });
-        } else {
-            res.status(404).json({ success: false, message: 'Course not found.' });
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found.' });
         }
+
+        // ✅ Check if already reviewed
+        const alreadyReviewed = await Review.findOne({ user: req.user.id, course: req.params.id });
+        if (alreadyReviewed) {
+            return res.status(400).json({ success: false, message: 'You already reviewed this course.' });
+        }
+
+        const review = await Review.create({
+            user: req.user.id,
+            course: req.params.id,
+            rating,
+            comment,
+        });
+
+        course.reviews.push(review._id);
+        await course.save();
+
+        res.status(201).json({ success: true, message: 'Review added successfully.', review });
     } catch (error) {
-        console.error("Create Review Error:", error);
+        console.error("🔥 Create Review Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
+
+// controller/coursecontroller.js
+
+// ... (aapke purane functions waise hi rahenge)
+
+// ========== POST: Ek course mein naya module add karein ==========
+export const addModuleToCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { title } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ success: false, message: 'Module title is required.' });
+        }
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found.' });
+        }
+
+        // Check karein ki user is course ka instructor hai ya admin
+        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+
+        course.modules.push({ title, lessons: [] });
+        await course.save();
+
+        res.status(201).json({ success: true, message: 'Module added successfully.', course });
+
+    } catch (error) {
+        console.error("🔥 Add Module Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
+
+// ========== POST: Ek module mein naya lesson add karein ==========
+export const addLessonToModule = async (req, res) => {
+    try {
+        const { courseId, moduleId } = req.params;
+        const { title, videoURL, duration } = req.body;
+
+        if (!title || !videoURL || !duration) {
+            return res.status(400).json({ success: false, message: 'Lesson title, videoURL, and duration are required.' });
+        }
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found.' });
+        }
+
+        // Check karein ki user is course ka instructor hai ya admin
+        if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized.' });
+        }
+
+        const module = course.modules.id(moduleId);
+        if (!module) {
+            return res.status(404).json({ success: false, message: 'Module not found.' });
+        }
+
+        module.lessons.push({ title, videoURL, duration });
+        await course.save();
+
+        res.status(201).json({ success: true, message: 'Lesson added successfully.', course });
+
+    } catch (error) {
+        console.error("🔥 Add Lesson Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
     }
 };

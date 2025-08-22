@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   fullname: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String }, // Google users ke liye optional
+  password: { type: String }, // optional for Google users
   phoneNumber: String,
   referralCode: String,
   role: {
@@ -17,69 +17,103 @@ const userSchema = new mongoose.Schema({
   otpExpiry: Date,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+
   teacherProfile: {
     qualifications: String,
     subjects: [String],
     experience: String,
   },
-  // Onboarding Fields
+
+  // --- Onboarding Fields ---
   dateOfBirth: Date,
   education: {
     type: String,
     enum: ["Primary School", "High school", "College", "Master’s", "PhD"],
+     default: null,
   },
   state: String,
-  city: String,
   district: String,
   goal: {
     type: String,
     enum: ["Learn a new skill", "Advance my career", "Start a business", "Grow my business"],
+     default: null,
   },
   contentPreference: {
     type: String,
     enum: ["Video courses", "PDFs", "Live mentorship"],
+     default: null,
   },
   interest: String,
   timeAvailability: {
     type: String,
     enum: ["<15 minutes", "15-30 minutes", "30-60 minutes", ">1 hour"],
+     default: null,
   },
   level: {
     type: String,
     enum: ["Beginner", "Intermediate", "Advanced"],
+     default: null,
   },
   bio: String,
   socialLinks: [String],
   profileImageURL: String,
   resumeURL: String,
   preferredLanguage: String,
-  avatar: String,
-  hasTakenOnlineCourses: {
-    type: Boolean,
-    default: false,
-  },
+  hasTakenOnlineCourses: { type: Boolean, default: false },
+
+  enrolledCourses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course'
+  }],
+
   isOnboarded: { type: Boolean, default: false },
+
+  // --- Store onboarding progress directly in DB ---
+  profileProgress: {
+    completed: { type: Number, default: 0 },
+    total: { type: Number, default: 0 },
+    percentage: { type: Number, default: 0 },
+  }
+
 }, { timestamps: true });
 
-// --- Virtual field for enrolled courses (from Enrollment collection) ---
+// --- Virtual for enrolled courses (optional) ---
 userSchema.virtual('enrollments', {
   ref: 'Enrollment',
   localField: '_id',
   foreignField: 'student',
 });
-  enrolledCourses: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course'
-  }],
-// --- Virtual field for profile progress (calculate dynamically) ---
-userSchema.virtual('profileProgress').get(function () {
-  // Example: calculate % based on enrollments completed
-  if (!this.enrollments || this.enrollments.length === 0) return { completed: 0, total: 0, percentage: 0 };
-  const completed = this.enrollments.filter(e => e.completed).length;
-  const total = this.enrollments.length;
+
+// --- Ensure virtuals appear in JSON ---
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
+
+// --- Method to calculate onboarding progress dynamically ---
+userSchema.methods.calculateOnboardingProgress = function() {
+  const fields = [
+    "dateOfBirth", "education", "state", "district", "goal", "contentPreference",
+    "timeAvailability", "level", "bio", "socialLinks",
+    "profileImageURL", "resumeURL", "preferredLanguage",
+    "interest", "hasTakenOnlineCourses"
+  ];
+
+  let completed = 0;
+  fields.forEach(field => {
+    const value = this[field];
+    if (value !== undefined && value !== null && String(value).trim() !== "" && !(Array.isArray(value) && value.length === 0)) {
+      completed++;
+    }
+  });
+
+  const total = fields.length;
   const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
-  return { completed, total, percentage };
-});
+
+  // Update DB field
+  this.profileProgress = { completed, total, percentage };
+  if (percentage === 100) this.isOnboarded = true;
+
+  return this.profileProgress;
+};
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 export default User;

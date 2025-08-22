@@ -8,6 +8,7 @@ import redisClient from '../config/redisClient.js';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // ✅ Signup Controller
 export const signup = async (req, res) => {
  const { fullname, email, password, phone, referralCode } = req.body;
@@ -278,6 +279,8 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+
+
 // ✅ Resend OTP Controller
 export const resendOTP = async (req, res) => {
   const { email } = req.body;
@@ -324,48 +327,158 @@ export const resendOTP = async (req, res) => {
 };
 
 
+// export const googleLogin = async (req, res) => {
+//   const { token } = req.body;
+
+//   if (!token) return res.status(400).json({ message: "Token is required." });
+
+//   try {
+//     const ticket = await client.verifyIdToken({
+//       idToken: token,
+//       audience: process.env.GOOGLE_CLIENT_ID,
+//     });
+
+//     const { sub: googleId, email, name: fullName } = ticket.getPayload();
+
+//     let user = await User.findOne({ googleId });
+
+//     if (!user) {
+//       user = await User.findOne({ email });
+//       if (user) {
+//         user.googleId = googleId;
+//       } else {
+//         user = new User({
+//           fullName,
+//           email,
+//           googleId,
+//           isVerified: true,
+//         });
+//       }
+//       await user.save();
+//     }
+
+//     // Generate JWT token (your function)
+//     const jwtToken = generatetoken(user._id);
+
+//     res.status(200).json({
+//       message: "Google login successful.",
+//       token: jwtToken,
+//       user: {
+//         fullName: user.fullName,
+//         email: user.email,
+//         googleId: user.googleId,
+//         role: user.role || "student",
+//       },
+//     });
+//   } catch (error) {
+//     res.status(401).json({ message: "Invalid Google token." });
+//   }
+// };
+
 export const googleLogin = async (req, res) => {
   const { token } = req.body;
 
+  if (!token) {
+    return res.status(400).json({ message: "Token is required." });
+  }
+
   try {
+    // Verify Google token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    const { sub: googleId, email, name: fullName } = ticket.getPayload();
+
+    // console.log("Server GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name: fullName, picture } = payload;
+
+    // console.log("Google payload:", payload);
 
     let user = await User.findOne({ googleId });
 
     if (!user) {
       user = await User.findOne({ email });
+
       if (user) {
+        // Link Google account
         user.googleId = googleId;
+        user.profilePicture = picture;
+        await user.save();
       } else {
+        // New user
         user = new User({
-          fullName,
+          fullname: fullName,
           email,
           googleId,
+          profilePicture: picture,
           isVerified: true,
+          authProvider: "google",
+          isOnboarded: false,
+           // ✅ Fix: must be false initially
         });
+        await user.save();
       }
-      await user.save();
     }
 
-   
-    generatetoken(user._id, res);
+    // Generate JWT
+    const jwtToken = generatetoken(user._id, res);
 
- res.status(200).json({
-  message: "Google login successful.",
-  user: {
-    fullName: user.fullName,
-    email: user.email,
-    googleId: user.googleId,
-    role: user.role || "student", // default role
-  },
-});
+    res.status(200).json({
+      message: "Google login successful.",
+      token: jwtToken,
+      user: {
+        id: user._id,
+        fullname: user.fullname, // ✅ Fix name field
+        email: user.email,
+        profilePicture: user.profilePicture,
+        role: user.role || "student",
+        isOnboarded: user.isOnboarded, // ✅ include onboarding flag
+      },
+    });
 
   } catch (error) {
-    res.status(401).json({ message: "Invalid Google token." });
+    console.error("Google login error:", error);
+
+    if (error.message.includes("Token used too late")) {
+      return res.status(401).json({ message: "Token expired. Please try again." });
+    }
+
+    res.status(401).json({
+      message: "Invalid Google token.",
+      error: error.message,
+    });
   }
 };
 
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id; // JWT se aayega
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Both fields are required" });
+    }
+
+    // user find karo
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // current password check karo
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // new password hash karke save karo
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    return res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

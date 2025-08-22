@@ -2,20 +2,63 @@ import User from '../models/usermodel.js';
 import Enrollment from '../models/enrollmentModel.js';
 import Course from '../models/courseModel.js';
 
+// Don't forget to import your new model at the top of the file
+import UserProgress from '../models/UserProgressModel.js'; 
+// import Enrollment from '../models/Enrollment.js';
+
 export const getMyLearning = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Enrollment se courses fetch karo
+    // 1. Get all courses the user is enrolled in
     const enrollments = await Enrollment.find({ student: userId })
       .populate({
         path: 'course',
-        populate: { path: 'instructor', select: 'fullname' }
+        // We need the modules and lessons to calculate the total
+        select: 'title thumbnailURL modules' ,
+         populate: { 
+          path: 'instructor',
+          select: 'fullname'
+        }
       });
+console.log('All Enrollments Data:', JSON.stringify(enrollments, null, 2));
+    // 2. Map through each enrollment to calculate progress
+    const coursesWithProgress = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        if (!enrollment.course) return null;
 
-    const courses = enrollments.map(e => e.course);
+        const course = enrollment.course;
+        let progress = 0;
 
-    res.status(200).json({ success: true, courses });
+        // 3. Find the user's progress for this specific course
+        const userProgress = await UserProgress.findOne({
+          user: userId,
+          course: course._id,
+        });
+        
+        // 4. Calculate total number of lessons in the course
+        const totalLessons = course.modules.reduce((acc, module) => acc + module.lessons.length, 0);
+
+        // 5. If progress and lessons exist, calculate the percentage
+        if (userProgress && totalLessons > 0) {
+          const completedLessonsCount = userProgress.completedLessons.length;
+          progress = Math.round((completedLessonsCount / totalLessons) * 100);
+        }
+
+        return {
+          _id: course._id,
+          title: course.title,
+          thumbnailURL: course.thumbnailURL,
+          progress: progress, // The dynamically calculated progress
+        };
+      })
+    );
+    
+    // Filter out any null results
+    const finalCourses = coursesWithProgress.filter(c => c !== null);
+
+    res.status(200).json({ success: true, courses: finalCourses });
+
   } catch (error) {
     console.error("Get My Learning Error:", error);
     res.status(500).json({ success: false, message: 'Server Error' });

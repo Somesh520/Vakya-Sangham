@@ -7,9 +7,7 @@ import api from '../api';
 import { useAuth } from '../AuthContext';
 import { View as MotiView } from 'moti';
 import { TextInput, Button, Text, HelperText, useTheme } from 'react-native-paper';
-
-// ✅ Only Google Sign-In
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Login'>;
@@ -26,13 +24,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     GoogleSignin.configure({
-  webClientId: "701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com",
-  offlineAccess: true,
-});
-
+      webClientId: "701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com",
+      offlineAccess: true,
+    });
   }, []);
 
-  // ✅ Normal login (email + password)
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.');
@@ -43,20 +39,24 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const response = await api.post('/user/auth/login', {
         email: email.trim().toLowerCase(),
-        password: password,
+        password,
       });
-      const { token, user } = response.data;
-      if (token && user) {
-        await signIn(token, user);
+
+      const { token, user: backendUser } = response.data;
+      
+      if (token && backendUser) {
+        // ✅ FIX: Map backend 'id' to frontend '_id'
+        const userForContext = {
+            ...backendUser,
+            _id: backendUser.id 
+        };
+        await signIn(token, userForContext, 'password');
+        console.log("Regular login successful");
       } else {
-        throw new Error(
-          'Login successful, but token or user data was not received.'
-        );
+        throw new Error('Login successful, but token or user data was not received.');
       }
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message ||
-        'Invalid credentials. Please try again.';
+      const errorMessage = err.response?.data?.message || 'Invalid credentials. Please try again.';
       setError(errorMessage);
       Alert.alert('Login Failed', errorMessage);
     } finally {
@@ -64,68 +64,52 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // ✅ Google Sign-In (direct backend verify)
-const handleGoogleSignIn = async () => {
-  try {
-    setGoogleLoading(true);
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleLoading(true);
+      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.signIn();
+      const { idToken } = await GoogleSignin.getTokens();
+      
+      if (!idToken) {
+        Alert.alert("Google Sign-In Failed", "No ID token returned.");
+        return;
+      }
 
-    // Check Google Play Services
-    await GoogleSignin.hasPlayServices();
+      const response = await api.post('/user/auth/google', { token: idToken });
+      const { token: jwtToken, user: backendUser } = response.data;
 
-    // Sign in and get ID token
-    const userInfo: any = await GoogleSignin.signIn();
-    const idToken = userInfo.idToken;
-
-    if (!idToken) {
-      throw new Error("No ID token received from Google");
+      if (jwtToken && backendUser) {
+        // ✅ FIX: Map backend 'id' to frontend '_id' for Google sign-in as well
+        const userForContext = {
+            ...backendUser,
+            _id: backendUser.id
+        };
+        await signIn(jwtToken, userForContext, 'google.com');
+        console.log("Google login successful");
+      } else {
+        throw new Error("Backend did not return token/user");
+      }
+    } catch (error: any) {
+      console.error("Google sign in error:", error);
+      Alert.alert("Google Sign-In Error", error.message || "Something went wrong");
+    } finally {
+      setGoogleLoading(false);
     }
-
-    // Send token to your backend (note the name: `token`)
-    const response = await api.post("/user/auth/google", { token: idToken });
-
-    const { token, user } = response.data;
-
-    // Save token/user in app state
-    await signIn(token, user);
-
-    console.log("Google login successful:", user);
-
-  } catch (err: any) {
-    console.log("Google Sign-In Error:", err);
-
-    // User cancelled
-    if (err.code === statusCodes.SIGN_IN_CANCELLED) return;
-
-    Alert.alert("Google Sign-In Failed", err.message || "Try again");
-  } finally {
-    setGoogleLoading(false);
-  }
-};
+  };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled">
-      <MotiView
-        from={{ opacity: 0, translateY: -20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 500 }}>
-        <Text variant="displaySmall" style={styles.title}>
-          Welcome Back!
-        </Text>
-        <Text variant="bodyLarge" style={styles.subtitle}>
-          Login to your account
-        </Text>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500 }}>
+        <Text variant="displaySmall" style={styles.title}>Welcome Back!</Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>Login to your account</Text>
       </MotiView>
 
-      <MotiView
-        from={{ opacity: 0, translateY: -20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 500, delay: 100 }}>
+      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500, delay: 100 }}>
         <TextInput
           label="Email Address"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => { setEmail(text); setError(null); }}
           style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -133,53 +117,28 @@ const handleGoogleSignIn = async () => {
           left={<TextInput.Icon icon="email-outline" />}
           error={!!error}
         />
-
         <TextInput
           label="Password"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(text) => { setPassword(text); setError(null); }}
           style={styles.input}
           secureTextEntry
           mode="outlined"
           left={<TextInput.Icon icon="lock-outline" />}
           error={!!error}
         />
-
-        <HelperText type="error" visible={!!error} style={styles.errorText}>
-          {error}
-        </HelperText>
+        <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>
       </MotiView>
 
-      <MotiView
-        from={{ opacity: 0, translateY: -20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 500, delay: 200 }}>
-        <Button
-          mode="contained"
-          onPress={handleLogin}
-          loading={loading}
-          disabled={loading || googleLoading}
-          style={styles.button}
-          labelStyle={styles.buttonText}>
-          Login
+      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500, delay: 200 }}>
+        <Button mode="contained" onPress={handleLogin} loading={loading} disabled={loading || googleLoading} style={styles.button}>
+          {loading ? "Logging in..." : "Login"}
         </Button>
-
-        <Button
-          mode="outlined"
-          onPress={handleGoogleSignIn}
-          loading={googleLoading}
-          disabled={loading || googleLoading}
-          style={styles.googleButton}
-          icon="google"
-          labelStyle={styles.googleButtonText}>
-          Sign in with Google
+        <Text style={styles.divider}>OR</Text>
+        <Button mode="outlined" onPress={handleGoogleSignIn} loading={googleLoading} disabled={loading || googleLoading} style={styles.googleButton} icon="google" labelStyle={styles.googleButtonText}>
+          {googleLoading ? "Signing in..." : "Sign in with Google"}
         </Button>
-
-        <Button
-          mode="text"
-          onPress={() => navigation.navigate('CreateAccount')}
-          disabled={loading || googleLoading}
-          style={styles.linkButton}>
+        <Button mode="text" onPress={() => navigation.navigate('CreateAccount')} disabled={loading || googleLoading} style={styles.linkButton}>
           Don't have an account? Sign Up
         </Button>
       </MotiView>
@@ -188,48 +147,16 @@ const handleGoogleSignIn = async () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#F5F5F5',
-  },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    marginBottom: 40,
-    color: '#616161',
-  },
-  input: {
-    marginBottom: 12,
-  },
-  button: {
-    paddingVertical: 8,
-    marginTop: 10,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  googleButton: {
-    marginTop: 15,
-    paddingVertical: 8,
-    borderColor: '#E0E0E0',
-  },
-  googleButtonText: {
-    fontSize: 16,
-    color: '#424242',
-  },
-  linkButton: {
-    marginTop: 15,
-  },
-  errorText: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#F5F5F5' },
+  title: { fontWeight: 'bold', textAlign: 'center' },
+  subtitle: { textAlign: 'center', marginBottom: 40, color: '#616161' },
+  input: { marginBottom: 12 },
+  button: { paddingVertical: 8, marginTop: 10 },
+  googleButton: { marginTop: 15, paddingVertical: 8, borderColor: '#E0E0E0' },
+  googleButtonText: { fontSize: 16, color: '#424242' },
+  divider: { textAlign: 'center', marginVertical: 20, color: '#9E9EE0', fontSize: 14 },
+  linkButton: { marginTop: 15 },
+  errorText: { fontSize: 14, textAlign: 'center' },
 });
 
 export default LoginScreen;

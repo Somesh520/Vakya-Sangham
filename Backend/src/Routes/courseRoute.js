@@ -6,7 +6,9 @@ import {
     getCourseById,
     updateCourse,
     deleteCourse,
-    createCourseReview
+    createCourseReview,
+     addModuleToCourse,
+     addLessonToModule  
 } from '../controller/coursecontroller.js';
 import { verifyUser } from '../middleware/protect.js';
 import { isTeacherOrAdmin } from '../middleware/check.js';
@@ -24,8 +26,10 @@ router.post('/:id/reviews', verifyUser, createCourseReview);
 router.post('/createcourse', verifyUser, isTeacherOrAdmin, createCourse); // ✅ New course
 router.patch('/:id', verifyUser, isTeacherOrAdmin, updateCourse); // ✅ Update course
 router.delete('/:id', verifyUser, isTeacherOrAdmin, deleteCourse); // ✅ Delete course
-
+router.post('/:courseId/modules', verifyUser, isTeacherOrAdmin, addModuleToCourse);
+router.post('/:courseId/modules/:moduleId/lessons', verifyUser, isTeacherOrAdmin, addLessonToModule);
 // --- Must be LAST so it doesn’t conflict ---
 router.get('/:id', getCourseById); // ✅ Single course by ID
+
 
 export default router;

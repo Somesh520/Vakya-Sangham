@@ -1,241 +1,238 @@
-// AiTutorScreen.tsx
-import React, { useState, useEffect } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  Text,
-  View,
-  TextInput,
-  Button,
-  TouchableOpacity,
-  ActivityIndicator,
+import io from 'socket.io-client';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+    SafeAreaView, 
+    ScrollView, 
+    View, 
+    Text, 
+    TextInput, 
+    TouchableOpacity, 
+    ActivityIndicator,
+    StyleSheet,
+    Platform
 } from 'react-native';
-import { useAuth } from '../AuthContext';
+import { Picker } from '@react-native-picker/picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const API_BASE = 'http://192.168.9.127:8000'; // Your backend IP
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
 
-interface Lesson {
-  number: number;
-  title: string;
-}
-
-const API_BASE = 'http://192.168.9.127:8000'; // Apna backend IP + port
-
 const AiTutorScreen: React.FC = () => {
-  const { userToken } = useAuth();
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [currentLesson, setCurrentLesson] = useState(1);
+  
+  // New state for language and lesson
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [lessonToTeach, setLessonToTeach] = useState('');
+
+  const scrollRef = useRef<ScrollView>(null);
+  const socketRef = useRef<any>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/lessons`)
-      .then(res => res.json())
-      .then(data => {
-        setLessons(data.lessons || []);
-      })
-      .catch(err => {
-        console.error('Error fetching lessons:', err);
+    socketRef.current = io(API_BASE);
+
+    socketRef.current.on('connect', () => {
+      console.log('Connected to server');
+    });
+
+    socketRef.current.on('assistant_chunk', (chunk: string) => {
+      setMessages(prev => {
+        const updated = [...prev];
+        if (updated.length > 0 && updated[updated.length - 1]?.role === 'assistant') {
+          updated[updated.length - 1].content += chunk;
+        } else {
+          updated.push({ role: 'assistant', content: chunk });
+        }
+        return updated;
       });
+    });
+
+    socketRef.current.on('assistant_done', () => {
+      setLoading(false);
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
   }, []);
 
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (!input.trim()) return;
 
-    const newMessages = [...messages, { role: 'user', content: input }];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, { role: 'user', content: input }]);
     setLoading(true);
 
-    const body = {
+    // Send language and lesson with the chat message
+    socketRef.current.emit('chat', {
       query: input,
-      previous_query: messages.length > 0 ? messages[messages.length - 2]?.content : null,
-      previous_response: messages.length > 0 ? messages[messages.length - 1]?.content : null,
-      lesson_to_teach: null,
-    };
-
-    try {
-      const res = await fetch(`${API_BASE}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', content: data?.response || '⚠️ No response from server.' }
-      ]);
-    } catch (error) {
-      console.error("Chat request error:", error);
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', content: '⚠️ Error: Could not connect to server.' }
-      ]);
-    }
+      language: selectedLanguage,
+      lesson_to_teach: lessonToTeach || null, // Send null if no lesson is specified
+      // You can still include previous messages if your backend supports it
+      previous_query: messages[messages.length - 2]?.content || null,
+      previous_response: messages[messages.length - 1]?.content || null,
+    });
 
     setInput('');
-    setLoading(false);
-  };
-
-  const startLesson = async (lessonNum: number) => {
-    if (lessonNum > currentLesson) return;
-
-    const displayText = `*(Starting Lesson ${lessonNum})*`;
-    const newMessages = [...messages, { role: 'user', content: displayText }];
-    setMessages(newMessages);
-    setLoading(true);
-
-    const body = {
-      query: `Direct instruction to teach lesson ${lessonNum}`,
-      previous_query: null,
-      previous_response: null,
-      lesson_to_teach: lessonNum,
-    };
-
-    try {
-      const res = await fetch(`${API_BASE}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', content: data?.response || `⚠️ No content for lesson ${lessonNum}.` }
-      ]);
-
-      if (lessonNum === currentLesson && lessonNum < lessons.length) {
-        setCurrentLesson(prev => prev + 1);
-      }
-    } catch (error) {
-      console.error("Lesson request error:", error);
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', content: '⚠️ Error: Could not connect to server.' }
-      ]);
-    }
-
-    setLoading(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 📚 Lesson Panel */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.lessonPanel}>
-        {lessons.map(lesson => {
-          const isLocked = lesson.number > currentLesson;
-          return (
-            <TouchableOpacity
-              key={lesson.number}
-              onPress={() => startLesson(lesson.number)}
-              style={[
-                styles.lessonButton,
-                isLocked ? styles.lockedLesson : styles.unlockedLesson
-              ]}
-              disabled={isLocked}
-            >
-              <Text style={styles.lessonNumber}>
-                {lesson.number}
-              </Text>
-              <Text style={styles.lessonText}>
-                {lesson.title}
-              </Text>
-              {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
+        {/* --- Setup Section --- */}
+        <View style={styles.setupContainer}>
+            <Text style={styles.setupTitle}>AI Tutor Setup</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={selectedLanguage}
+                    onValueChange={(itemValue) => setSelectedLanguage(itemValue)}
+                    style={styles.picker}
+                    itemStyle={styles.pickerItem}
+                >
+                    <Picker.Item label="English" value="English" />
+                    <Picker.Item label="Hindi" value="Hindi" />
+                    <Picker.Item label="Spanish" value="Spanish" />
+                </Picker>
+            </View>
+            <TextInput
+                style={styles.lessonInput}
+                placeholder="Optional: What lesson should I teach?"
+                placeholderTextColor="#aaa"
+                value={lessonToTeach}
+                onChangeText={setLessonToTeach}
+            />
+        </View>
+
+        {/* --- Chat Section --- */}
+        <ScrollView
+            ref={scrollRef}
+            style={styles.chatScrollView}
+            contentContainerStyle={{ paddingBottom: 10 }}
+            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+        >
+            {messages.map((msg, idx) => (
+                <View key={idx} style={[styles.messageBubble, msg.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
+                    <Text style={styles.messageText}>
+                        {msg.content}
+                    </Text>
+                </View>
+            ))}
+             {loading && messages[messages.length -1]?.role === 'user' && (
+                <View style={[styles.messageBubble, styles.assistantBubble]}>
+                    <ActivityIndicator size="small" color="#FFA500" />
+                </View>
+             )}
+        </ScrollView>
+
+        {/* --- Input Section --- */}
+        <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="Type your message..."
+                placeholderTextColor="#aaa"
+                value={input}
+                onChangeText={setInput}
+                multiline
+            />
+            <TouchableOpacity onPress={sendMessage} style={styles.sendButton} disabled={loading}>
+                <Ionicons name="send" size={24} color="#fff" />
             </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* 💬 Chat Messages */}
-      <ScrollView style={styles.chatContainer}>
-        {messages.map((msg, idx) => (
-          <View
-            key={idx}
-            style={[
-              styles.message,
-              msg.role === 'user' ? styles.userMessage : styles.assistantMessage,
-            ]}
-          >
-            <Text style={styles.messageText}>{msg.content}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      {loading && <ActivityIndicator size="large" color="#FFA500" style={{ marginBottom: 10 }} />}
-
-      {/* ✏️ Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={input}
-          onChangeText={setInput}
-          placeholder="Type your message..."
-          placeholderTextColor="#aaa"
-        />
-        <Button title="Send" onPress={sendMessage} color="#FFA500" />
-      </View>
+        </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1E1E1E' },
-
-  lessonPanel: { paddingVertical: 12, paddingHorizontal: 8, backgroundColor: '#1E1E1E', flexDirection: 'row' },
-
-  lessonButton: {
-    width: 90,
-    height: 100,
-    borderRadius: 16,
-    padding: 10,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  unlockedLesson: {
-    backgroundColor: '#FFA500',
-  },
-  lockedLesson: {
-    backgroundColor: '#444',
-  },
-  lessonNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  lessonText: {
-    fontSize: 12,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  lockIcon: {
-    fontSize: 16,
-    marginTop: 4,
-  },
-
-  chatContainer: { flex: 1, padding: 10 },
-
-  message: { padding: 10, borderRadius: 8, marginVertical: 5, maxWidth: '80%' },
-  userMessage: { backgroundColor: '#FFA500', alignSelf: 'flex-end' },
-  assistantMessage: { backgroundColor: '#444', alignSelf: 'flex-start' },
-  messageText: { color: '#fff' },
-
-  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 10 },
-  input: { flex: 1, borderColor: '#555', borderWidth: 1, borderRadius: 8, padding: 10, color: '#fff', marginRight: 5 },
+    container: { flex: 1, backgroundColor: '#121212' },
+    setupContainer: {
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+    },
+    setupTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 10,
+    },
+    pickerContainer: {
+        backgroundColor: '#333',
+        borderRadius: 8,
+        marginBottom: 10,
+        ...Platform.select({
+            ios: {
+                padding: 0,
+            },
+            android: {
+                paddingHorizontal: 10,
+            }
+        })
+    },
+    picker: {
+        color: '#fff',
+        height: Platform.OS === 'ios' ? 120 : 50,
+    },
+    pickerItem: {
+        color: '#fff',
+        height: 120,
+    },
+    lessonInput: {
+        backgroundColor: '#333',
+        borderRadius: 8,
+        padding: 12,
+        color: '#fff',
+        fontSize: 16,
+    },
+    chatScrollView: {
+        flex: 1,
+        padding: 10,
+    },
+    messageBubble: {
+        marginVertical: 5,
+        padding: 12,
+        borderRadius: 12,
+        maxWidth: '80%',
+    },
+    userBubble: {
+        alignSelf: 'flex-end',
+        backgroundColor: '#FFA500',
+    },
+    assistantBubble: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#444',
+    },
+    messageText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        padding: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#333',
+        alignItems: 'center',
+    },
+    input: {
+        flex: 1,
+        backgroundColor: '#333',
+        borderRadius: 20,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        color: '#fff',
+        marginRight: 10,
+        fontSize: 16,
+    },
+    sendButton: {
+        backgroundColor: '#FFA500',
+        borderRadius: 25,
+        width: 50,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
 
 export default AiTutorScreen;

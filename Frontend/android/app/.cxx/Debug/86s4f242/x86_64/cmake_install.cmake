@@ -56,6 +56,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86_64/rnscreens_autolinked_build/cmake_install.cmake")
   include("C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86_64/rnsvg_autolinked_build/cmake_install.cmake")
   include("C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86_64/RNVectorIconsSpec_autolinked_build/cmake_install.cmake")
+  include("C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86_64/RNCWebViewSpec_autolinked_build/cmake_install.cmake")
 
 endif()
 

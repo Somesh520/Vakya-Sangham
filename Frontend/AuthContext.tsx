@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import api from './api';
 
-// --- FIXED: User interface
+// --- User Interface ---
 export interface User {
   _id: string;
   fullname: string;
@@ -11,8 +11,9 @@ export interface User {
   role: 'student' | 'teacher' | 'admin';
   isOnboarded: boolean;
   profileImageURL?: string;
-  token: string; // JWT token for auth
-  enrolledCourses: string[]; // array of course IDs
+  token: string;
+  enrolledCourses: string[];
+  providerId?: 'password' | 'google.com';
 }
 
 interface AuthState {
@@ -23,10 +24,11 @@ interface AuthState {
 }
 
 export interface AuthContextType extends AuthState {
-  signIn: (token: string, userData: User) => Promise<void>;
+  signIn: (token: string, userData: Omit<User, 'token'>, providerId: 'password' | 'google.com') => Promise<void>;
   signOut: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => void;
   setDataDirty: (isDirty: boolean) => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;  // ✅ Added
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,14 +56,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (token && userDataJson) {
           const userFromStorage: User = JSON.parse(userDataJson);
-
-          // Ensure token is included in user object
-          const userWithToken = { ...userFromStorage, token };
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
           setAuthState({
             userToken: token,
-            user: userWithToken,
+            user: userFromStorage,
             isLoading: false,
             isDataDirty: true,
           });
@@ -76,21 +74,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     bootstrapAsync();
   }, []);
 
-  const signIn = useCallback(async (token: string, userData: User) => {
-    const userWithToken = { ...userData, token }; // Include token in user object
+  // ✅ signIn
+  const signIn = useCallback(async (token: string, userData: Omit<User, 'token'>, providerId: 'password' | 'google.com') => {
+    const fullUser: User = { ...userData, token, providerId };
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setAuthState({ userToken: token, user: fullUser, isLoading: false, isDataDirty: true });
 
-    setAuthState({ userToken: token, user: userWithToken, isLoading: false, isDataDirty: true });
     await AsyncStorage.setItem('userToken', token);
-    await AsyncStorage.setItem('userData', JSON.stringify(userWithToken));
+    await AsyncStorage.setItem('userData', JSON.stringify(fullUser));
   }, []);
 
+  // ✅ signOut
   const signOut = useCallback(async () => {
     delete api.defaults.headers.common['Authorization'];
     await AsyncStorage.multiRemove(['userToken', 'userData']);
     setAuthState({ userToken: null, user: null, isLoading: false, isDataDirty: true });
   }, []);
 
+  // ✅ updateUser
   const updateUser = useCallback((updatedData: Partial<User>) => {
     setAuthState(currentState => {
       if (!currentState.user) return currentState;
@@ -100,9 +101,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  // ✅ setDataDirty
   const setDataDirty = useCallback((isDirty: boolean) => {
     setAuthState(prevState => ({ ...prevState, isDataDirty: isDirty }));
   }, []);
+
+  // ✅ changePassword API call
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    if (!authState.userToken) throw new Error('Not authenticated');
+
+    await api.post("/user/auth/changePassword", {
+      currentPassword,
+      newPassword,
+    });
+  }, [authState.userToken]);
 
   const contextValue = useMemo(() => ({
     ...authState,
@@ -110,7 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
     updateUser,
     setDataDirty,
-  }), [authState, signIn, signOut, updateUser, setDataDirty]);
+    changePassword,
+  }), [authState, signIn, signOut, updateUser, setDataDirty, changePassword]);
 
   if (authState.isLoading) {
     return (

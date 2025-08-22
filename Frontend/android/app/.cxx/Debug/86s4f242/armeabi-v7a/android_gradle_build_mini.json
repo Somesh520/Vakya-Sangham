@@ -4,6 +4,7 @@
     "C:\\project\\Frontend\\node_modules\\@react-native-community\\datetimepicker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\@react-native-google-signin\\google-signin\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\@react-native-picker\\picker\\android\\src\\main\\jni\\CMakeLists.txt",
+    "C:\\project\\Frontend\\node_modules\\react-native-document-picker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-gesture-handler\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-image-picker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-reanimated\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
@@ -11,6 +12,7 @@
     "C:\\project\\Frontend\\node_modules\\react-native-screens\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-svg\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-vector-icons\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
+    "C:\\project\\Frontend\\node_modules\\react-native-webview\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native\\ReactAndroid\\cmake-utils\\default-app-setup\\CMakeLists.txt"
   ],
   "cleanCommandsComponents": [
@@ -33,11 +35,6 @@
       "abi": "armeabi-v7a",
       "runtimeFiles": []
     },
-    "react_codegen_rnreanimated::@8afabad14bfffa3f8b9a": {
-      "artifactName": "react_codegen_rnreanimated",
-      "abi": "armeabi-v7a",
-      "runtimeFiles": []
-    },
     "react_codegen_safeareacontext::@7984cd80db47aa7b952a": {
       "artifactName": "react_codegen_safeareacontext",
       "abi": "armeabi-v7a",
@@ -53,20 +50,10 @@
       "abi": "armeabi-v7a",
       "runtimeFiles": []
     },
-    "react_codegen_RNImagePickerSpec::@f66ee9a2efecfb28bee4": {
-      "artifactName": "react_codegen_RNImagePickerSpec",
+    "react_codegen_RNCWebViewSpec::@eb48929f9f7453740a6c": {
+      "artifactName": "react_codegen_RNCWebViewSpec",
       "abi": "armeabi-v7a",
       "runtimeFiles": []
-    },
-    "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
-      "artifactName": "react_codegen_rnscreens",
-      "abi": "armeabi-v7a",
-      "output": "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\armeabi-v7a\\libreact_codegen_rnscreens.so",
-      "runtimeFiles": [
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\1d221509c521a46e74f6572064742339\\transformed\\react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\1d221509c521a46e74f6572064742339\\transformed\\react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\b6a6ccfe82730aba80016e7d9940f54a\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so"
-      ]
     },
     "react_codegen_RNDateTimePickerCGen::@59b70ddc31ba2f8ef1d2": {
       "artifactName": "react_codegen_RNDateTimePickerCGen",
@@ -87,6 +74,11 @@
         "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\1d221509c521a46e74f6572064742339\\transformed\\react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so"
       ]
     },
+    "react_codegen_rndocumentpicker::@1e246c1f1267e461f98b": {
+      "artifactName": "react_codegen_rndocumentpicker",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
     "react_codegen_rnsvg::@4f40eb209d0c0b4a3b65": {
       "artifactName": "react_codegen_rnsvg",
       "abi": "armeabi-v7a",
@@ -106,6 +98,26 @@
       "artifactName": "react_codegen_rnasyncstorage",
       "abi": "armeabi-v7a",
       "runtimeFiles": []
+    },
+    "react_codegen_rnreanimated::@8afabad14bfffa3f8b9a": {
+      "artifactName": "react_codegen_rnreanimated",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "react_codegen_RNImagePickerSpec::@f66ee9a2efecfb28bee4": {
+      "artifactName": "react_codegen_RNImagePickerSpec",
+      "abi": "armeabi-v7a",
+      "runtimeFiles": []
+    },
+    "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
+      "artifactName": "react_codegen_rnscreens",
+      "abi": "armeabi-v7a",
+      "output": "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\armeabi-v7a\\libreact_codegen_rnscreens.so",
+      "runtimeFiles": [
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\1d221509c521a46e74f6572064742339\\transformed\\react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\1d221509c521a46e74f6572064742339\\transformed\\react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\b6a6ccfe82730aba80016e7d9940f54a\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so"
+      ]
     },
     "react_codegen_rnpicker::@e8bb2e9e833f47d0d516": {
       "artifactName": "react_codegen_rnpicker",

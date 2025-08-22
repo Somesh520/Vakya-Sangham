@@ -1,151 +1,235 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, SafeAreaView, FlatList,
-    TouchableOpacity, ActivityIndicator, Alert,
+  View, Text, StyleSheet, SafeAreaView, FlatList,
+  TouchableOpacity, ActivityIndicator, Alert, Image, ScrollView
 } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import api from '../api';
 import { useAuth } from '../AuthContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+// --- Type Definitions ---
+
+// Aapke Course Stack ke liye types
+type CourseStackParamList = {
+  CourseList: undefined;
+  CourseDetail: { courseId: string };
+  // Agar aapke paas video player screen hai to yahan add karein
+  // VideoPlayer: { lesson: Lesson };
+};
+
+// Is screen ke route ke liye type
+type CourseDetailScreenRouteProp = RouteProp<CourseStackParamList, 'CourseDetail'>;
+
+// Is screen ke navigation ke liye type
+type CourseDetailScreenNavigationProp = NativeStackNavigationProp<CourseStackParamList, 'CourseDetail'>;
 
 interface Lesson {
-    _id: string;
-    title: string;
-    duration: number;
+  _id: string;
+  title: string;
+  duration: number;
 }
 
 interface Course {
+  _id:string;
+  title: string;
+  description: string;
+  thumbnailURL: string;
+  instructor: { 
+    _id: string;
+    fullname: string 
+  };
+  modules: {
     _id: string;
     title: string;
-    description: string;
-    thumbnailURL: string;
-    instructor: { fullname: string };
     lessons: Lesson[];
-    price: number;
+  }[];
+  price: number;
 }
 
 const CourseDetailScreen = () => {
-    const { user, updateUser } = useAuth();
-    const route = useRoute();
-    const navigation = useNavigation();
-    const { courseId } = route.params as { courseId: string };
+  const { user, updateUser } = useAuth();
+  const route = useRoute<CourseDetailScreenRouteProp>();
+  const navigation = useNavigation<CourseDetailScreenNavigationProp>();
+  const { courseId } = route.params;
 
-    const [course, setCourse] = useState<Course | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [enrolled, setEnrolled] = useState(false);
-    const [enrolling, setEnrolling] = useState(false);
-    
-    const fetchCourseDetails = useCallback(async () => {
-        if (!courseId) return;
-        setLoading(true);
-        try {
-            const res = await api.get(`/api/${courseId}`);
-            if (res.data.success) {
-                setCourse(res.data.course);
-                const isUserEnrolled = user?.enrolledCourses?.includes(courseId) || false;
-                setEnrolled(isUserEnrolled);
-            }
-        } catch (err) {
-            console.error('Course fetch error:', err);
-            Alert.alert('Error', 'Failed to fetch course details.');
-        } finally {
-            setLoading(false);
-        }
-    }, [courseId, user]);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
-    useEffect(() => {
-        fetchCourseDetails();
-    }, [fetchCourseDetails]);
+  // Course details fetch karne ka function
+  const fetchCourseDetails = useCallback(async () => {
+    if (!courseId) return;
+    try {
+      const res = await api.get(`/api/${courseId}`);
+      if (res.data.success) {
+        const fetchedCourse = res.data.course;
+        setCourse(fetchedCourse);
 
-    const handleEnroll = async () => {
-        if (!course || !user) return;
-        setEnrolling(true);
-        try {
-            const res = await api.post('/api/enrollment/enroll', { courseId });
-            if (res.data.success) {
-                Alert.alert('Success', 'You are now enrolled in this course!');
-                setEnrolled(true);
-                updateUser({ enrolledCourses: res.data.enrolledCourses });
-            }
-        } catch (err: any) {
-            console.error('Enrollment error:', err.response?.data);
-            Alert.alert('Error', err.response?.data?.message || 'Enrollment failed');
-        } finally {
-            setEnrolling(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <SafeAreaView style={styles.center}>
-                <ActivityIndicator size="large" color="#FFA500" />
-            </SafeAreaView>
-        );
+        // Yahan check hoga ki user pehle se enrolled hai ya nahi
+        const isUserEnrolled = user?.enrolledCourses?.includes(fetchedCourse._id);
+        setEnrolled(!!isUserEnrolled);
+      }
+    } catch (err: any) {
+      console.error('Course fetch error:', err?.response?.data || err);
+      Alert.alert('Error', 'Failed to fetch course details.');
+    } finally {
+      setLoading(false);
     }
+  }, [courseId, user]);
 
-    if (!course) {
-        return (
-            <SafeAreaView style={styles.center}>
-                <Text>Course not found</Text>
-            </SafeAreaView>
-        );
+  useEffect(() => {
+    fetchCourseDetails();
+  }, [fetchCourseDetails]);
+
+  // Enroll karne ka function
+  const handleEnroll = async () => {
+    if (!course || !user) return;
+    setEnrolling(true);
+    try {
+      const res = await api.post('/api/enrollment/enroll', { courseId });
+      if (res.data.success) {
+        Alert.alert('Success!', 'You are now enrolled in this course.');
+        setEnrolled(true);
+        
+        // Auth context mein user ko update karein
+        const updatedEnrolledCourses = [...(user.enrolledCourses || []), course._id];
+        updateUser({ ...user, enrolledCourses: updatedEnrolledCourses });
+      }
+    } catch (err: any) {
+      console.error('Enrollment error:', err?.response?.data || err);
+      Alert.alert('Error', err?.response?.data?.message || 'Enrollment failed. Please try again.');
+    } finally {
+      setEnrolling(false);
     }
+  };
 
+  // Lesson par tap karne ka function
+  const handleLessonPress = (lesson: Lesson) => {
+    if (enrolled) {
+      // Yahan se aap video player screen par navigate kar sakte hain
+      // navigation.navigate('VideoPlayer', { lesson });
+      Alert.alert("Let's Learn!", `Playing: ${lesson.title}`);
+    } else {
+      Alert.alert("Enroll First", "Please enroll in the course to watch the lessons.");
+    }
+  };
+
+  if (loading) {
     return (
-        <SafeAreaView style={styles.container}>
-            <FlatList
-                data={course.lessons}
-                keyExtractor={(item) => item._id}
-                ListHeaderComponent={
-                    <View style={styles.content}>
-                        <Text style={styles.title}>{course.title}</Text>
-                        <Text style={styles.instructor}>by {course.instructor.fullname}</Text>
-                        <Text style={styles.description}>{course.description}</Text>
-                        <TouchableOpacity
-                            style={[styles.enrollButton, enrolled && styles.enrolledButton]}
-                            onPress={handleEnroll}
-                            disabled={enrolled || enrolling}
-                        >
-                            <Text style={styles.enrollText}>
-                                {enrolled
-                                    ? 'Enrolled'
-                                    : enrolling
-                                    ? 'Enrolling...'
-                                    : course.price > 0
-                                    ? `Buy ₹${course.price}`
-                                    : 'Enroll for Free'}
-                            </Text>
-                        </TouchableOpacity>
-                        <Text style={styles.sectionTitle}>Lessons</Text>
-                    </View>
-                }
-                renderItem={({ item, index }) => (
-                    <View style={styles.lessonItem}>
-                        <Text style={styles.lessonIndex}>{index + 1}.</Text>
-                        <Text style={styles.lessonTitle}>
-                            {item.title}
-                        </Text>
-                    </View>
-                )}
-                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-            />
-        </SafeAreaView>
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator size="large" color="#FFA500" />
+      </SafeAreaView>
     );
+  }
+
+  if (!course) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text>Sorry, course not found.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Course ke saare lessons ko ek flat list mein daal dein
+  const allLessons = course.modules.flatMap(module => module.lessons);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={allLessons}
+        keyExtractor={(item) => item._id}
+        ListHeaderComponent={
+          <>
+            <Image source={{ uri: course.thumbnailURL || 'https://placehold.co/400x250' }} style={styles.thumbnail} />
+            <View style={styles.headerContent}>
+              <Text style={styles.title}>{course.title}</Text>
+              <Text style={styles.instructor}>Created by {course.instructor.fullname}</Text>
+              <Text style={styles.description}>{course.description}</Text>
+            </View>
+            <View style={styles.lessonsHeader}>
+              <Text style={styles.sectionTitle}>What you'll learn</Text>
+            </View>
+          </>
+        }
+        renderItem={({ item, index }) => (
+          <TouchableOpacity 
+            style={styles.lessonItem}
+            onPress={() => handleLessonPress(item)}
+          >
+            <View style={styles.lessonNumberContainer}>
+                <Text style={styles.lessonIndex}>{index + 1}</Text>
+            </View>
+            <Text style={styles.lessonTitle}>{item.title}</Text>
+            {!enrolled && <Ionicons name="lock-closed" size={20} color="#BDBDBD" />}
+          </TouchableOpacity>
+        )}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      />
+      
+      {/* --- Enroll Button (Sticky at the bottom) --- */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.enrollButton, (enrolled || enrolling) && styles.enrolledButton]}
+          onPress={handleEnroll}
+          disabled={enrolled || enrolling}
+        >
+          {enrolling ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.enrollText}>
+              {enrolled
+                ? '✓ Enrolled'
+                : course.price > 0
+                ? `Buy Now for ₹${course.price}`
+                : 'Enroll for Free'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F6F5F2' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    content: { paddingTop: 20 },
-    title: { fontSize: 24, fontWeight: 'bold', color: '#212121', marginBottom: 4 },
-    instructor: { fontSize: 16, color: '#616161', marginBottom: 12 },
-    description: { fontSize: 16, color: '#424242', lineHeight: 24, marginBottom: 15 },
-    enrollButton: { backgroundColor: '#FFA500', paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginVertical: 15, elevation: 2 },
-    enrolledButton: { backgroundColor: '#BDBDBD' },
-    enrollText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    sectionTitle: { fontSize: 20, fontWeight: 'bold', marginTop: 20, marginBottom: 10, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 20 },
-    lessonItem: { flexDirection: 'row', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee', alignItems: 'center' },
-    lessonIndex: { width: 30, fontSize: 16, color: '#666' },
-    lessonTitle: { flex: 1, fontSize: 16, color: '#333' },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  thumbnail: { width: '100%', height: 220 },
+  headerContent: { padding: 20 },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#121212', marginBottom: 5 },
+  instructor: { fontSize: 16, color: '#555', marginBottom: 15 },
+  description: { fontSize: 16, color: '#424242', lineHeight: 24 },
+  lessonsHeader: { paddingHorizontal: 20, marginTop: 10 },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#121212', borderTopWidth: 1, borderTopColor: '#EFEFEF', paddingTop: 20, marginBottom: 10 },
+  lessonItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#EFEFEF' },
+  lessonNumberContainer: { width: 30, alignItems: 'center', justifyContent: 'center'},
+  lessonIndex: { fontSize: 16, color: '#666' },
+  lessonTitle: { flex: 1, fontSize: 16, color: '#333', marginLeft: 10 },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#EFEFEF',
+  },
+  enrollButton: { 
+    backgroundColor: '#FFA500', 
+    paddingVertical: 15, 
+    borderRadius: 12, 
+    alignItems: 'center', 
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  enrolledButton: { backgroundColor: '#4CAF50' }, // Green color for enrolled
+  enrollText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });
 
 export default CourseDetailScreen;

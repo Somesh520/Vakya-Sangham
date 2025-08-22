@@ -1,15 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
-import { useAuth } from '../AuthContext'; // ✅ पाथ को सही करें
+import { useAuth } from '../AuthContext'; 
 import { useNavigation } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; // ✅ FIX 1: इसे इम्पोर्ट करें
-import { AdminTabParamList } from '../AdminNavigator'; // ✅ FIX 1: इसे इम्पोर्ट करें
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; 
+import { AdminTabParamList } from '../AdminNavigator';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
-// ✅ FIX 1: नेविगेशन के टाइप को Tab Navigator के अनुसार बदलें
 type SettingsNavigationProp = BottomTabNavigationProp<AdminTabParamList, 'Settings'>;
 
-// हेल्पर कंपोनेंट: हर सेटिंग आइटम के लिए
+
 const SettingsItem: React.FC<{ label: string; icon: string; onPress: () => void; color?: string }> = ({ label, icon, onPress, color = '#333' }) => (
     <TouchableOpacity style={styles.settingsItem} onPress={onPress}>
         <Ionicons name={icon as any} size={24} color={color} style={styles.settingsIcon} />

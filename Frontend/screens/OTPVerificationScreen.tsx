@@ -24,7 +24,7 @@ type Props = {
 
 const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
   const { email } = route.params;
-  const { signIn } = useAuth(); // Correctly get the signIn function
+  const { signIn } = useAuth();
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +38,9 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleOtpChange = (text: string, index: number) => {
     if (!/^\d*$/.test(text)) return;
     const newOtp = [...otp];
-    newOtp[index] = text.slice(-1);
+    newOtp[index] = text.slice(-1); // only last digit
     setOtp(newOtp);
+
     if (text && index < 5) {
       inputs.current[index + 1]?.focus();
     }
@@ -51,7 +52,6 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   };
 
-  // UPDATED: This function now correctly handles the state change
   const handleVerifyOtp = async () => {
     const enteredOtp = otp.join('').trim();
     if (enteredOtp.length !== 6) {
@@ -63,17 +63,13 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
     setError(null);
 
     try {
-      // Your backend must return a token and user object on success
       const response = await api.post('/user/auth/verify-otp', {
         email: email.toLowerCase(),
         otp: enteredOtp,
       });
 
       const { token, user } = response.data;
-
       if (token && user) {
-        // Correct way: Sign the user in.
-        // This triggers the RootNavigator to switch from AuthStack to OnboardingStack.
         await signIn(token, user);
       } else {
         throw new Error('Token or user data not received from server.');
@@ -112,14 +108,14 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
           <TextInput
             key={index}
             style={styles.otpInput}
-            value={digit}
+            value={digit || ''} // ensure visible
             onChangeText={(text) => handleOtpChange(text, index)}
             onKeyPress={({ nativeEvent }) => {
               if (nativeEvent.key === 'Backspace') {
                 handleBackspace(index);
               }
             }}
-            keyboardType="number-pad"
+            keyboardType="numeric"
             maxLength={1}
             ref={(ref) => {
               inputs.current[index] = ref;
@@ -146,7 +142,6 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -178,20 +173,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   otpInput: {
-    width: 45,
-    height: 55,
+    width: 50,
+    height: 60,
     borderWidth: 2,
     borderColor: '#DDD',
-    borderRadius: 8,
+    borderRadius: 10,
     textAlign: 'center',
     fontSize: 22,
     fontWeight: 'bold',
     backgroundColor: '#FFF',
+    color: '#333', // ✅ text color added
   },
   button: {
     backgroundColor: '#A7727D',
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
     marginTop: 20,
   },

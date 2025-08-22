@@ -1,7 +1,7 @@
 {
-  "name": "Yt",
-  "displayName": "Yt",
+  "name": "VakyaSangam",
+  "displayName": "VakyaSangam",
   "android": {
-    "package": "com.anonymous.yt"
+    "package": "com.anonymous.vakyasangam"
   }
 }

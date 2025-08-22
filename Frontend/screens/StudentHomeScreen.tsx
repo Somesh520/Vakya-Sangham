@@ -8,7 +8,7 @@ import api from '../api';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { AppTabParamList } from '../AppNavigator'; // Adjust path if needed
-import Ionicons from 'react-native-vector-icons/Ionicons';
+// ✅ REMOVED Ionicons import
 
 interface Course {
     _id: string;
@@ -30,9 +30,30 @@ const StudentHomeScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchData = useCallback(async () => { /* ... (fetchData logic remains the same) ... */ }, [user]);
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+
+            // Featured courses API call
+            const featuredRes = await api.get("/api/featured");
+            setFeaturedCourses(featuredRes.data?.courses || []);
+
+            // My learning (enrolled courses) API call
+            const myLearningRes = await api.get("/api/users/my-learning");
+            setMyLearning(myLearningRes.data?.courses || []);
+
+        } catch (error) {
+            console.error("Error fetching data:", error.response?.data || error.message);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, [user]);
+
+
     useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
     const onRefresh = useCallback(() => { setRefreshing(true); fetchData(); }, [fetchData]);
+
     const navigateToCourseDetail = (courseId: string, courseTitle: string) => {
         navigation.navigate('Courses', {
             screen: 'CourseDetail',
@@ -69,7 +90,7 @@ const StudentHomeScreen = () => {
                     <Text style={styles.learningTitle} numberOfLines={2}>{item.title}</Text>
                     <Text style={styles.learningInstructor}>by {item.instructor?.fullname || 'Instructor'}</Text>
                     <View style={styles.progressBarBackground}>
-                        <View style={[styles.progressBarForeground, { width: `${(item.progress || 0) * 100}%` }]} />
+                        <View style={[styles.progressBarForeground, { width: `${item.progress || 0}%` }]} />
                     </View>
                 </View>
             </TouchableOpacity>
@@ -82,8 +103,6 @@ const StudentHomeScreen = () => {
 
     const firstName = user?.fullname?.split(' ')[0] || 'Student';
     
-    // --- THIS IS THE FIX ---
-    // We define the sections of our screen in an array
     const screenSections = [
         { type: 'HEADER', key: 'header' },
         { type: 'FEATURED', key: 'featured', data: featuredCourses },
@@ -107,9 +126,7 @@ const StudentHomeScreen = () => {
                                         <Text style={styles.greeting}>Hello, {firstName}!</Text>
                                         <Text style={styles.subtitle}>What will you learn today?</Text>
                                     </View>
-                                    <TouchableOpacity>
-                                        <Ionicons name="search-outline" size={28} color="#333" />
-                                    </TouchableOpacity>
+                                    {/* ✅ REMOVED the TouchableOpacity for the search icon */}
                                 </View>
                             );
                         case 'FEATURED':
@@ -152,7 +169,6 @@ const StudentHomeScreen = () => {
     );
 };
 
-// ... (Your existing styles are fine)
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFFFFF' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },

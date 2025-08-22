@@ -3,18 +3,15 @@ import React, { useState, useMemo } from 'react';
 import { 
   StyleSheet, 
   ScrollView,
-  Alert,
-  Modal,
   View,
   FlatList,
   TouchableOpacity
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../types'; // Adjust path if necessary
+import { RootStackParamList } from '../types';
 import api from '../api';
 
-// --- Import components from React Native Paper ---
 import {
   Text,
   ProgressBar,
@@ -22,11 +19,12 @@ import {
   TextInput,
   Button,
   Searchbar,
-  List,
-  Divider
+  Divider,
+  Snackbar
 } from 'react-native-paper';
 
-import { View as MotiView } from 'moti';
+import { View as MotiView, AnimatePresence } from 'moti';
+import statesData from '../statesDistricts.json';
 
 type AboutYouRouteProp = RouteProp<RootStackParamList, 'AboutYou'>;
 type Props = {
@@ -39,251 +37,202 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const [education, setEducation] = useState('');
   const [state, setState] = useState('');
-  const [city, setCity] = useState('');
   const [district, setDistrict] = useState('');
-  const [isStateModalVisible, setIsStateModalVisible] = useState(false);
+  const [districts, setDistricts] = useState<string[]>([]);
+
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
+  const [step, setStep] = useState<'state' | 'district'>('state');
+
   const [searchQuery, setSearchQuery] = useState('');
+
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ visible: false, message: '' });
 
   const educationLevels = [
     { label: 'Primary School', value: 'Primary School' },
-    { label: 'High School', value: 'High School' },
+    { label: 'High school', value: 'High school' },
     { label: 'College', value: 'College' },
-    { label: 'Master\'s', value: 'Master\'s' },
+    { label: 'Master’s', value: 'Master’s' },
     { label: 'PhD', value: 'PhD' }
   ];
 
-  const allStates = [
-    "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
-    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", 
-    "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", 
-    "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", 
-    "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", 
-    "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
-  ];
-  
-  const filteredStates = useMemo(() => 
-    allStates.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())),
+  const allStates = Object.keys(statesData);
+
+  const filteredStates = useMemo(
+    () => allStates.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase())),
     [searchQuery]
   );
 
+  const filteredDistricts = useMemo(
+    () => districts.filter(d => d.toLowerCase().includes(searchQuery.toLowerCase())),
+    [searchQuery, districts]
+  );
+
+  const onStateSelect = (selectedState: string) => {
+    setState(selectedState);
+    setDistricts(statesData[selectedState as keyof typeof statesData] || []);
+    setDistrict('');
+    setSearchQuery('');
+    setStep('district');
+  };
+
+  const onDistrictSelect = (selectedDistrict: string) => {
+    setDistrict(selectedDistrict);
+    setIsLocationModalVisible(false);
+    setSearchQuery('');
+    setStep('state');
+  };
+
   const handleContinue = async () => {
-    if (!education || !state || !city.trim() || !district.trim()) {
-      Alert.alert('Missing Information', 'Please fill out all the fields to continue.');
+    if (!education || !state || !district.trim()) {
+      setSnackbar({ visible: true, message: 'Please fill out all the fields ✨' });
       return;
     }
 
     setLoading(true);
     try {
-      const onboardingData = {
-        dateOfBirth,
-        education, 
-        state, 
-        city: city.trim(),
-        District: district.trim(),
-      };
+      const onboardingData = { dateOfBirth, education, state, district: district.trim() };
       await api.patch('/user/info/onboarding', onboardingData);
       navigation.navigate('GetStarted');
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'An error occurred. Please try again.';
-      Alert.alert('Onboarding Failed', errorMessage);
+      const errorMessage = err.response?.data?.message || 'Something went wrong 🚧';
+      setSnackbar({ visible: true, message: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
-      <MotiView from={{opacity: 0}} animate={{opacity: 1}}>
-        <Text style={styles.title}>About you</Text>
-        <ProgressBar progress={0.5} color={styles.progressFill.backgroundColor} style={styles.progressBar} />
-      </MotiView>
-      
-      <MotiView from={{opacity: 0, translateX: -20}} animate={{opacity: 1, translateX: 0}} transition={{delay: 100}}>
-        <Text style={styles.sectionTitle}>What's your education level?</Text>
-        <RadioButton.Group onValueChange={newValue => setEducation(newValue)} value={education}>
-          {educationLevels.map((level) => (
-            <RadioButton.Item 
-              key={level.value}
-              label={level.label}
-              value={level.value}
-              labelStyle={styles.optionText}
-              color={styles.radioSelected.backgroundColor}
-              style={education === level.value ? styles.selectedOption : styles.option}
-            />
-          ))}
-        </RadioButton.Group>
-      </MotiView>
-      
-      <MotiView from={{opacity: 0, translateX: -20}} animate={{opacity: 1, translateX: 0}} transition={{delay: 200}}>
-        <Text style={styles.sectionTitle}>Where are you located?</Text>
-        
-        {/* --- Improved State Picker --- */}
-        <TouchableOpacity onPress={() => setIsStateModalVisible(true)}>
-            <View pointerEvents="none">
-                 <TextInput
-                    label="State"
-                    value={state}
-                    mode="outlined"
-                    editable={false}
-                    right={<TextInput.Icon icon="menu-down" />}
-                    style={styles.input}
-                 />
-            </View>
-        </TouchableOpacity>
-
-        <TextInput
-          label="City"
-          value={city}
-          onChangeText={setCity}
-          mode="outlined"
-          style={styles.input}
-          left={<TextInput.Icon icon="map-marker-outline" />}
-        />
-        
-        <TextInput
-          label="District"
-          value={district}
-          onChangeText={setDistrict}
-          mode="outlined"
-          style={styles.input}
-          left={<TextInput.Icon icon="map-marker-radius-outline" />}
-        />
-      </MotiView>
-      
-      <MotiView from={{opacity: 0, translateY: 20}} animate={{opacity: 1, translateY: 0}} transition={{delay: 300}}>
-        <Button
-          mode="contained"
-          onPress={handleContinue}
-          loading={loading}
-          disabled={loading}
-          style={styles.continueButton}
-          labelStyle={styles.continueButtonText}
-          buttonColor={styles.continueButton.backgroundColor}
-        >
-          {loading ? 'Saving...' : 'Continue'}
-        </Button>
-      </MotiView>
-
-      {/* --- State Selection Modal --- */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isStateModalVisible}
-        onRequestClose={() => setIsStateModalVisible(false)}
+    <>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.contentContainer} 
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Searchbar
-              placeholder="Search for a state"
-              onChangeText={setSearchQuery}
-              value={searchQuery}
-              style={styles.searchbar}
-            />
-            <FlatList
-              data={filteredStates}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <List.Item
-                  title={item}
-                  onPress={() => {
-                    setState(item);
-                    setIsStateModalVisible(false);
-                    setSearchQuery('');
-                  }}
+        <MotiView from={{opacity: 0, translateY: -20}} animate={{opacity: 1, translateY: 0}} transition={{type: "timing", duration: 600}}>
+          <Text style={styles.title}>About you</Text>
+          <ProgressBar progress={0.5} color={styles.progressFill.backgroundColor} style={styles.progressBar} />
+        </MotiView>
+
+        {/* Education */}
+        <MotiView from={{opacity: 0, translateX: -30}} animate={{opacity: 1, translateX: 0}} transition={{delay: 150}}>
+          <Text style={styles.sectionTitle}>What's your education level?</Text>
+          <RadioButton.Group onValueChange={setEducation} value={education}>
+            {educationLevels.map((level, i) => (
+              <MotiView key={level.value} from={{opacity: 0, scale: 0.9}} animate={{opacity: 1, scale: 1}} transition={{delay: 200 + i*80}}>
+                <RadioButton.Item 
+                  label={level.label}
+                  value={level.value}
+                  labelStyle={styles.optionText}
+                  color={styles.radioSelected.backgroundColor}
+                  style={education === level.value ? styles.selectedOption : styles.option}
                 />
-              )}
-              ItemSeparatorComponent={() => <Divider />}
-            />
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+              </MotiView>
+            ))}
+          </RadioButton.Group>
+        </MotiView>
+
+        {/* Location */}
+        <MotiView from={{opacity: 0, translateX: -30}} animate={{opacity: 1, translateX: 0}} transition={{delay: 400}}>
+          <Text style={styles.sectionTitle}>Where are you located?</Text>
+
+          <TouchableOpacity onPress={() => { setIsLocationModalVisible(true); setStep('state'); }}>
+            <View pointerEvents="none">
+              <TextInput label="State" value={state} mode="outlined" editable={false} right={<TextInput.Icon icon="menu-down" />} style={styles.input}/>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => {
+            if (!state) return setSnackbar({ visible: true, message: 'Select a state first ✨' });
+            setIsLocationModalVisible(true);
+            setStep('district');
+          }}>
+            <View pointerEvents="none">
+              <TextInput label="District" value={district} mode="outlined" editable={false} right={<TextInput.Icon icon="menu-down" />} style={styles.input}/>
+            </View>
+          </TouchableOpacity>
+        </MotiView>
+
+        {/* Continue Button */}
+        <MotiView from={{opacity: 0, translateY: 20}} animate={{opacity: 1, translateY: 0}} transition={{delay: 600}}>
+          <MotiView from={{scale: 1}} animate={{scale: [1,1.05,1]}} transition={{loop:true,type:'timing',duration:2000}}>
+            <Button mode="contained" onPress={handleContinue} loading={loading} disabled={loading} style={styles.continueButton} labelStyle={styles.continueButtonText} buttonColor={styles.continueButton.backgroundColor}>
+              {loading ? 'Saving...' : 'Continue'}
+            </Button>
+          </MotiView>
+        </MotiView>
+      </ScrollView>
+
+      {/* Location Modal */}
+      <AnimatePresence>
+        {isLocationModalVisible && (
+          <MotiView from={{opacity:0, translateY:50}} animate={{opacity:1, translateY:0}} exit={{opacity:0, translateY:50}} style={styles.bottomSheetContainer}>
+            <View style={styles.bottomSheetContent}>
+              <Searchbar 
+                placeholder={step === 'state' ? 'Search state...' : 'Search district...'}
+                onChangeText={setSearchQuery}
+                value={searchQuery}
+                style={styles.searchbar}
+              />
+
+              <FlatList
+                data={step === 'state' ? filteredStates : filteredDistricts}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => step === 'state' ? onStateSelect(item) : onDistrictSelect(item)}
+                    style={[styles.listItem,
+                      (step === 'state' && state === item) || (step === 'district' && district === item)
+                        ? styles.selectedListItem : null]}
+                  >
+                    <Text style={styles.listItemText}>{item}</Text>
+                    {((step === 'state' && state === item) || (step === 'district' && district === item)) && (
+                      <Text style={styles.checkmark}>✔</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <Divider />}
+              />
+
+              <Button mode="outlined" onPress={() => setIsLocationModalVisible(false)} style={styles.closeButton}>
+                Close
+              </Button>
+            </View>
+          </MotiView>
+        )}
+      </AnimatePresence>
+
+      {/* Snackbar */}
+      <Snackbar visible={snackbar.visible} onDismiss={() => setSnackbar({...snackbar,visible:false})} duration={2000} style={{backgroundColor:'#D87A33'}}>
+        {snackbar.message}
+      </Snackbar>
+    </>
   );
 };
 
-// Styles are adjusted for Paper components, using your color scheme
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5E8C7', 
-  },
-  contentContainer: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    marginTop: 30, // Adjusted margin for status bar
-    color: '#000000', 
-  },
-  progressBar: {
-    height: 5,
-    marginBottom: 30,
-    borderRadius: 2.5,
-  },
-  progressFill: {
-    backgroundColor: '#000000', 
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    marginTop: 20,
-    color: '#000000', 
-  },
-  option: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  selectedOption: {
-    backgroundColor: '#FEF3E8',
-    borderColor: '#D87A33',
-    borderWidth: 1.5,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#000000', 
-  },
-  radioSelected: {
-    backgroundColor: '#000000', // Color for the selected radio dot
-  },
-  input: {
-    marginBottom: 15,
-    backgroundColor: '#FFFFFF',
-  },
-  continueButton: {
-    paddingVertical: 8,
-    borderRadius: 25,
-    marginTop: 30,
-    backgroundColor: '#D87A33',
-  },
-  continueButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '90%',
-    maxHeight: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
-  },
-  searchbar: {
-    marginBottom: 10,
-  },
+  container: { flex: 1, backgroundColor: '#F5E8C7' },
+  contentContainer: { padding: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, marginTop: 30, color: '#000' },
+  progressBar: { height: 5, marginBottom: 30, borderRadius: 2.5 },
+  progressFill: { backgroundColor: '#000' },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, marginTop: 20, color: '#000' },
+  option: { backgroundColor: '#fff', borderRadius: 8, marginBottom: 10 },
+  selectedOption: { backgroundColor: '#FEF3E8', borderColor: '#D87A33', borderWidth: 1.5, borderRadius: 8, marginBottom: 10 },
+  optionText: { fontSize: 16, color: '#000' },
+  radioSelected: { backgroundColor: '#000' },
+  input: { marginBottom: 15, backgroundColor: '#fff' },
+  continueButton: { paddingVertical: 8, borderRadius: 25, marginTop: 30, backgroundColor: '#D87A33' },
+  continueButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  bottomSheetContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end', flex: 1 },
+  bottomSheetContent: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, maxHeight: '70%' },
+  listItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 10 },
+  selectedListItem: { backgroundColor: '#FEF3E8' },
+  listItemText: { fontSize: 16, color: '#000' },
+  checkmark: { fontSize: 16, color: '#D87A33', fontWeight: 'bold' },
+  closeButton: { marginTop: 12, borderColor: '#D87A33' },
+  searchbar: { marginBottom: 10 }
 });
 
 export default AboutYouScreen;
