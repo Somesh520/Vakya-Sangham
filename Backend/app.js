@@ -84,7 +84,9 @@ const loginLimiter = rateLimit({
 
 
 app.use('/user/auth/login', loginLimiter);
-
+app.get('/', (req, res) => {
+  res.status(200).json({ status: "ok", message: "Vakya Sangham server is up and running!" });
+});
 // ------------------- 🔐 Passport Setup -------------------
 app.use(passport.initialize());
 app.use(passport.session());

@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-  baseURL: 'http://10.0.2.2:3000', // <- yaha apna Render backend URL lagao
+  baseURL: 'https://vakya-sangham-62l7.onrender.com', // <- yaha apna Render backend URL lagao
   headers: {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache', // Disable caching

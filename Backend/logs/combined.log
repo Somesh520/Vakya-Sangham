@@ -6114,3 +6114,4 @@
 {"level":"info","message":"::ffff:127.0.0.1 - - [28/Aug/2025:14:19:08 +0000] \"POST /user/auth/forgot-password HTTP/1.1\" 200 38 \"-\" \"okhttp/4.12.0\"","timestamp":"2025-08-28 19:49:08"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [28/Aug/2025:14:20:37 +0000] \"POST /user/auth/forgot-password HTTP/1.1\" 404 28 \"-\" \"okhttp/4.12.0\"","timestamp":"2025-08-28 19:50:37"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [28/Aug/2025:14:20:56 +0000] \"POST /user/auth/forgot-password HTTP/1.1\" 200 38 \"-\" \"okhttp/4.12.0\"","timestamp":"2025-08-28 19:50:56"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [28/Aug/2025:14:37:40 +0000] \"POST /user/auth/forgot-password HTTP/1.1\" 200 38 \"-\" \"okhttp/4.12.0\"","timestamp":"2025-08-28 20:07:40"}
