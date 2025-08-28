@@ -9,7 +9,7 @@ const api = axios.create({
     Pragma: 'no-cache',
     Expires: '0',
   },
-  timeout: 10000, // Optional: 10s timeout
+  timeout: 60000, // Optional: 10s timeout
 });
 
 // Attach token to every request

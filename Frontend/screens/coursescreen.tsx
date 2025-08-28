@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -6,16 +6,21 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   StyleSheet,
-  TextInput 
+  TextInput,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  Dimensions
 } from 'react-native';
 import { useNavigation, useFocusEffect, NavigationProp } from '@react-navigation/native';
-import { Picker } from '@react-native-picker/picker';
 import api from '../api';
-import { useAuth } from '../AuthContext'; // ✅ 1. Import useAuth to get user data
+import { useAuth } from '../AuthContext'; 
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
+// --- Type Definitions ---
 type RootStackParamList = {
   CourseScreen: undefined;
-  CourseDetail: { courseId: string };
+  CourseDetail: { courseId: string; courseTitle?: string };
 };
 
 interface Course {
@@ -25,209 +30,246 @@ interface Course {
   thumbnailURL?: string;
   price: number;
   instructor?: { fullname?: string } | null;
-}
-
-interface Filters {
-  language?: string;
   level?: string;
+  language?: string;
 }
 
+const { width } = Dimensions.get('window');
+
+// --- Category Card Component ---
+const CategoryCard = ({ icon, label, value, isSelected, onSelect }) => (
+    <TouchableOpacity 
+        style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
+        onPress={() => onSelect(value)}
+    >
+        <Ionicons name={icon} size={28} color={isSelected ? '#FFFFFF' : '#4A90E2'} />
+        <Text style={[styles.categoryCardText, isSelected && styles.categoryCardTextSelected]}>{label}</Text>
+    </TouchableOpacity>
+);
+
+// --- Main Component ---
 const CourseScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { user } = useAuth(); // ✅ 2. Get the user object from your Auth Context
+  const { user, refreshUser } = useAuth(); 
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [query, setQuery] = useState<string>(''); 
-  const [activeFilters, setActiveFilters] = useState<Filters>({});
+  const [activeFilters, setActiveFilters] = useState<{ category?: string; level?: string }>({});
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCourses = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params: any = {};
-      if (query.trim()) params.q = query.trim();
-      if (activeFilters.language) params.language = activeFilters.language;
-      if (activeFilters.level) params.level = activeFilters.level;
-
-      const res = await api.get('/api/courses', { params });
-
-      if (res.data.success && res.data.courses.length > 0) {
-        const sanitized = res.data.courses.map((c: Course) => ({
-          ...c,
-          instructor: c.instructor || { fullname: 'Unknown Instructor' },
-          price: c.price ?? 0,
-        }));
-        setCourses(sanitized);
-      } else {
-        setCourses([]);
-        setError('No courses found with the selected criteria.');
-      }
-    } catch (err: any) {
-      console.error('Error fetching courses:', err.message);
-      setError('Failed to load courses. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [query, activeFilters]);
-
-  // useFocusEffect will re-run fetchCourses every time the screen is focused
   useFocusEffect(
     useCallback(() => {
-      fetchCourses();
-    }, [fetchCourses])
+      let isActive = true;
+
+      const loadData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          await refreshUser();
+
+          const params: any = {};
+          if (query.trim()) params.q = query.trim();
+          if (activeFilters.category) params.category = activeFilters.category;
+          if (activeFilters.level) params.level = activeFilters.level;
+
+          const res = await api.get('/api/', { params });
+
+          if (isActive) {
+            if (res.data.success && res.data.courses) {
+              setCourses(res.data.courses);
+            } else {
+              setCourses([]);
+            }
+          }
+        } catch (err: any) {
+          if (isActive) {
+            console.error('❌ Error fetching data:', err.message);
+            setError('Failed to load courses.');
+          }
+        } finally {
+          if (isActive) {
+            setLoading(false);
+          }
+        }
+      };
+
+      loadData();
+
+      return () => { isActive = false; };
+    }, [refreshUser, query, activeFilters])
   );
 
-  const handleNavigate = (courseId: string) => {
-    navigation.navigate('CourseDetail', { courseId });
+  const handleFilterSelect = (type: 'category' | 'level', value: string | undefined) => {
+      setActiveFilters(prev => {
+          const newFilterValue = prev[type] === value ? undefined : value;
+          return { ...prev, [type]: newFilterValue };
+      });
+  };
+
+  const handleNavigate = (courseId: string, courseTitle: string) => {
+    navigation.navigate('CourseDetail', { courseId, courseTitle });
   };
 
   const renderCourseItem = ({ item }: { item: Course }) => {
-    // ✅ 3. Check if the user is enrolled in this specific course
-    const isEnrolled = user?.enrolledCourses?.includes(item._id);
+    const isEnrolled = user?.enrolledCourses?.some(id => id === item._id) || false;
 
     return (
       <TouchableOpacity 
-        style={[styles.card, isEnrolled && styles.enrolledCard]} // Apply different style if enrolled
-        onPress={() => handleNavigate(item._id)}
-        disabled={isEnrolled} // Disable the button if enrolled
+        style={styles.card}
+        onPress={() => handleNavigate(item._id, item.title)}
       >
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.instructor}>by {item.instructor?.fullname}</Text>
-        
-        {/* ✅ 4. Show a badge if enrolled, otherwise show the price */}
-        {isEnrolled ? (
-          <View style={styles.enrolledBadge}>
-            <Text style={styles.enrolledText}>✓ Enrolled</Text>
-          </View>
-        ) : (
-          <Text style={styles.price}>
-            {item.price > 0 ? `₹${item.price}` : 'Free'}
-          </Text>
-        )}
+        <Image 
+            source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E2E8F0/333?text=Course' }} 
+            style={styles.cardThumbnail} 
+        />
+        <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+                <Text style={styles.levelPill}>{item.level || 'All Levels'}</Text>
+            </View>
+            <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.instructor}>by {item.instructor?.fullname || 'Vakya Sangham'}</Text>
+            <View style={styles.cardFooter}>
+                {isEnrolled ? (
+                  <View style={styles.enrolledBadge}>
+                    <Ionicons name="checkmark-circle" size={16} color="#28a745" />
+                    <Text style={styles.enrolledText}>Enrolled</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.price}>
+                    {item.price > 0 ? `₹${item.price}` : 'Free'}
+                  </Text>
+                )}
+            </View>
+        </View>
       </TouchableOpacity>
     );
   };
+  
+  const categoryFilters = [
+      { label: 'Tech', value: 'tech', icon: 'laptop-outline' },
+      { label: 'Business', value: 'business', icon: 'briefcase-outline' },
+      { label: 'Creative', value: 'creative', icon: 'color-palette-outline' },
+      { label: 'Language', value: 'language', icon: 'language-outline' },
+  ];
+  const levelFilters = [
+      { label: 'Beginner', value: 'beginner' },
+      { label: 'Intermediate', value: 'intermediate' },
+      { label: 'Advanced', value: 'advanced' },
+  ];
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#FFA500" />
-      </View>
-    );
-  }
+  const renderHeader = () => (
+    <>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+            <Ionicons name="search-outline" size={22} color="#888" style={styles.searchIcon} />
+            <TextInput
+                style={styles.searchBar}
+                placeholder="Search for anything..."
+                placeholderTextColor="#888"
+                value={query}
+                onChangeText={setQuery}
+            />
+        </View>
+
+        {/* Category Filters */}
+        <View>
+            <Text style={styles.sectionTitle}>Categories</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollView}>
+                <CategoryCard icon="grid-outline" label="All" value={undefined} isSelected={!activeFilters.category} onSelect={() => handleFilterSelect('category', undefined)} />
+                {categoryFilters.map(filter => (
+                    <CategoryCard key={filter.value} {...filter} isSelected={activeFilters.category === filter.value} onSelect={handleFilterSelect.bind(null, 'category')} />
+                ))}
+            </ScrollView>
+        </View>
+        <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Results</Text>
+    </>
+  );
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search courses..."
-        value={query}
-        onChangeText={setQuery}
-      />
-
-      <View style={styles.filterRow}>
-        <View style={styles.pickerBox}>
-          <Text style={styles.filterLabel}>Language:</Text>
-          <Picker
-            selectedValue={activeFilters.language}
-            onValueChange={(val) => 
-              setActiveFilters((prev) => ({ ...prev, language: val || undefined }))
-            }
-            style={styles.picker}
-          >
-            <Picker.Item label="All" value="" />
-            <Picker.Item label="Hindi" value="hindi" />
-            <Picker.Item label="English" value="english" />
-          </Picker>
-        </View>
-
-        <View style={styles.pickerBox}>
-          <Text style={styles.filterLabel}>Level:</Text>
-          <Picker
-            selectedValue={activeFilters.level}
-            onValueChange={(val) => 
-              setActiveFilters((prev) => ({ ...prev, level: val || undefined }))
-            }
-            style={styles.picker}
-          >
-            <Picker.Item label="All" value="" />
-            <Picker.Item label="Beginner" value="beginner" />
-            <Picker.Item label="Intermediate" value="intermediate" />
-            <Picker.Item label="Advanced" value="advanced" />
-          </Picker>
-        </View>
-      </View>
-
-      {error && !loading ? (
-        <View style={styles.center}>
-          <Text style={styles.error}>{error}</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={courses}
-          keyExtractor={(item) => item._id}
-          renderItem={renderCourseItem} // Use the new render function
-          ListEmptyComponent={
+    <SafeAreaView style={styles.container}>
+        {loading ? (
             <View style={styles.center}>
-              <Text style={styles.empty}>No courses available.</Text>
+                <ActivityIndicator size="large" color="#4A90E2" />
+                <Text style={styles.loadingText}>Finding Courses...</Text>
             </View>
-          }
-        />
-      )}
-    </View>
+        ) : error ? (
+            <View style={styles.center}>
+                <Ionicons name="alert-circle-outline" size={60} color="#E53E3E" />
+                <Text style={styles.error}>{error}</Text>
+            </View>
+        ) : (
+            <FlatList
+                data={courses}
+                keyExtractor={(item) => item._id}
+                renderItem={renderCourseItem}
+                ListHeaderComponent={renderHeader}
+                contentContainerStyle={{ paddingTop: 10 }}
+                ListEmptyComponent={
+                    <View style={styles.center}>
+                        <Ionicons name="cloud-offline-outline" size={60} color="#A0AEC0" />
+                        <Text style={styles.empty}>No Courses Found</Text>
+                        <Text style={styles.emptySub}>Try adjusting your search or filters.</Text>
+                    </View>
+                }
+            />
+        )}
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: '#F6F5F2' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  searchBar: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    fontSize: 16,
-    elevation: 2,
-  },
-  filterRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  pickerBox: { flex: 1, marginHorizontal: 5, backgroundColor: '#fff', borderRadius: 8, elevation: 2, justifyContent: 'center' },
-  filterLabel: { fontSize: 12, fontWeight: '600', marginLeft: 10, color: '#555' },
-  picker: { height: 50, width: '100%' },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  loadingText: { marginTop: 10, fontSize: 16, color: '#4A90E2', fontWeight: '600' },
+  
+  // Search
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F7F8FA', borderRadius: 12, marginHorizontal: 20, marginTop: 10, paddingHorizontal: 15 },
+  searchIcon: { marginRight: 10 },
+  searchBar: { flex: 1, height: 50, fontSize: 16, color: '#1A202C' },
+  
+  // Filters
+  sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#1A202C', marginHorizontal: 20, marginTop: 25, marginBottom: 15 },
+  filterScrollView: { paddingHorizontal: 20, paddingBottom: 25 },
+  categoryCard: { width: 100, height: 100, backgroundColor: '#F0F5FF', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  categoryCardSelected: { backgroundColor: '#4A90E2' },
+  categoryCardText: { fontSize: 14, color: '#4A90E2', fontWeight: 'bold', marginTop: 8 },
+  categoryCardTextSelected: { color: '#FFFFFF' },
+
+  // Card
   card: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginVertical: 8,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: '#9DA3B7',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
   },
-  // ✅ 5. New styles for enrolled courses
-  enrolledCard: {
-    backgroundColor: '#F0FFF4', // A light green background
-    borderColor: '#4CAF50',
-    borderWidth: 1,
+  cardThumbnail: {
+      width: '100%',
+      height: 180,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
   },
-  enrolledBadge: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    alignSelf: 'flex-start',
-  },
-  enrolledText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: '#333' },
-  instructor: { fontSize: 14, color: '#616161', marginBottom: 10 },
-  price: { fontSize: 16, fontWeight: 'bold', color: '#FFA500', alignSelf: 'flex-end' },
-  error: { fontSize: 16, color: 'red', textAlign: 'center' },
-  empty: { fontSize: 16, color: '#666', textAlign: 'center' },
+  cardContent: { padding: 15 },
+  cardHeader: { flexDirection: 'row', marginBottom: 10 },
+  levelPill: { backgroundColor: '#EBF8FF', color: '#2C5282', fontWeight: 'bold', fontSize: 12, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12, overflow: 'hidden' },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#1A202C', marginBottom: 5 },
+  instructor: { fontSize: 14, color: '#718096', marginBottom: 15 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  price: { fontSize: 20, fontWeight: 'bold', color: '#4A90E2' },
+  
+  // Enrolled Badge
+  enrolledBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E6FFFA', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 15 },
+  enrolledText: { color: '#28a745', fontWeight: 'bold', fontSize: 14, marginLeft: 5 },
+  
+  // States
+  error: { fontSize: 18, color: '#E53E3E', textAlign: 'center', fontWeight: '600', marginTop: 15 },
+  empty: { fontSize: 20, color: '#4A5568', marginTop: 15, fontWeight: 'bold' },
+  emptySub: { fontSize: 14, color: '#A0AEC0', marginTop: 5, textAlign: 'center' },
 });
 
 export default CourseScreen;

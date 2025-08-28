@@ -19,6 +19,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // ✅ Naya state password ko show/hide karne ke liye
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   const { signIn } = useAuth();
   const { colors } = useTheme();
 
@@ -45,7 +49,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const { token, user: backendUser } = response.data;
       
       if (token && backendUser) {
-        // ✅ FIX: Map backend 'id' to frontend '_id'
         const userForContext = {
             ...backendUser,
             _id: backendUser.id 
@@ -80,7 +83,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const { token: jwtToken, user: backendUser } = response.data;
 
       if (jwtToken && backendUser) {
-        // ✅ FIX: Map backend 'id' to frontend '_id' for Google sign-in as well
         const userForContext = {
             ...backendUser,
             _id: backendUser.id
@@ -117,16 +119,36 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           left={<TextInput.Icon icon="email-outline" />}
           error={!!error}
         />
+        
+        {/* ✅ Password field ko update kiya gaya hai */}
         <TextInput
           label="Password"
           value={password}
           onChangeText={(text) => { setPassword(text); setError(null); }}
           style={styles.input}
-          secureTextEntry
+          secureTextEntry={!isPasswordVisible} // State se control ho raha hai
           mode="outlined"
           left={<TextInput.Icon icon="lock-outline" />}
+          // Icon ko show/hide karne ke liye right prop add kiya gaya hai
+          right={
+            <TextInput.Icon 
+              icon={isPasswordVisible ? 'eye-off' : 'eye'}
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            />
+          }
           error={!!error}
         />
+        
+        <Button 
+          mode="text" 
+          onPress={() => navigation.navigate('ForgotPassword')}
+          style={styles.forgotPasswordButton}
+          labelStyle={styles.forgotPasswordLabel}
+          disabled={loading || googleLoading}
+        >
+          Forgot Password?
+        </Button>
+        
         <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>
       </MotiView>
 
@@ -157,6 +179,14 @@ const styles = StyleSheet.create({
   divider: { textAlign: 'center', marginVertical: 20, color: '#9E9EE0', fontSize: 14 },
   linkButton: { marginTop: 15 },
   errorText: { fontSize: 14, textAlign: 'center' },
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginTop: -5,
+    marginBottom: 10,
+  },
+  forgotPasswordLabel: {
+    fontSize: 14,
+  },
 });
 
 export default LoginScreen;

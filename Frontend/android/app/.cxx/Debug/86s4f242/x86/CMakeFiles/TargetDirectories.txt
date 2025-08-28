@@ -22,6 +22,9 @@ C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/rngesturehandler_codegen
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/edit_cache.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/RNPermissionsSpec_autolinked_build/CMakeFiles/react_codegen_RNPermissionsSpec.dir
+C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/RNPermissionsSpec_autolinked_build/CMakeFiles/edit_cache.dir
+C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/RNPermissionsSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/rnreanimated_autolinked_build/CMakeFiles/react_codegen_rnreanimated.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/rnreanimated_autolinked_build/CMakeFiles/edit_cache.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/x86/rnreanimated_autolinked_build/CMakeFiles/rebuild_cache.dir

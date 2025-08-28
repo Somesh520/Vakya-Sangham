@@ -1,352 +1,293 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from 'react';
+
 import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  Image,
-  TouchableOpacity,
-} from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import DocumentPicker from "react-native-document-picker";
-import { launchImageLibrary } from "react-native-image-picker";
-import api from "../../api"; // <-- your axios instance with token interceptor
+    View, Text, StyleSheet, ScrollView, Alert, Image,
+    TouchableOpacity, PermissionsAndroid, Platform, ActivityIndicator, SafeAreaView
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import DocumentPicker from 'react-native-document-picker';
+import { launchImageLibrary, Asset } from 'react-native-image-picker';
+import api from '../../api';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useAuth } from '../../AuthContext'; // To get the user's name for the header
+
+// --- Custom Components for a better UI ---
+
+const InputField = ({ label, icon, value, onChangeText, placeholder, multiline = false, keyboardType = 'default' }) => (
+    <View style={styles.inputContainer}>
+        <Ionicons name={icon} size={22} color="#A0AEC0" style={styles.inputIcon} />
+        <TextInput
+            style={[styles.input, multiline && styles.multilineInput]}
+            placeholder={placeholder}
+            placeholderTextColor="#A0AEC0"
+            value={value}
+            onChangeText={onChangeText}
+            multiline={multiline}
+            keyboardType={keyboardType}
+        />
+    </View>
+);
+
+const PickerField = ({ label, icon, selectedValue, onValueChange, items }) => (
+    <View style={styles.inputContainer}>
+        <Ionicons name={icon} size={22} color="#A0AEC0" style={styles.inputIcon} />
+        <Picker
+            selectedValue={selectedValue}
+            onValueChange={onValueChange}
+            style={styles.picker}
+            dropdownIconColor="#4A90E2"
+        >
+            {items.map(item => <Picker.Item key={item.value} label={item.label} value={item.value} />)}
+        </Picker>
+    </View>
+);
+
+const SectionHeader = ({ title }) => (
+    <Text style={styles.sectionTitle}>{title}</Text>
+);
+
+// --- Main Component ---
 
 export default function EditProfileScreen() {
-  const [loading, setLoading] = useState(false);
+    const { user: authUser, refreshUser } = useAuth(); // Get user for header and refresh function
+    const [loading, setLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
 
-  // Profile fields
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [education, setEducation] = useState("");
-  const [state, setState] = useState("");
-  const [district, setDistrict] = useState("");
-  const [goal, setGoal] = useState("");
-  const [contentPreference, setContentPreference] = useState("");
-  const [timeAvailability, setTimeAvailability] = useState("");
-  const [level, setLevel] = useState("");
-  const [bio, setBio] = useState("");
-  const [socialLinks, setSocialLinks] = useState("");
-  const [preferredLanguage, setPreferredLanguage] = useState("");
-  const [interest, setInterest] = useState("");
-  const [hasTakenOnlineCourses, setHasTakenOnlineCourses] = useState("false");
+    // --- Profile State ---
+    const [formData, setFormData] = useState({
+        dateOfBirth: "",
+        education: "",
+        state: "",
+        district: "",
+        goal: "",
+        contentPreference: "",
+        timeAvailability: "",
+        level: "",
+        bio: "",
+        socialLinks: "",
+        preferredLanguage: "",
+        interest: "",
+        hasTakenOnlineCourses: "false",
+    });
+    const [profileImage, setProfileImage] = useState<Asset | null>(null);
+    const [resume, setResume] = useState<any>(null);
+    const [existingProfileImageUrl, setExistingProfileImageUrl] = useState<string | undefined>(undefined);
 
-  const [profileImage, setProfileImage] = useState<any>(null);
-  const [resume, setResume] = useState<any>(null);
-
-  useEffect(() => {
-    // Fetch user data to prefill form
-    const fetchUser = async () => {
-      try {
-        const res = await api.get("/user/info/me");
-        const u = res.data.user;
-        setDateOfBirth(u.dateOfBirth || "");
-        setEducation(u.education || "");
-        setState(u.state || "");
-        setDistrict(u.district || "");
-        setGoal(u.goal || "");
-        setContentPreference(u.contentPreference || "");
-        setTimeAvailability(u.timeAvailability || "");
-        setLevel(u.level || "");
-        setBio(u.bio || "");
-        setSocialLinks(u.socialLinks || "");
-        setPreferredLanguage(u.preferredLanguage || "");
-        setInterest(u.interest || "");
-        setHasTakenOnlineCourses(u.hasTakenOnlineCourses ? "true" : "false");
-      } catch (err) {
-        console.log("Error fetching user:", err);
-      }
+    // --- Data Fetching ---
+    React.useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                setIsFetching(true);
+                const res = await api.get("/user/info/me");
+                const u = res.data.user;
+                setFormData({
+                    dateOfBirth: u.dateOfBirth || "",
+                    education: u.education || "",
+                    state: u.state || "",
+                    district: u.district || "",
+                    goal: u.goal || "",
+                    contentPreference: u.contentPreference || "",
+                    timeAvailability: u.timeAvailability || "",
+                    level: u.level || "",
+                    bio: u.bio || "",
+                    socialLinks: (u.socialLinks || []).join(", "),
+                    preferredLanguage: u.preferredLanguage || "",
+                    interest: u.interest || "",
+                    hasTakenOnlineCourses: u.hasTakenOnlineCourses ? "true" : "false",
+                });
+                setExistingProfileImageUrl(u.profileImageURL);
+            } catch (err) {
+                console.log("Error fetching user:", err);
+                Alert.alert("Error", "Could not load your profile data.");
+            } finally {
+                setIsFetching(false);
+            }
+        };
+        fetchUser();
+    }, []);
+    
+    const handleInputChange = (field: keyof typeof formData, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
-    fetchUser();
-  }, []);
 
-  // 📄 Pick Resume
-  const handlePickResume = async () => {
-    try {
-      const res = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.pdf],
-      });
-      setResume(res);
-    } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        console.error("Resume picker error:", err);
-      }
-    }
-  };
-
-  // 🖼️ Pick Image
-  const handlePickImage = () => {
-    launchImageLibrary({ mediaType: "photo", quality: 0.8 }, (response) => {
-      if (response.didCancel) return;
-      if (response.errorCode) {
-        console.error("Image picker error:", response.errorMessage);
-        return;
-      }
-      if (response.assets && response.assets.length > 0) {
-        setProfileImage(response.assets[0]);
-      }
-    });
-  };
-
-  // 💾 Save Profile
-const handleSave = async () => {
-  try {
-    setLoading(true);
-    const formData = new FormData();
-
-    if (dateOfBirth) formData.append("dateOfBirth", dateOfBirth);
-    if (education) formData.append("education", education);
-    if (state) formData.append("state", state);
-    if (district) formData.append("district", district);
-    if (goal) formData.append("goal", goal);
-    if (contentPreference) formData.append("contentPreference", contentPreference);
-    if (timeAvailability) formData.append("timeAvailability", timeAvailability);
-    if (level) formData.append("level", level);
-    if (bio) formData.append("bio", bio);
-  
-    if (socialLinks) {
-      // Split the comma-separated string into an array
-      const links = socialLinks.split(",").map((link) => link.trim());
-      // Append each link individually
-      links.forEach((link) => {
-        if (link) { // Ensure you don't append empty strings
-          formData.append("socialLinks[]", link);
+    // --- File Picking Logic ---
+    const requestGalleryPermission = async () => {
+        if (Platform.OS === "android") {
+            try {
+                const permission = Platform.Version >= 33
+                    ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                    : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+                const granted = await PermissionsAndroid.request(permission);
+                return granted === PermissionsAndroid.RESULTS.GRANTED;
+            } catch (err) {
+                console.warn("Permission error:", err);
+                return false;
+            }
         }
-      });
+        return true;
+    };
+
+    const handlePickImage = async () => {
+        const hasPermission = await requestGalleryPermission();
+        if (!hasPermission) {
+            Alert.alert("Permission Denied", "You need to allow access to photos.");
+            return;
+        }
+        launchImageLibrary({ mediaType: "photo", quality: 0.7 }, (response) => {
+            if (response.didCancel || response.errorCode) return;
+            if (response.assets && response.assets[0]) {
+                setProfileImage(response.assets[0]);
+            }
+        });
+    };
+
+    const handlePickResume = async () => {
+        try {
+            const res = await DocumentPicker.pickSingle({ type: [DocumentPicker.types.pdf] });
+            setResume(res);
+        } catch (err) {
+            if (!DocumentPicker.isCancel(err)) console.error("Resume picker error:", err);
+        }
+    };
+
+    // --- Save Logic ---
+    const handleSave = async () => {
+        setLoading(true);
+        try {
+            const data = new FormData();
+            
+            // Append all text fields
+            Object.entries(formData).forEach(([key, value]) => {
+                if (key === 'socialLinks') {
+                    const links = value.split(",").map(link => link.trim()).filter(Boolean);
+                    links.forEach(link => data.append("socialLinks", link));
+                } else if (key === 'hasTakenOnlineCourses') {
+                    data.append(key, value === 'true');
+                } else if (value) {
+                    data.append(key, value);
+                }
+            });
+
+            // Append files if they've been changed
+            if (profileImage) {
+                data.append("profileImage", {
+                    uri: profileImage.uri,
+                    type: profileImage.type || "image/jpeg",
+                    name: profileImage.fileName || "profile.jpg",
+                });
+            }
+            if (resume) {
+                data.append("resume", {
+                    uri: resume.uri,
+                    type: resume.type || "application/pdf",
+                    name: resume.name || "resume.pdf",
+                });
+            }
+
+            await api.patch("/user/info/onboarding", data, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            
+            await refreshUser(); // Refresh user data globally
+            Alert.alert("Success", "Profile updated successfully!");
+
+        } catch (err) {
+            console.log("Error updating profile:", err);
+            Alert.alert("Error", "Failed to update profile. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (isFetching) {
+        return <View style={styles.center}><ActivityIndicator size="large" color="#4A90E2" /></View>;
     }
 
+    const profileImageUri = profileImage?.uri || existingProfileImageUrl || `https://ui-avatars.com/api/?name=${(authUser?.fullname || 'User').replace(' ', '+')}&background=EBF8FF&color=2C5282&size=128`;
 
-    if (preferredLanguage) formData.append("preferredLanguage", preferredLanguage);
-    if (interest) formData.append("interest", interest);
-    formData.append("hasTakenOnlineCourses", hasTakenOnlineCourses === "true");
+    return (
+        <SafeAreaView style={styles.container}>
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={styles.loadingText}>Saving...</Text>
+                </View>
+            )}
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={styles.header}>
+                    <Image source={{ uri: profileImageUri }} style={styles.avatar} />
+                    <Text style={styles.userName}>{authUser?.fullname}</Text>
+                    <Text style={styles.userEmail}>{authUser?.email}</Text>
+                </View>
 
-    if (profileImage) {
-      formData.append("profileImage", {
-        uri: profileImage.uri,
-        type: profileImage.type || "image/jpeg",
-        name: profileImage.fileName || "profile.jpg",
-      } as any);
-    }
-    if (resume) {
-      formData.append("resume", {
-        uri: resume.uri,
-        type: resume.type || "application/pdf",
-        name: resume.name || "resume.pdf",
-      } as any);
-    }
+                <View style={styles.formContainer}>
+                    <SectionHeader title="Personal Information" />
+                    <InputField label="Date of Birth" icon="calendar-outline" placeholder="YYYY-MM-DD" value={formData.dateOfBirth} onChangeText={(val) => handleInputChange('dateOfBirth', val)} />
+                    <InputField label="State" icon="map-outline" placeholder="e.g. Maharashtra" value={formData.state} onChangeText={(val) => handleInputChange('state', val)} />
+                    <InputField label="District" icon="location-outline" placeholder="e.g. Mumbai" value={formData.district} onChangeText={(val) => handleInputChange('district', val)} />
 
-    await api.patch("/user/info/onboarding", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+                    <SectionHeader title="Professional Details" />
+                    <PickerField label="Education" icon="school-outline" selectedValue={formData.education} onValueChange={(val) => handleInputChange('education', val)} items={[
+                        { label: "Select Education", value: "" }, { label: "High School", value: "High school" }, { label: "College", value: "College" }, { label: "Master’s", value: "Master’s" }, { label: "PhD", value: "PhD" }
+                    ]} />
+                    <InputField label="Bio" icon="document-text-outline" placeholder="Tell us about yourself" value={formData.bio} onChangeText={(val) => handleInputChange('bio', val)} multiline />
+                    <InputField label="Social Links" icon="link-outline" placeholder="your-linkedin, your-github" value={formData.socialLinks} onChangeText={(val) => handleInputChange('socialLinks', val)} />
 
-    Alert.alert("Success", "Profile updated successfully!");
-  } catch (err) {
-    console.log("Error updating profile:", err);
-    Alert.alert("Error", "Failed to update profile");
-  } finally {
-    setLoading(false);
-  }
-};
+                    <SectionHeader title="Preferences" />
+                    <PickerField label="Your Goal" icon="flag-outline" selectedValue={formData.goal} onValueChange={(val) => handleInputChange('goal', val)} items={[
+                        { label: "Select Goal", value: "" }, { label: "Learn a new skill", value: "Learn a new skill" }, { label: "Advance my career", value: "Advance my career" }, { label: "Start a business", value: "Start a business" }
+                    ]} />
+                    <PickerField label="Learning Level" icon="bar-chart-outline" selectedValue={formData.level} onValueChange={(val) => handleInputChange('level', val)} items={[
+                        { label: "Select Level", value: "" }, { label: "Beginner", value: "Beginner" }, { label: "Intermediate", value: "Intermediate" }, { label: "Advanced", value: "Advanced" }
+                    ]} />
+                    <InputField label="Interests" icon="heart-outline" placeholder="e.g. Coding, Marketing" value={formData.interest} onChangeText={(val) => handleInputChange('interest', val)} />
 
-
-  return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Edit Profile</Text>
-
-      {/* Date of Birth */}
-      <Text style={styles.label}>Date of Birth</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="YYYY-MM-DD"
-        value={dateOfBirth}
-        onChangeText={setDateOfBirth}
-      />
-
-      {/* Education */}
-      <Text style={styles.label}>Education</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker selectedValue={education} onValueChange={setEducation}>
-          <Picker.Item label="Select Education" value="" />
-          <Picker.Item label="Primary School" value="Primary School" />
-          <Picker.Item label="High school" value="High school" />
-          <Picker.Item label="College" value="College" />
-          <Picker.Item label="Master’s" value="Master’s" />
-          <Picker.Item label="PhD" value="PhD" />
-        </Picker>
-      </View>
-
-      {/* Goal */}
-      <Text style={styles.label}>Goal</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker selectedValue={goal} onValueChange={setGoal}>
-          <Picker.Item label="Select Goal" value="" />
-          <Picker.Item label="Learn a new skill" value="Learn a new skill" />
-          <Picker.Item label="Advance my career" value="Advance my career" />
-          <Picker.Item label="Start a business" value="Start a business" />
-          <Picker.Item label="Grow my business" value="Grow my business" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Content Preference</Text>
-<View style={styles.pickerWrapper}>
-  <Picker
-    selectedValue={contentPreference}
-    onValueChange={setContentPreference}
-  >
-    <Picker.Item label="Select Preference" value="" />
-    <Picker.Item label="Video courses" value="Video courses" />
-    <Picker.Item label="PDFs" value="PDFs" />
-    <Picker.Item label="Live mentorship" value="Live mentorship" />
-  </Picker>
-</View>
-
-{/* Time Availability */}
-<Text style={styles.label}>Time Availability</Text>
-<View style={styles.pickerWrapper}>
-  <Picker
-    selectedValue={timeAvailability}
-    onValueChange={setTimeAvailability}
-  >
-    <Picker.Item label="Select Time" value="" />
-    <Picker.Item label="<15 minutes" value="<15 minutes" />
-    <Picker.Item label="15-30 minutes" value="15-30 minutes" />
-    <Picker.Item label="30-60 minutes" value="30-60 minutes" />
-    <Picker.Item label=">1 hour" value=">1 hour" />
-  </Picker>
-</View>
-
-      {/* Level */}
-      <Text style={styles.label}>Level</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker selectedValue={level} onValueChange={setLevel}>
-          <Picker.Item label="Select Level" value="" />
-          <Picker.Item label="Beginner" value="Beginner" />
-          <Picker.Item label="Intermediate" value="Intermediate" />
-          <Picker.Item label="Advanced" value="Advanced" />
-        </Picker>
-      </View>
-
-      {/* State */}
-      <Text style={styles.label}>State</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter State"
-        value={state}
-        onChangeText={setState}
-      />
-
-      {/* District */}
-      <Text style={styles.label}>District</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter District"
-        value={district}
-        onChangeText={setDistrict}
-      />
-
-      {/* Bio */}
-      <Text style={styles.label}>Bio</Text>
-      <TextInput
-        style={[styles.input, { height: 80 }]}
-        placeholder="Write about yourself"
-        value={bio}
-        onChangeText={setBio}
-        multiline
-      />
-
-      {/* Social Links */}
-      <Text style={styles.label}>Social Links</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Your social profile link"
-        value={socialLinks}
-        onChangeText={setSocialLinks}
-      />
-
-      {/* Preferred Language */}
-      <Text style={styles.label}>Preferred Language</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Hindi, English"
-        value={preferredLanguage}
-        onChangeText={setPreferredLanguage}
-      />
-
-      {/* Interest */}
-      <Text style={styles.label}>Interest</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Your interest"
-        value={interest}
-        onChangeText={setInterest}
-      />
-
-      {/* Has Taken Online Courses */}
-      <Text style={styles.label}>Taken Online Courses?</Text>
-      <View style={styles.pickerWrapper}>
-        <Picker
-          selectedValue={hasTakenOnlineCourses}
-          onValueChange={setHasTakenOnlineCourses}
-        >
-          <Picker.Item label="No" value="false" />
-          <Picker.Item label="Yes" value="true" />
-        </Picker>
-      </View>
-
-      {/* Image Preview */}
-      {profileImage && (
-        <Image source={{ uri: profileImage.uri }} style={styles.imagePreview} />
-      )}
-
-      <TouchableOpacity style={styles.btn} onPress={handlePickImage}>
-        <Text style={styles.btnText}>Upload Profile Image</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.btn} onPress={handlePickResume}>
-        <Text style={styles.btnText}>Upload Resume</Text>
-      </TouchableOpacity>
-
-      <Button
-        title={loading ? "Saving..." : "Save Profile"}
-        onPress={handleSave}
-        disabled={loading}
-      />
-    </ScrollView>
-  );
+                    <SectionHeader title="File Uploads" />
+                    <TouchableOpacity style={styles.uploadButton} onPress={handlePickImage}>
+                        <Ionicons name="image-outline" size={22} color="#4A90E2" />
+                        <Text style={styles.uploadButtonText}>{profileImage ? "Change Profile Photo" : "Upload Profile Photo"}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.uploadButton} onPress={handlePickResume}>
+                        <Ionicons name="document-attach-outline" size={22} color="#4A90E2" />
+                        <Text style={styles.uploadButtonText}>{resume ? "Change Resume (PDF)" : "Upload Resume (PDF)"}</Text>
+                        {resume && <Text style={styles.fileName}>{resume.name}</Text>}
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+            <View style={styles.footer}>
+                <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
+                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  label: { fontWeight: "600", marginTop: 15, marginBottom: 5 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  imagePreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignSelf: "center",
-    marginVertical: 10,
-  },
-  btn: {
-    backgroundColor: "#007bff",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  btnText: { color: "#fff", fontWeight: "bold" },
+    container: { flex: 1, backgroundColor: '#F7F8FA' },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+    loadingText: { color: '#FFFFFF', marginTop: 10, fontSize: 16, fontWeight: '600' },
+
+    header: { alignItems: 'center', paddingVertical: 20, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#EDF2F7' },
+    avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, borderColor: '#4A90E2' },
+    userName: { fontSize: 24, fontWeight: 'bold', color: '#1A202C', marginTop: 12 },
+    userEmail: { fontSize: 16, color: '#718096', marginTop: 4 },
+    
+    formContainer: { padding: 20 },
+    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#2D3748', marginTop: 25, marginBottom: 15, borderLeftWidth: 4, borderLeftColor: '#4A90E2', paddingLeft: 10 },
+    
+    inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 },
+    inputIcon: { padding: 12 },
+    input: { flex: 1, height: 50, fontSize: 16, color: '#1A202C', paddingRight: 15 },
+    multilineInput: { height: 100, textAlignVertical: 'top', paddingTop: 12 },
+    picker: { flex: 1, color: '#1A202C' },
+
+    uploadButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EBF8FF', borderRadius: 12, padding: 15, marginBottom: 15 },
+    uploadButtonText: { color: '#2C5282', fontWeight: 'bold', fontSize: 16, marginLeft: 10 },
+    fileName: { flex: 1, textAlign: 'right', color: '#718096', fontStyle: 'italic' },
+    
+    footer: { padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#EDF2F7' },
+    saveButton: { backgroundColor: '#4A90E2', padding: 15, borderRadius: 12, alignItems: 'center' },
+    saveButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
 });

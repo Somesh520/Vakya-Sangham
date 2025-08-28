@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
-  TouchableOpacity, ActivityIndicator, Alert, Image, ScrollView
+  TouchableOpacity, ActivityIndicator, Alert, Image
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,20 +9,18 @@ import api from '../api';
 import { useAuth } from '../AuthContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// --- Type Definitions ---
 
-// Aapke Course Stack ke liye types
 type CourseStackParamList = {
   CourseList: undefined;
   CourseDetail: { courseId: string };
-  // Agar aapke paas video player screen hai to yahan add karein
-  // VideoPlayer: { lesson: Lesson };
+  CoursePlayer: { courseId: string }; 
 };
 
-// Is screen ke route ke liye type
+
+
 type CourseDetailScreenRouteProp = RouteProp<CourseStackParamList, 'CourseDetail'>;
 
-// Is screen ke navigation ke liye type
+
 type CourseDetailScreenNavigationProp = NativeStackNavigationProp<CourseStackParamList, 'CourseDetail'>;
 
 interface Lesson {
@@ -32,7 +30,7 @@ interface Lesson {
 }
 
 interface Course {
-  _id:string;
+  _id: string;
   title: string;
   description: string;
   thumbnailURL: string;
@@ -68,7 +66,6 @@ const CourseDetailScreen = () => {
         const fetchedCourse = res.data.course;
         setCourse(fetchedCourse);
 
-        // Yahan check hoga ki user pehle se enrolled hai ya nahi
         const isUserEnrolled = user?.enrolledCourses?.includes(fetchedCourse._id);
         setEnrolled(!!isUserEnrolled);
       }
@@ -84,19 +81,21 @@ const CourseDetailScreen = () => {
     fetchCourseDetails();
   }, [fetchCourseDetails]);
 
-  // Enroll karne ka function
+ 
   const handleEnroll = async () => {
     if (!course || !user) return;
     setEnrolling(true);
     try {
       const res = await api.post('/api/enrollment/enroll', { courseId });
       if (res.data.success) {
-        Alert.alert('Success!', 'You are now enrolled in this course.');
-        setEnrolled(true);
         
-        // Auth context mein user ko update karein
         const updatedEnrolledCourses = [...(user.enrolledCourses || []), course._id];
         updateUser({ ...user, enrolledCourses: updatedEnrolledCourses });
+        setEnrolled(true);
+
+     
+        navigation.navigate('CoursePlayer', { courseId: course._id });
+
       }
     } catch (err: any) {
       console.error('Enrollment error:', err?.response?.data || err);
@@ -105,13 +104,23 @@ const CourseDetailScreen = () => {
       setEnrolling(false);
     }
   };
+  
+  // ✅ Footer button ke liye naya function
+  const handleFooterButtonPress = () => {
+    if (enrolled) {
+      // Agar pehle se enrolled hai, to seedhe player par jaayein
+      navigation.navigate('CoursePlayer', { courseId });
+    } else {
+      // Varna, enroll karein
+      handleEnroll();
+    }
+  };
 
   // Lesson par tap karne ka function
-  const handleLessonPress = (lesson: Lesson) => {
+  const handleLessonPress = () => {
     if (enrolled) {
       // Yahan se aap video player screen par navigate kar sakte hain
-      // navigation.navigate('VideoPlayer', { lesson });
-      Alert.alert("Let's Learn!", `Playing: ${lesson.title}`);
+      navigation.navigate('CoursePlayer', { courseId });
     } else {
       Alert.alert("Enroll First", "Please enroll in the course to watch the lessons.");
     }
@@ -133,7 +142,6 @@ const CourseDetailScreen = () => {
     );
   }
 
-  // Course ke saare lessons ko ek flat list mein daal dein
   const allLessons = course.modules.flatMap(module => module.lessons);
 
   return (
@@ -157,7 +165,8 @@ const CourseDetailScreen = () => {
         renderItem={({ item, index }) => (
           <TouchableOpacity 
             style={styles.lessonItem}
-            onPress={() => handleLessonPress(item)}
+            // ✅ Lesson par tap karke bhi player par jaa sakte hain
+            onPress={handleLessonPress}
           >
             <View style={styles.lessonNumberContainer}>
                 <Text style={styles.lessonIndex}>{index + 1}</Text>
@@ -173,15 +182,17 @@ const CourseDetailScreen = () => {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.enrollButton, (enrolled || enrolling) && styles.enrolledButton]}
-          onPress={handleEnroll}
-          disabled={enrolled || enrolling}
+          // ✅ Naya function use karein
+          onPress={handleFooterButtonPress}
+          // ✅ Sirf enrolling ke time disable hoga
+          disabled={enrolling}
         >
           {enrolling ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.enrollText}>
               {enrolled
-                ? '✓ Enrolled'
+                ? 'Go to Course' // ✅ Text badla gaya
                 : course.price > 0
                 ? `Buy Now for ₹${course.price}`
                 : 'Enroll for Free'}
@@ -228,7 +239,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
   },
-  enrolledButton: { backgroundColor: '#4CAF50' }, // Green color for enrolled
+  enrolledButton: { backgroundColor: '#4CAF50' }, // Green color for enrolled/enrolling
   enrollText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });
 

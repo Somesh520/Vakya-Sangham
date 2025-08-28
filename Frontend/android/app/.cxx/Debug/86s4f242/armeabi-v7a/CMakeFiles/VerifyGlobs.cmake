@@ -193,6 +193,31 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/CMakeFiles/cmake.verify_globs")
 endif()
 
+# react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/*.cpp")
+set(OLD_GLOB
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/RNPermissionsSpec-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/CMakeFiles/cmake.verify_globs")
+endif()
+
+# react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/*.cpp")
+set(OLD_GLOB
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/ComponentDescriptors.cpp"
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/EventEmitters.cpp"
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/Props.cpp"
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/RNPermissionsSpecJSI-generated.cpp"
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/ShadowNodes.cpp"
+  "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/react/renderer/components/RNPermissionsSpec/States.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/CMakeFiles/cmake.verify_globs")
+endif()
+
 # react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/*.cpp")
 set(OLD_GLOB

@@ -14,14 +14,15 @@ export const getMyLearning = async (req, res) => {
     const enrollments = await Enrollment.find({ student: userId })
       .populate({
         path: 'course',
-        // We need the modules and lessons to calculate the total
-        select: 'title thumbnailURL modules' ,
-         populate: { 
+        select: 'title thumbnailURL modules instructor',
+        populate: { 
           path: 'instructor',
           select: 'fullname'
         }
       });
-console.log('All Enrollments Data:', JSON.stringify(enrollments, null, 2));
+
+    // console.log('All Enrollments Data:', JSON.stringify(enrollments, null, 2));
+
     // 2. Map through each enrollment to calculate progress
     const coursesWithProgress = await Promise.all(
       enrollments.map(async (enrollment) => {
@@ -45,12 +46,15 @@ console.log('All Enrollments Data:', JSON.stringify(enrollments, null, 2));
           progress = Math.round((completedLessonsCount / totalLessons) * 100);
         }
 
+        // ✅ Add instructor name in response
         return {
           _id: course._id,
           title: course.title,
           thumbnailURL: course.thumbnailURL,
-          progress: progress, // The dynamically calculated progress
-        };
+          progress,
+         instructor: course.instructor ? { fullname: course.instructor.fullname } : null
+};
+        
       })
     );
     
@@ -64,6 +68,7 @@ console.log('All Enrollments Data:', JSON.stringify(enrollments, null, 2));
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
+
 export const getLessonsForCourse = async (req, res) => {
     const { courseId } = req.params;
     const userId = req.user.id;

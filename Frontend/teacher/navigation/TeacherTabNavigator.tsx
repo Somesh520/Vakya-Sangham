@@ -9,17 +9,10 @@ import TeacherNavigator from '../navigation/teachernavigator';
 // --- Import the real Profile screen ---
 import TeacherProfileScreen from '../screen/TeacherProfileScreen';
 
-// --- Placeholder screen for the Analytics tab ---
-const AnalyticsScreen = () => (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Analytics Screen</Text>
-    </View>
-);
-
 // --- Define types for the new Tab Navigator ---
 export type TeacherTabParamList = {
     Courses: undefined;
-    Analytics: undefined;
+    Manage: undefined; // ✅ Analytics ko 'Manage' naam diya
     Profile: undefined;
 };
 
@@ -38,8 +31,8 @@ const TeacherTabNavigator = () => {
 
                     if (route.name === 'Courses') {
                         iconName = focused ? 'library' : 'library-outline';
-                    } else if (route.name === 'Analytics') {
-                        iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+                    } else if (route.name === 'Manage') { // ✅ 'Manage' ke liye icon
+                        iconName = focused ? 'create' : 'create-outline';
                     } else if (route.name === 'Profile') {
                         iconName = focused ? 'person-circle' : 'person-circle-outline';
                     }
@@ -51,9 +44,14 @@ const TeacherTabNavigator = () => {
                 name="Courses" 
                 component={TeacherNavigator} 
             />
-            <Tab.Screen name="Analytics" component={AnalyticsScreen} />
-            {/* --- FIX: Using the real TeacherProfileScreen --- */}
-            <Tab.Screen name="Profile" component={TeacherProfileScreen} />
+
+            {/* ✅ Analytics ki jagah ab yahan se bhi course manage honge */}
+       
+         
+            <Tab.Screen 
+                name="Profile" 
+                component={TeacherProfileScreen} 
+            />
         </Tab.Navigator>
     );
 };

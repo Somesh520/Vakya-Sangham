@@ -22,6 +22,9 @@ C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/rngesturehandler
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/RNImagePickerSpec_autolinked_build/CMakeFiles/edit_cache.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/RNImagePickerSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/RNPermissionsSpec_autolinked_build/CMakeFiles/react_codegen_RNPermissionsSpec.dir
+C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/RNPermissionsSpec_autolinked_build/CMakeFiles/edit_cache.dir
+C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/RNPermissionsSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/rnreanimated_autolinked_build/CMakeFiles/react_codegen_rnreanimated.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/rnreanimated_autolinked_build/CMakeFiles/edit_cache.dir
 C:/project/Frontend/android/app/.cxx/Debug/86s4f242/armeabi-v7a/rnreanimated_autolinked_build/CMakeFiles/rebuild_cache.dir

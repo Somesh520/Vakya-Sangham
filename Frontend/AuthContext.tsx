@@ -24,11 +24,16 @@ interface AuthState {
 }
 
 export interface AuthContextType extends AuthState {
-  signIn: (token: string, userData: Omit<User, 'token'>, providerId: 'password' | 'google.com') => Promise<void>;
+  signIn: (
+    token: string,
+    userData: Omit<User, 'token'>,
+    providerId: 'password' | 'google.com'
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   updateUser: (updatedData: Partial<User>) => void;
   setDataDirty: (isDirty: boolean) => void;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;  // ✅ Added
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  refreshUser: () => Promise<User | null>;   // ✅ Added
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,20 +80,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // ✅ signIn
-  const signIn = useCallback(async (token: string, userData: Omit<User, 'token'>, providerId: 'password' | 'google.com') => {
-    const fullUser: User = { ...userData, token, providerId };
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setAuthState({ userToken: token, user: fullUser, isLoading: false, isDataDirty: true });
+  const signIn = useCallback(
+    async (
+      token: string,
+      userData: Omit<User, 'token'>,
+      providerId: 'password' | 'google.com'
+    ) => {
+      const fullUser: User = { ...userData, token, providerId };
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setAuthState({
+        userToken: token,
+        user: fullUser,
+        isLoading: false,
+        isDataDirty: true,
+      });
 
-    await AsyncStorage.setItem('userToken', token);
-    await AsyncStorage.setItem('userData', JSON.stringify(fullUser));
-  }, []);
+      await AsyncStorage.setItem('userToken', token);
+      await AsyncStorage.setItem('userData', JSON.stringify(fullUser));
+    },
+    []
+  );
 
   // ✅ signOut
   const signOut = useCallback(async () => {
     delete api.defaults.headers.common['Authorization'];
     await AsyncStorage.multiRemove(['userToken', 'userData']);
-    setAuthState({ userToken: null, user: null, isLoading: false, isDataDirty: true });
+    setAuthState({
+      userToken: null,
+      user: null,
+      isLoading: false,
+      isDataDirty: true,
+    });
   }, []);
 
   // ✅ updateUser
@@ -106,24 +128,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAuthState(prevState => ({ ...prevState, isDataDirty: isDirty }));
   }, []);
 
-  // ✅ changePassword API call
-  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
-    if (!authState.userToken) throw new Error('Not authenticated');
+  // ✅ changePassword
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!authState.userToken) throw new Error('Not authenticated');
 
-    await api.post("/user/auth/changePassword", {
-      currentPassword,
-      newPassword,
-    });
+      await api.post('/user/auth/changePassword', {
+        currentPassword,
+        newPassword,
+      });
+    },
+    [authState.userToken]
+  );
+
+  // ✅ refreshUser
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    try {
+      if (!authState.userToken) return null;
+
+      const response = await api.get('/user/info/me'); // 👈 backend endpoint
+      const updatedUser: User = { ...response.data.data, token: authState.userToken };
+
+      setAuthState(prev => {
+        const newUser = { ...prev.user, ...updatedUser };
+        AsyncStorage.setItem('userData', JSON.stringify(newUser));
+        return { ...prev, user: newUser, isDataDirty: false };
+      });
+
+      return updatedUser;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      return null;
+    }
   }, [authState.userToken]);
 
-  const contextValue = useMemo(() => ({
-    ...authState,
-    signIn,
-    signOut,
-    updateUser,
-    setDataDirty,
-    changePassword,
-  }), [authState, signIn, signOut, updateUser, setDataDirty, changePassword]);
+  const contextValue: AuthContextType = useMemo(
+    () => ({
+      ...authState,
+      signIn,
+      signOut,
+      updateUser,
+      setDataDirty,
+      changePassword,
+      refreshUser, // ✅ Now available everywhere
+    }),
+    [authState, signIn, signOut, updateUser, setDataDirty, changePassword, refreshUser]
+  );
 
   if (authState.isLoading) {
     return (
@@ -133,11 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 const styles = StyleSheet.create({
@@ -146,5 +192,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8F9FA',
-  }
+  },
 });

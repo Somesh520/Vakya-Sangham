@@ -24,6 +24,7 @@ import teacherRoutes from './src/Routes/Teacherroute.js';
 import courseController from './src/Routes/courseRoute.js';
 import userRoutes from './src/Routes/usercourseRoutes.js';
 import CourseEnrollment from './src/Routes/CourseEnrollment.js';
+import progressRoutes from './src/Routes/progressRoutes.js';
  // User's courses and learning progress
 // ------------------- ⚙️ Initial Setup -------------------
 dotenv.config();
@@ -96,6 +97,7 @@ app.use('/user/auth', authroute);               // 🔐 Manual auth (login/signu
 app.use('/user/info', userroute);               // 👤 Profile, user data, etc.
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes); 
+app.use('/api/progress', progressRoutes);
 // ------------------- 🛑 Error Handling Middleware -------------------
 //----------------courseController
 

@@ -1,7 +1,8 @@
 import Course from '../models/courseModel.js';
 import Activity from '../models/activityModel.js';
 import Review from '../models/Review.js';
-
+import { uploadToCloudinary } from '../config/cloudinary.js';
+import UserProgress from '../models/UserProgressModel.js';
 // ========== POST: Create a new course ==========
 export const createCourse = async (req, res) => {
     try {
@@ -15,6 +16,23 @@ export const createCourse = async (req, res) => {
             });
         }
 
+        // --- Naya Code Start Hua ---
+        let thumbnailURL = ''; // Default empty URL
+
+        // Agar file upload hui hai, toh usse Cloudinary par daalo
+        if (req.file) {
+            console.log("Thumbnail file received, uploading to Cloudinary...");
+            const instructorName = req.user.fullname.replace(/\s+/g, '-').toLowerCase();
+
+            const result = await uploadToCloudinary(req.file.buffer, {
+                folder: `thumbnails/${instructorName}`, // A dedicated folder for thumbnails
+                resource_type: 'image',
+            });
+            thumbnailURL = result.secure_url;
+            console.log("Thumbnail uploaded successfully:", thumbnailURL);
+        }
+        // --- Naya Code Yahan Tak ---
+
         const newCourse = await Course.create({
             title,
             description,
@@ -23,6 +41,7 @@ export const createCourse = async (req, res) => {
             language,
             level,
             instructor: instructorId,
+            thumbnailURL, // Thumbnail URL ko yahan add karein
             isPublished: true
         });
 
@@ -37,10 +56,17 @@ export const createCourse = async (req, res) => {
             message: "Course created successfully.",
             course: newCourse
         });
-    } catch (error) {
-        console.error("🔥 Create Course Error:", error);
-        res.status(500).json({ success: false, message: "Server error." });
+ } catch (error) {
+    // Log the full error response from the server
+    if (error.response) {
+        console.error("Server Error Response:", JSON.stringify(error.response.data, null, 2));
+    } else {
+        console.error("Failed to save course:", error);
     }
+
+    const message = error.response?.data?.message || "Could not save the course.";
+    Alert.alert("Error", message);
+}
 };
 
 // ========== GET: Get all courses with filtering ==========
@@ -97,7 +123,35 @@ export const getCourseById = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
+// ========== GET: Get Course Content for Enrolled Students ==========
+export const getCourseContent = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const userId = req.user.id;
 
+        // Course ki details fetch karein
+        const course = await Course.findById(courseId)
+            .populate('instructor', 'fullname'); 
+
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found.' });
+        }
+
+        // Us user ka us course ke liye progress find karein
+        const userProgress = await UserProgress.findOne({ user: userId, course: courseId });
+
+        // Course aur progress, dono ko response mein bhejein
+        res.status(200).json({ 
+            success: true,
+            course,
+            userProgress // Agar progress nahi hai to yeh 'null' hoga
+        });
+
+    } catch (error) {
+        console.error("🔥 Get Content Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
 // ========== PATCH: Update a course ==========
 export const updateCourse = async (req, res) => {
     try {
@@ -108,10 +162,28 @@ export const updateCourse = async (req, res) => {
         if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Not authorized.' });
         }
+        
+        const updateData = { ...req.body };
+
+        // --- Naya Code Start Hua ---
+        // Check karein agar nayi thumbnail file aayi hai
+        if (req.file) {
+            console.log("New thumbnail received for update, uploading...");
+            const instructorName = req.user.fullname.replace(/\s+/g, '-').toLowerCase();
+
+            const result = await uploadToCloudinary(req.file.buffer, {
+                folder: `thumbnails/${instructorName}`,
+                resource_type: 'image',
+            });
+            // Update data mein naya URL add karein
+            updateData.thumbnailURL = result.secure_url;
+             console.log("Thumbnail updated successfully:", updateData.thumbnailURL);
+        }
+        // --- Naya Code Yahan Tak ---
 
         const updatedCourse = await Course.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData, // req.body ke bajaye updateData use karein
             { new: true, runValidators: true }
         );
 
@@ -225,18 +297,35 @@ export const addModuleToCourse = async (req, res) => {
 export const addLessonToModule = async (req, res) => {
     try {
         const { courseId, moduleId } = req.params;
-        const { title, videoURL, duration } = req.body;
+        const { title, duration } = req.body;
 
-        if (!title || !videoURL || !duration) {
-            return res.status(400).json({ success: false, message: 'Lesson title, videoURL, and duration are required.' });
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Video file is required.' });
         }
+        if (!title || !duration) {
+            return res.status(400).json({ success: false, message: 'Lesson title and duration are required.' });
+        }
+        
+        // Instructor ka naam URL-friendly banayein
+        const instructorName = req.user.fullname.replace(/\s+/g, '-').toLowerCase();
 
+        console.log("Uploading file to Cloudinary using custom helper...");
+        
+        // Dynamic folder path banayein
+        const cloudinaryResult = await uploadToCloudinary(req.file.buffer, {
+            folder: `courses/${instructorName}/${courseId}`, // Naya folder structure
+            resource_type: 'video',
+        });
+        console.log("Upload successful!");
+
+        const videoURL = cloudinaryResult.secure_url;
+
+        // --- Baaki logic same rahega ---
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found.' });
         }
 
-        // Check karein ki user is course ka instructor hai ya admin
         if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Not authorized.' });
         }
@@ -245,7 +334,7 @@ export const addLessonToModule = async (req, res) => {
         if (!module) {
             return res.status(404).json({ success: false, message: 'Module not found.' });
         }
-
+        
         module.lessons.push({ title, videoURL, duration });
         await course.save();
 

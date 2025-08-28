@@ -1,19 +1,20 @@
 import User from "../models/usermodel.js";
 import Enrollment from "../models/enrollmentModel.js";
-import cloudinary from '../config/cloudinary.js';
+//import cloudinary from '../config/cloudinary.js';
+ import { cloudinary, uploadToCloudinary } from '../config/cloudinary.js'; 
 import streamifier from 'streamifier';
 import path from 'path';
 
 // --- Helper Function to Upload (No changes) ---
-const uploadToCloudinary = (fileBuffer, options) => {
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-        streamifier.createReadStream(fileBuffer).pipe(stream);
-    });
-};
+// const uploadToCloudinary = (fileBuffer, options) => {
+//     return new Promise((resolve, reject) => {
+//         const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+//             if (error) return reject(error);
+//             resolve(result);
+//         });
+//         streamifier.createReadStream(fileBuffer).pipe(stream);
+//     });
+// };
 
 // --- Single, CORRECTED Helper Function to Extract Public ID ---
 const getPublicIdFromUrl = (url) => {
@@ -154,7 +155,7 @@ export const getme= async (req, res) => {
         const user = await User.findById(userId).select(
             `fullname dateOfBirth education goal timeAvailability contentPreference
             level preferredLanguage bio profileImageURL socialLinks resumeURL
-            state district interest profileProgress isOnboarded`
+            state district interest profileProgress isOnboarded enrolledCourses`
         );
 
         console.log("USER OBJECT FROM DATABASE:", user);
@@ -182,12 +183,14 @@ export const getme= async (req, res) => {
                 state: user.state || "",
                 district: user.district || "",
                 interest: user.interest || "",
+                 enrolledCourses: user.enrolledCourses || [],
                 profileProgress: {
                     completed: user.profileProgress?.completed || 0,
                     total: user.profileProgress?.total || 0,
                     percentage: user.profileProgress?.percentage || 0,
                 },
                 isOnboarded: user.isOnboarded || false,
+               
             }
         });
     } catch (error) {

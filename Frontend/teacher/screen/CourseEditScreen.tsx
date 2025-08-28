@@ -1,14 +1,78 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // ✅ Picker added
+import React, { useState, useEffect } from 'react';
+import {
+    View, Text, StyleSheet, ScrollView, Alert, Image,
+    TouchableOpacity, PermissionsAndroid, Platform, ActivityIndicator, SafeAreaView,
+    TextInput
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import api from '../../api';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { TeacherStackParamList } from '../navigation/TeacherNavigator'; // Adjust path if needed
+import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
+import { TeacherStackParamList } from '../navigation/TeacherNavigator';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
+// --- Type Definitions ---
 type EditScreenRouteProp = RouteProp<TeacherStackParamList, 'CourseEdit'>;
+interface InputFieldProps {
+    label: string;
+    icon: string;
+    value: string;
+    onChangeText: (text: string) => void;
+    placeholder: string;
+    multiline?: boolean;
+    keyboardType?: 'default' | 'numeric' | 'email-address';
+}
+interface PickerItem {
+    label: string;
+    value: string;
+}
+interface PickerFieldProps {
+    label: string;
+    icon: string;
+    selectedValue: string;
+    onValueChange: (value: string) => void;
+    items: PickerItem[];
+}
 
+// --- Custom Components ---
+const InputField = ({ label, icon, value, onChangeText, placeholder, multiline = false, keyboardType = 'default' }: InputFieldProps) => (
+    <View style={styles.fieldContainer}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.inputWrapper}>
+            <Ionicons name={icon} size={22} color="#A0AEC0" style={styles.inputIcon} />
+            <TextInput
+                style={[styles.input, multiline && styles.multilineInput]}
+                placeholder={placeholder}
+                placeholderTextColor="#A0AEC0"
+                value={value}
+                onChangeText={onChangeText}
+                multiline={multiline}
+                keyboardType={keyboardType}
+            />
+        </View>
+    </View>
+);
+
+const PickerField = ({ label, icon, selectedValue, onValueChange, items }: PickerFieldProps) => (
+    <View style={styles.fieldContainer}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.inputWrapper}>
+            <Ionicons name={icon} size={22} color="#A0AEC0" style={styles.inputIcon} />
+            <Picker
+                selectedValue={selectedValue}
+                onValueChange={onValueChange}
+                style={styles.picker}
+                dropdownIconColor="#4A90E2"
+            >
+                {items.map(item => <Picker.Item key={item.value} label={item.label} value={item.value} />)}
+            </Picker>
+        </View>
+    </View>
+);
+
+// --- Main Component ---
 const CourseEditScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProp<TeacherStackParamList>>();
     const route = useRoute<EditScreenRouteProp>();
     const courseToEdit = route.params?.course;
 
@@ -17,80 +81,196 @@ const CourseEditScreen = () => {
     const [category, setCategory] = useState(courseToEdit?.category || '');
     const [price, setPrice] = useState(courseToEdit?.price?.toString() || '');
     const [language, setLanguage] = useState(courseToEdit?.language || '');
-    const [level, setLevel] = useState(courseToEdit?.level || 'Beginner'); // ✅ Default set
+    const [level, setLevel] = useState(courseToEdit?.level || 'Beginner');
     const [isLoading, setIsLoading] = useState(false);
+    const [thumbnail, setThumbnail] = useState<Asset | null>(null);
+    const [isFormValid, setIsFormValid] = useState(false);
 
-    const handleSubmit = async () => {
-        if (!title.trim() || !description.trim() || !category.trim() || !language.trim() || !level.trim()) {
-            Alert.alert("Missing Information", "Please fill out all required fields.");
+    useEffect(() => {
+        const isEditing = !!courseToEdit;
+        let isValid = false;
+
+        const allTextFieldsFilled =
+            title.trim() !== '' &&
+            description.trim() !== '' &&
+            category.trim() !== '' &&
+            language.trim() !== '' &&
+            level.trim() !== '';
+
+        if (isEditing) {
+            isValid = allTextFieldsFilled;
+        } else {
+            isValid = allTextFieldsFilled && thumbnail !== null;
+        }
+
+        setIsFormValid(isValid);
+    }, [title, description, category, language, level, thumbnail, courseToEdit]);
+
+    const requestGalleryPermission = async () => {
+        if (Platform.OS === "android") {
+            try {
+                const permission = Platform.Version >= 33
+                    ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+                    : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+                const granted = await PermissionsAndroid.request(permission);
+                return granted === PermissionsAndroid.RESULTS.GRANTED;
+            } catch (err) {
+                console.warn("Permission error:", err);
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const handlePickThumbnail = async () => {
+        const hasPermission = await requestGalleryPermission();
+        if (!hasPermission) {
+            Alert.alert("Permission Denied", "You need to allow access to photos.");
             return;
         }
+        launchImageLibrary({ mediaType: "photo", quality: 0.7 }, (response) => {
+            if (response.didCancel || response.errorCode) return;
+            if (response.assets && response.assets[0]) {
+                setThumbnail(response.assets[0]);
+            }
+        });
+    };
+
+    const handleSubmit = async () => {
+        if (!isFormValid) {
+             Alert.alert("Incomplete Form", "Please fill out all required fields and select a thumbnail.");
+             return;
+        }
+
         setIsLoading(true);
         try {
-            const courseData = { 
-                title, 
-                description, 
-                category, 
-                price: Number(price) || 0, 
-                language, 
-                level 
-            };
+            const courseData = new FormData();
+            courseData.append('title', title);
+            courseData.append('description', description);
+            courseData.append('category', category);
+            courseData.append('price', Number(price) || 0);
+            courseData.append('language', language);
+            courseData.append('level', level);
+
+            if (thumbnail) {
+                courseData.append('thumbnail', {
+                    uri: thumbnail.uri,
+                    type: thumbnail.type || 'image/jpeg',
+                    name: thumbnail.fileName || 'thumbnail.jpg',
+                } as any);
+            }
 
             if (courseToEdit) {
-                await api.patch(`/api/teacher/courses/${courseToEdit._id}`, courseData);
+                // ✅ Final, correct URL for updating a course
+                await api.patch(`/api/${courseToEdit._id}`, courseData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
             } else {
-                await api.post('/api/teacher/courses', courseData);
+                // ✅ Final, correct URL for creating a new course
+                await api.post('/api/createcourse', courseData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
             }
             navigation.goBack();
         } catch (error: any) {
-            console.error("Failed to save course:", error);
+             if (error.response) {
+                console.error("Server Error Response:", JSON.stringify(error.response.data, null, 2));
+            } else {
+                console.error("Failed to save course:", error);
+            }
             const message = error.response?.data?.message || "Could not save the course.";
             Alert.alert("Error", message);
         } finally {
             setIsLoading(false);
         }
     };
+    
+    const thumbnailUri = thumbnail?.uri || courseToEdit?.thumbnailURL;
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 50 }}>
-            <Text style={styles.label}>Course Title</Text>
-            <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="e.g., Introduction to Sanskrit" />
-
-            <Text style={styles.label}>Course Description</Text>
-            <TextInput style={styles.input} value={description} onChangeText={setDescription} multiline numberOfLines={4} placeholder="Describe what students will learn." />
-
-            <Text style={styles.label}>Category</Text>
-            <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="e.g., Language, Spirituality" />
-
-            <Text style={styles.label}>Language</Text>
-            <TextInput style={styles.input} value={language} onChangeText={setLanguage} placeholder="e.g., Sanskrit" />
-
-            <Text style={styles.label}>Level</Text>
-            {/* ✅ Picker instead of TextInput */}
-            <View style={styles.pickerContainer}>
-                <Picker selectedValue={level} onValueChange={(itemValue) => setLevel(itemValue)}>
-                    <Picker.Item label="Beginner" value="Beginner" />
-                    <Picker.Item label="Intermediate" value="Intermediate" />
-                    <Picker.Item label="Advanced" value="Advanced" />
-                </Picker>
+        <SafeAreaView style={styles.container}>
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                    <Text style={styles.loadingText}>Saving...</Text>
+                </View>
+            )}
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={styles.formContainer}>
+                    <Text style={styles.headerTitle}>{courseToEdit ? 'Edit Course' : 'Create New Course'}</Text>
+                    <Text style={styles.label}>Course Thumbnail</Text>
+                    <TouchableOpacity style={styles.thumbnailPicker} onPress={handlePickThumbnail}>
+                        {thumbnailUri ? (
+                            <Image source={{ uri: thumbnailUri }} style={styles.thumbnailImage} />
+                        ) : (
+                            <View style={styles.thumbnailPlaceholder}>
+                                <Ionicons name="image-outline" size={40} color="#A0AEC0" />
+                                <Text style={styles.thumbnailPlaceholderText}>Tap to upload an image</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
+                    <InputField label="Course Title" icon="text-outline" value={title} onChangeText={setTitle} placeholder="e.g., Introduction to Sanskrit" />
+                    <InputField label="Course Description" icon="document-text-outline" value={description} onChangeText={setDescription} multiline placeholder="Describe what students will learn." />
+                    <InputField label="Category" icon="grid-outline" value={category} onChangeText={setCategory} placeholder="e.g., Language, Spirituality" />
+                    <InputField label="Language" icon="language-outline" value={language} onChangeText={setLanguage} placeholder="e.g., Sanskrit" />
+                    <PickerField label="Level" icon="bar-chart-outline" selectedValue={level} onValueChange={setLevel} items={[
+                        { label: "Beginner", value: "Beginner" },
+                        { label: "Intermediate", value: "Intermediate" },
+                        { label: "Advanced", value: "Advanced" },
+                    ]} />
+                    <InputField label="Price (₹)" icon="cash-outline" value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="e.g., 499 (0 for free)" />
+                </View>
+            </ScrollView>
+            <View style={styles.footer}>
+                <TouchableOpacity 
+                    style={[styles.saveButton, (!isFormValid || isLoading) && styles.disabledButton]} 
+                    onPress={handleSubmit} 
+                    disabled={!isFormValid || isLoading}
+                >
+                    <Text style={styles.saveButtonText}>{courseToEdit ? "Update Course" : "Create Course"}</Text>
+                </TouchableOpacity>
             </View>
-
-            <Text style={styles.label}>Price (optional, 0 for free)</Text>
-            <TextInput style={styles.input} value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="e.g., 499" />
-
-            <View style={styles.buttonContainer}>
-                <Button title={isLoading ? "Saving..." : (courseToEdit ? "Update Course" : "Create Course")} onPress={handleSubmit} disabled={isLoading} color="#FFA500" />
-            </View>
-        </ScrollView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-    label: { fontSize: 16, fontWeight: 'bold', marginBottom: 8, marginTop: 16, color: '#333' },
-    input: { borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 8, fontSize: 16, textAlignVertical: 'top', backgroundColor: '#f8f8f8' },
-    pickerContainer: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, backgroundColor: '#f8f8f8', marginBottom: 12 },
-    buttonContainer: { marginTop: 32 },
+    container: { flex: 1, backgroundColor: '#F7F8FA' },
+    loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+    loadingText: { color: '#FFFFFF', marginTop: 10, fontSize: 16, fontWeight: '600' },
+    formContainer: { padding: 20 },
+    headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#1A202C', marginBottom: 25 },
+    label: { fontSize: 16, fontWeight: '600', color: '#4A5568', marginBottom: 8 },
+    fieldContainer: { marginBottom: 20 },
+    inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' },
+    inputIcon: { paddingLeft: 15 },
+    input: { flex: 1, height: 50, fontSize: 16, color: '#1A202C', paddingHorizontal: 15 },
+    multilineInput: { height: 120, textAlignVertical: 'top', paddingTop: 15 },
+    picker: { flex: 1, color: '#1A202C' },
+    thumbnailPicker: {
+        height: 200,
+        borderRadius: 12,
+        backgroundColor: '#EDF2F7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#E2E8F0',
+        borderStyle: 'dashed',
+        marginBottom: 20,
+        overflow: 'hidden',
+    },
+    thumbnailImage: { width: '100%', height: '100%' },
+    thumbnailPlaceholder: { alignItems: 'center' },
+    thumbnailPlaceholderText: {
+        marginTop: 10,
+        color: '#A0AEC0',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    footer: { padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#EDF2F7' },
+    saveButton: { backgroundColor: '#4A90E2', padding: 15, borderRadius: 12, alignItems: 'center' },
+    saveButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
+    disabledButton: { backgroundColor: '#A0AEC0' },
 });
 
 export default CourseEditScreen;

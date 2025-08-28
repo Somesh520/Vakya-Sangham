@@ -3063,6 +3063,14 @@
     "@types/react" "*"
     "@types/react-native" "^0.70"
 
+"@types/react-native-video@^5.0.20":
+  version "5.0.20"
+  resolved "https://registry.npmjs.org/@types/react-native-video/-/react-native-video-5.0.20.tgz"
+  integrity sha512-CdD4T43uEKzTNJ/RylTDViNuGuyOPWQUEuA1Y9GY8T+HiE9cwYw1zQNqk8a7zz9GHamlPfJQ+bYoEE9OWjZ/6g==
+  dependencies:
+    "@types/react" "*"
+    react-native "*"
+
 "@types/react-native@^0.70":
   version "0.70.19"
   resolved "https://registry.npmjs.org/@types/react-native/-/react-native-0.70.19.tgz"
@@ -7974,6 +7982,11 @@ react-native-paper@^5.14.5:
     color "^3.1.2"
     use-latest-callback "^0.2.3"
 
+react-native-permissions@^5.4.2:
+  version "5.4.2"
+  resolved "https://registry.npmjs.org/react-native-permissions/-/react-native-permissions-5.4.2.tgz"
+  integrity sha512-XNMoG1fxrB9q73MLn/ZfTaP7pS8qPu0KWypbeFKVTvoR+JJ3O7uedMOTH/mts9bTG+GKhShOoZ+k0CR63q9jwA==
+
 react-native-reanimated@*, react-native-reanimated@^3.19.0:
   version "3.19.0"
   resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.19.0.tgz"
@@ -8006,6 +8019,11 @@ react-native-screens@^4.14.1, "react-native-screens@>= 4.0.0":
     react-native-is-edge-to-edge "^1.2.1"
     warn-once "^0.1.0"
 
+react-native-splash-screen@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.npmjs.org/react-native-splash-screen/-/react-native-splash-screen-3.3.0.tgz"
+  integrity sha512-rGjt6HkoSXxMqH4SQUJ1gnPQlPJV8+J47+4yhgTIan4bVvAwJhEeJH7wWt9hXSdH4+VfwTS0GTaflj1Tw83IhA==
+
 react-native-sse@^1.2.1:
   version "1.2.1"
   resolved "https://registry.npmjs.org/react-native-sse/-/react-native-sse-1.2.1.tgz"
@@ -8036,6 +8054,11 @@ react-native-vector-icons@^10.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
+react-native-video@^6.16.1:
+  version "6.16.1"
+  resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-6.16.1.tgz"
+  integrity sha512-+G6tVVGbwFqNTyPivqb+PhQzWr5OudDQ1dgvBNyBRAgcS8rOcbwuS6oX+m8cxOsXHn1UT9ofQnjQEwkGOsvomg==
+
 react-native-webview@*, react-native-webview@^13.15.0:
   version "13.15.0"
   resolved "https://registry.npmjs.org/react-native-webview/-/react-native-webview-13.15.0.tgz"
@@ -8044,7 +8067,7 @@ react-native-webview@*, react-native-webview@^13.15.0:
     escape-string-regexp "^4.0.0"
     invariant "2.2.4"
 
-react-native@*, "react-native@^0.0.0-0 || >=0.65 <1.0", react-native@>=0.50.4, react-native@>=0.60.0, react-native@0.80.1:
+react-native@*, "react-native@^0.0.0-0 || >=0.65 <1.0", react-native@>=0.50.4, react-native@>=0.57.0, react-native@>=0.60.0, react-native@>=0.70.0, react-native@0.80.1:
   version "0.80.1"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.80.1.tgz"
   integrity sha512-cIiJiPItdC2+Z9n30FmE2ef1y4522kgmOjMIoDtlD16jrOMNTUdB2u+CylLTy3REkWkWTS6w8Ub7skUthkeo5w==
