@@ -4,7 +4,7 @@ import Enrollment from "../models/enrollmentModel.js";
  import { cloudinary, uploadToCloudinary } from '../config/cloudinary.js'; 
 import streamifier from 'streamifier';
 import path from 'path';
-
+import bcrypt from 'bcryptjs';
 // --- Helper Function to Upload (No changes) ---
 // const uploadToCloudinary = (fileBuffer, options) => {
 //     return new Promise((resolve, reject) => {
@@ -286,5 +286,46 @@ console.log(user);
     } catch (error) {
         console.error('getUserProfile error:', error);
         res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+export const deleteUser = async (req, res) => {
+    try {
+        const { password } = req.body;
+        const userId = req.user.id; // From your 'verifyUser' middleware
+
+        // 1. Find the user first
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        // 💡 DEBUG: Check what user object we got from the database
+        console.log("USER TO BE DELETED:", user); 
+
+        // 2. Check the user's provider
+        if (user.providerId === 'password') {
+            // --- This is a password user ---
+            if (!password) {
+                return res.status(400).json({ success: false, message: "Password is required to delete your account." });
+            }
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ success: false, message: "Incorrect password." });
+            }
+        } 
+        // ✅ For Google users (or any other provider), we skip the password check and proceed
+
+        // 3. If checks pass, delete the user
+        await user.deleteOne();
+
+        // 4. Clear the authentication cookie
+        res.clearCookie('jwt');
+
+        res.status(200).json({ success: true, message: "Your account has been permanently deleted." });
+
+    } catch (error) {
+        console.error("DELETE ACCOUNT ERROR:", error);
+        res.status(500).json({ success: false, message: "An error occurred." });
     }
 };

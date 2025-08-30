@@ -14,7 +14,7 @@ import MyLearningScreen from './screens/userscreen/MylearningScreen';
 import SettingsScreen from './screens/userscreen/SettingsScreen';
 import DoubtClearingScreen from './screens/Doubtclearing'; 
 import CoursePlayerScreen from './screens/CoursePlayerScreen'; 
-
+import DeleteAccountScreen from './screens/userscreen/delete';
 // --- Course Stack ---
 export type CourseStackParamList = {
     CourseList: undefined;
@@ -49,6 +49,7 @@ export type ProfileStackParamList = {
     EditProfile: undefined;
     MyLearning: undefined; 
     Settings: undefined;
+    DeleteAccount: undefined;
 };
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 const ProfileNavigator = () => (
@@ -78,6 +79,11 @@ const ProfileNavigator = () => (
             name="Settings" 
             component={SettingsScreen} 
             options={{ title: 'Settings' }}
+        />
+         <ProfileStack.Screen 
+            name="DeleteAccount" 
+            component={DeleteAccountScreen} 
+            options={{ title: 'Delete Account' }}
         />
     </ProfileStack.Navigator>
 );

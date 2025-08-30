@@ -9,17 +9,20 @@ import {
   Image,
   TouchableOpacity,
   Alert,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 
 // Local imports
 import { useAuth } from '../AuthContext';
 import api from '../api';
-import { AppTabParamList } from '../AppNavigator';
+import { AppTabParamList, ProfileStackParamList } from '../AppNavigator';
+
+// --- Type Definitions ---
 
 interface ProfileType {
   fullname: string;
@@ -28,38 +31,42 @@ interface ProfileType {
   profileProgress?: { percentage: number };
 }
 
-// ✅ FIX: Correctly type the screen names
 interface MenuItem {
   title: string;
   icon: string;
-  screen: 'EditProfile' | 'MyLearning' | 'Settings' | 'Help';
+  screen: keyof ProfileStackParamList;
 }
 
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<AppTabParamList, 'Profile'>,
+  NativeStackNavigationProp<ProfileStackParamList>
+>;
+
+
+// --- Component ---
+
 const ProfileScreen = () => {
-  const navigation = useNavigation<BottomTabNavigationProp<AppTabParamList>>();
-  // ✅ Get the full user object to check the provider
-  const { user, signOut } = useAuth(); 
- console.log("Current User Object:", JSON.stringify(user, null, 2));
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchProfile = useCallback(async () => {
-    setLoading(true);
     try {
       const response = await api.get(`/user/info/profile?ts=${Date.now()}`);
       if (response.data?.success && response.data.data) {
         setProfile(response.data.data);
       } else {
-        console.warn('Profile data empty:', response.data);
+        console.warn('Profile data empty or request failed:', response.data);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Axios error:', error.response?.data || error.message);
+        console.error('Axios error fetching profile:', error.response?.data || error.message);
       } else if (error instanceof Error) {
-        console.error('Error:', error.message);
+        console.error('Error fetching profile:', error.message);
       } else {
-        console.error('Unknown error:', error);
+        console.error('Unknown error fetching profile:', error);
       }
       Alert.alert('Error', 'Could not load your profile. Please try again later.');
     } finally {
@@ -86,15 +93,13 @@ const ProfileScreen = () => {
     ]);
   };
 
-  // ✅ FIX: Conditionally build the menu items array
   const isEmailPasswordUser = user?.providerId === 'password';
-  
+
   const menuItems: MenuItem[] = [
     { title: 'Edit Profile', icon: 'person-circle-outline', screen: 'EditProfile' },
     { title: 'My Learning', icon: 'book-outline', screen: 'MyLearning' },
-    // Only add 'Settings' if the user is not a Google user
     ...(isEmailPasswordUser ? [{ title: 'Settings', icon: 'settings-outline', screen: 'Settings' as const }] : []),
-    { title: 'Help & Support', icon: 'help-circle-outline', screen: 'Help' },
+    { title: 'Delete Account', icon: 'trash-outline', screen: 'DeleteAccount' },
   ];
 
   if (loading && !refreshing) {
@@ -126,7 +131,7 @@ const ProfileScreen = () => {
               <View style={[styles.progressBar, { width: `${profile.profileProgress.percentage}%` }]} />
             </View>
             <Text style={styles.progressText}>{profile.profileProgress.percentage}% Complete</Text>
-          </View>
+          </View> // ✅ CORRECTED: This now correctly closes the progressCard View.
         )}
 
         <View style={styles.menuContainer}>
@@ -134,10 +139,12 @@ const ProfileScreen = () => {
             <TouchableOpacity
               key={item.title}
               style={styles.menuItem}
-              onPress={() => navigation.navigate(item.screen as any)} // Using 'as any' because of complex navigation types
+              onPress={() => navigation.navigate(item.screen)}
             >
-              <Ionicons name={item.icon} size={24} color="#555" />
-              <Text style={styles.menuItemText}>{item.title}</Text>
+              <Ionicons name={item.icon} size={24} color={item.screen === 'DeleteAccount' ? '#FF4B4B' : '#555'} />
+              <Text style={[styles.menuItemText, item.screen === 'DeleteAccount' && { color: '#FF4B4B' }]}>
+                {item.title}
+              </Text>
               <Ionicons name="chevron-forward-outline" size={22} color="#ccc" />
             </TouchableOpacity>
           ))}

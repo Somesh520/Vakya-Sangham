@@ -40,6 +40,13 @@ C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNImagePickerSpec_
 C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNImagePickerSpec_autolinked_build\CMakeFiles\react_codegen_RNImagePickerSpec.dir\react\renderer\components\RNImagePickerSpec\RNImagePickerSpecJSI-generated.cpp.o
 C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNImagePickerSpec_autolinked_build\CMakeFiles\react_codegen_RNImagePickerSpec.dir\react\renderer\components\RNImagePickerSpec\ShadowNodes.cpp.o
 C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNImagePickerSpec_autolinked_build\CMakeFiles\react_codegen_RNImagePickerSpec.dir\react\renderer\components\RNImagePickerSpec\States.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\react\renderer\components\rnpdf\ComponentDescriptors.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\react\renderer\components\rnpdf\EventEmitters.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\react\renderer\components\rnpdf\Props.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\react\renderer\components\rnpdf\ShadowNodes.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\react\renderer\components\rnpdf\States.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\react\renderer\components\rnpdf\rnpdfJSI-generated.cpp.o
+C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\rnpdf_autolinked_build\CMakeFiles\react_codegen_rnpdf.dir\rnpdf-generated.cpp.o
 C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNPermissionsSpec_autolinked_build\CMakeFiles\react_codegen_RNPermissionsSpec.dir\RNPermissionsSpec-generated.cpp.o
 C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNPermissionsSpec_autolinked_build\CMakeFiles\react_codegen_RNPermissionsSpec.dir\react\renderer\components\RNPermissionsSpec\ComponentDescriptors.cpp.o
 C:\project\Frontend\android\app\.cxx\Debug\86s4f242\arm64-v8a\RNPermissionsSpec_autolinked_build\CMakeFiles\react_codegen_RNPermissionsSpec.dir\react\renderer\components\RNPermissionsSpec\EventEmitters.cpp.o

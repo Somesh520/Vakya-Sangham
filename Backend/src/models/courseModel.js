@@ -6,13 +6,30 @@ const lessonSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    videoURL: {
-        type: String,
-        required: true
-    },
     duration: { // in minutes
         type: Number,
         required: true
+    },
+    // ✅ BADLAV 1: Lesson ka type batane ke liye
+    lessonType: {
+        type: String,
+        enum: ['video', 'pdf'], // Lesson ya to video hoga ya pdf
+        required: true,
+    },
+    // ✅ BADLAV 2: YouTube link ke liye
+    videoUrl: { 
+        type: String, 
+        trim: true 
+    },
+    // ✅ BADLAV 3: PDF link ke liye
+    pdfUrl: { 
+        type: String,
+        trim: true
+    },
+    // ✅ BADLAV 4: PDF ka original naam save karne ke liye
+    pdfOriginalName: {
+        type: String,
+        trim: true
     }
 });
 

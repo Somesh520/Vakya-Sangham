@@ -5,6 +5,7 @@ C:\project\Frontend\node_modules\@react-native-picker\picker\android\src\main\jn
 C:\project\Frontend\node_modules\react-native-document-picker\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\project\Frontend\node_modules\react-native-gesture-handler\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\project\Frontend\node_modules\react-native-image-picker\android\build\generated\source\codegen\jni\CMakeLists.txt
+C:\project\Frontend\node_modules\react-native-pdf\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\project\Frontend\node_modules\react-native-permissions\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\project\Frontend\node_modules\react-native-reanimated\android\build\generated\source\codegen\jni\CMakeLists.txt
 C:\project\Frontend\node_modules\react-native-safe-area-context\android\src\main\jni\CMakeLists.txt

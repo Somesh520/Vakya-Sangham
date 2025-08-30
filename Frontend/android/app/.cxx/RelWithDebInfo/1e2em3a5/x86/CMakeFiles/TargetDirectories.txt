@@ -22,6 +22,9 @@ C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/rngesturehandle
 C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/react_codegen_RNImagePickerSpec.dir
 C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/edit_cache.dir
 C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/RNImagePickerSpec_autolinked_build/CMakeFiles/rebuild_cache.dir
+C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/rnpdf_autolinked_build/CMakeFiles/react_codegen_rnpdf.dir
+C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/rnpdf_autolinked_build/CMakeFiles/edit_cache.dir
+C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/rnpdf_autolinked_build/CMakeFiles/rebuild_cache.dir
 C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/RNPermissionsSpec_autolinked_build/CMakeFiles/react_codegen_RNPermissionsSpec.dir
 C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/RNPermissionsSpec_autolinked_build/CMakeFiles/edit_cache.dir
 C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/RNPermissionsSpec_autolinked_build/CMakeFiles/rebuild_cache.dir

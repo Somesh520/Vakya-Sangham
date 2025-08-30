@@ -50,14 +50,14 @@ const StudentHomeScreen = () => {
         }
     }, []);
 
-    useFocusEffect(useCallback(() => { 
+    useFocusEffect(useCallback(() => {
         setLoading(true);
-        fetchData(); 
+        fetchData();
     }, [fetchData]));
 
-    const onRefresh = useCallback(() => { 
-        setRefreshing(true); 
-        fetchData(); 
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        fetchData();
     }, [fetchData]);
 
     // --- Navigation Handlers ---
@@ -87,9 +87,7 @@ const StudentHomeScreen = () => {
                         <Text style={styles.greeting}>Hello, {firstName}!</Text>
                         <Text style={styles.subtitle}>Let's start learning</Text>
                     </View>
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <Ionicons name="notifications-outline" size={26} color="#333" />
-                    </TouchableOpacity>
+                    {/* Notification Button Removed From Here */}
                 </View>
             </View>
         );
@@ -100,9 +98,9 @@ const StudentHomeScreen = () => {
             style={styles.featuredCard}
             onPress={() => navigateToCourseDetail(item._id, item.title)}
         >
-            <Image 
-                source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E2E8F0/333?text=Course' }} 
-                style={styles.featuredThumbnail} 
+            <Image
+                source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E2E8F0/333?text=Course' }}
+                style={styles.featuredThumbnail}
             />
             <View style={styles.featuredCardContent}>
                 <Text style={styles.featuredTitle} numberOfLines={2}>{item.title}</Text>
@@ -116,9 +114,9 @@ const StudentHomeScreen = () => {
             style={styles.learningItem}
             onPress={() => navigateToCoursePlayer(item._id)}
         >
-            <Image 
-                source={{ uri: item.thumbnailURL || 'https://placehold.co/200x200/E2E8F0/333?text=...' }} 
-                style={styles.learningThumbnail} 
+            <Image
+                source={{ uri: item.thumbnailURL || 'https://placehold.co/200x200/E2E8F0/333?text=...' }}
+                style={styles.learningThumbnail}
             />
             <View style={styles.learningTextContainer}>
                 <Text style={styles.learningTitle} numberOfLines={2}>{item.title}</Text>
@@ -205,7 +203,8 @@ const styles = StyleSheet.create({
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20 },
     greeting: { fontSize: 28, fontWeight: 'bold', color: '#1A202C' },
     subtitle: { fontSize: 16, color: '#4A5568', marginTop: 4 },
-    notificationButton: { padding: 8, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 },
+    // You can also remove the notificationButton style if it's no longer used anywhere else
+    // notificationButton: { padding: 8, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 },
 
     // Section Title
     sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#1A202C', marginHorizontal: 20, marginTop: 30, marginBottom: 15 },

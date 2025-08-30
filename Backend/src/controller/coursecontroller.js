@@ -70,25 +70,34 @@ export const createCourse = async (req, res) => {
 };
 
 // ========== GET: Get all courses with filtering ==========
+// controller/coursecontroller.js
+
+// ... (all other functions remain the same)
+
+// ========== GET: Get all courses with filtering ==========
 export const getAllCourses = async (req, res) => {
-    try {
-        const { q, language, level, category } = req.query;
+    try {
+        const { q, language, level, category } = req.query;
 
-        const query = {};
-        if (req.user?.role !== 'admin') query.isPublished = true;
+        const query = {};
+        if (req.user?.role !== 'admin') query.isPublished = true;
 
-        if (q) query.title = { $regex: q, $options: 'i' };
-        if (language) query.language = language;
-        if (level) query.level = level;
-        if (category) query.category = category;
+        // ✅ IMPROVEMENT: Changed regex to find the query anywhere in the title, not just at the start.
+        if (q) query.title = { $regex: q, $options: 'i' }; 
 
-        const courses = await Course.find(query).populate('instructor', 'fullname');
-        res.status(200).json({ success: true, courses });
-    } catch (error) {
-        console.error("🔥 Get All Courses Error:", error);
-        res.status(500).json({ success: false, message: "Server error." });
-    }
+        if (language) query.language = { $regex: `^${language}$`, $options: 'i' };
+        if (level) query.level = level;
+        if (category) query.category = category;
+
+        const courses = await Course.find(query).populate('instructor', 'fullname');
+        res.status(200).json({ success: true, courses });
+    } catch (error) {
+        console.error("🔥 Get All Courses Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
 };
+
+
 
 // ========== GET: Get featured courses ==========
 export const getFeaturedCourses = async (req, res) => {
@@ -294,38 +303,24 @@ export const addModuleToCourse = async (req, res) => {
 };
 
 // ========== POST: Ek module mein naya lesson add karein ==========
+// courseController.js (aapki controller file)
+
 export const addLessonToModule = async (req, res) => {
     try {
         const { courseId, moduleId } = req.params;
-        const { title, duration } = req.body;
+        // ✅ BADLAV 1: Frontend se lessonType aur videoUrl bhi aayega
+        const { title, duration, lessonType, videoUrl } = req.body;
 
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'Video file is required.' });
-        }
-        if (!title || !duration) {
-            return res.status(400).json({ success: false, message: 'Lesson title and duration are required.' });
+        if (!title || !duration || !lessonType) {
+            return res.status(400).json({ success: false, message: 'Title, duration, and lesson type are required.' });
         }
         
-        // Instructor ka naam URL-friendly banayein
-        const instructorName = req.user.fullname.replace(/\s+/g, '-').toLowerCase();
-
-        console.log("Uploading file to Cloudinary using custom helper...");
-        
-        // Dynamic folder path banayein
-        const cloudinaryResult = await uploadToCloudinary(req.file.buffer, {
-            folder: `courses/${instructorName}/${courseId}`, // Naya folder structure
-            resource_type: 'video',
-        });
-        console.log("Upload successful!");
-
-        const videoURL = cloudinaryResult.secure_url;
-
-        // --- Baaki logic same rahega ---
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({ success: false, message: 'Course not found.' });
         }
 
+        // Authorization check (aapka code)
         if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Not authorized.' });
         }
@@ -334,8 +329,40 @@ export const addLessonToModule = async (req, res) => {
         if (!module) {
             return res.status(404).json({ success: false, message: 'Module not found.' });
         }
-        
-        module.lessons.push({ title, videoURL, duration });
+
+        const newLesson = { title, duration, lessonType };
+
+        // ✅ BADLAV 2: Logic to handle video link OR PDF upload
+        if (lessonType === 'video') {
+            if (!videoUrl) {
+                return res.status(400).json({ success: false, message: 'Video URL is required for video lessons.' });
+            }
+            newLesson.videoUrl = videoUrl;
+
+        } else if (lessonType === 'pdf') {
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: 'PDF file is required for PDF lessons.' });
+            }
+
+            // PDF ko Cloudinary par upload karein
+            console.log("Uploading PDF to Cloudinary...");
+            const instructorName = req.user.fullname.replace(/\s+/g, '-').toLowerCase();
+
+            const cloudinaryResult = await uploadToCloudinary(req.file.buffer, {
+                folder: `courses/${instructorName}/${courseId}/pdfs`, // PDF ke liye alag folder
+                resource_type: 'raw', // PDF ke liye 'raw' use karna accha hai
+                format: 'pdf'
+            });
+            console.log("PDF Upload successful!");
+            
+            newLesson.pdfUrl = cloudinaryResult.secure_url;
+            newLesson.pdfOriginalName = req.file.originalname;
+
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid lesson type provided.' });
+        }
+
+        module.lessons.push(newLesson);
         await course.save();
 
         res.status(201).json({ success: true, message: 'Lesson added successfully.', course });
