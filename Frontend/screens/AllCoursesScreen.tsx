@@ -14,7 +14,7 @@ import { useAuth } from '../AuthContext';
 
 const AllCoursesScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { userToken } = useAuth(); // ✅ Always at top level
+  const { userToken } = useAuth(); 
 
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ const AllCoursesScreen: React.FC = () => {
   if (loading) {
     return (
       <ActivityIndicator
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: '#F5E8C7' }}
         size="large"
         color="#FFA500"
       />
@@ -93,15 +93,15 @@ const AllCoursesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1E1E1E', padding: 10 },
+  container: { flex: 1, backgroundColor: '#F5E8C7', padding: 10 },
   createButton: { backgroundColor: '#FFA500', padding: 12, borderRadius: 8, marginBottom: 10 },
   createButtonText: { color: '#fff', fontWeight: 'bold', textAlign: 'center' },
-  card: { backgroundColor: '#333', padding: 15, borderRadius: 8, marginBottom: 10 },
-  title: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  desc: { color: '#ccc', marginVertical: 5 },
-  meta: { color: '#aaa', fontSize: 12 },
+  card: { backgroundColor: '#E8DBC6', padding: 15, borderRadius: 8, marginBottom: 10 },
+  title: { color: '#4A4135', fontSize: 18, fontWeight: 'bold' },
+  desc: { color: '#4A4135', marginVertical: 5 },
+  meta: { color: '#A19A8F', fontSize: 12 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 },
-  emptyText: { color: '#aaa', fontSize: 16 }
+  emptyText: { color: '#A19A8F', fontSize: 16 }
 });
 
 export default AllCoursesScreen;

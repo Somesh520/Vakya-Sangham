@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,6 @@ interface ProfileType {
   profileProgress?: { percentage: number };
 }
 
-// ✅ FIX: Correctly type the screen names
 interface MenuItem {
   title: string;
   icon: string;
@@ -37,7 +36,6 @@ interface MenuItem {
 
 const ProfileScreen = () => {
   const navigation = useNavigation<BottomTabNavigationProp<AppTabParamList>>();
-  // ✅ Get the full user object to check the provider
   const { user, signOut } = useAuth(); 
  console.log("Current User Object:", JSON.stringify(user, null, 2));
   const [profile, setProfile] = useState<ProfileType | null>(null);
@@ -86,13 +84,11 @@ const ProfileScreen = () => {
     ]);
   };
 
-  // ✅ FIX: Conditionally build the menu items array
   const isEmailPasswordUser = user?.providerId === 'password';
   
   const menuItems: MenuItem[] = [
     { title: 'Edit Profile', icon: 'person-circle-outline', screen: 'EditProfile' },
     { title: 'My Learning', icon: 'book-outline', screen: 'MyLearning' },
-    // Only add 'Settings' if the user is not a Google user
     ...(isEmailPasswordUser ? [{ title: 'Settings', icon: 'settings-outline', screen: 'Settings' as const }] : []),
     { title: 'Help & Support', icon: 'help-circle-outline', screen: 'Help' },
   ];
@@ -134,11 +130,11 @@ const ProfileScreen = () => {
             <TouchableOpacity
               key={item.title}
               style={styles.menuItem}
-              onPress={() => navigation.navigate(item.screen as any)} // Using 'as any' because of complex navigation types
+              onPress={() => navigation.navigate(item.screen as any)}
             >
-              <Ionicons name={item.icon} size={24} color="#555" />
+              <Ionicons name={item.icon} size={24} color="#4A4135" />
               <Text style={styles.menuItemText}>{item.title}</Text>
-              <Ionicons name="chevron-forward-outline" size={22} color="#ccc" />
+              <Ionicons name="chevron-forward-outline" size={22} color="#A19A8F" />
             </TouchableOpacity>
           ))}
         </View>
@@ -153,21 +149,21 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F5F2' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F6F5F2' },
+  container: { flex: 1, backgroundColor: '#F5E8C7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5E8C7' },
   profileHeader: { alignItems: 'center', paddingVertical: 30 },
   avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: '#FFA500' },
-  userName: { fontSize: 24, fontWeight: 'bold', marginTop: 15, color: '#212121' },
-  userEmail: { fontSize: 16, color: 'gray', marginTop: 5 },
-  progressCard: { backgroundColor: 'white', marginHorizontal: 20, borderRadius: 12, padding: 20, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  progressTitle: { fontSize: 16, fontWeight: '600', color: '#333' },
-  progressBarContainer: { height: 8, backgroundColor: '#e0e0e0', borderRadius: 4, marginTop: 15, overflow: 'hidden' },
+  userName: { fontSize: 24, fontWeight: 'bold', marginTop: 15, color: '#4A4135' },
+  userEmail: { fontSize: 16, color: '#A19A8F', marginTop: 5 },
+  progressCard: { backgroundColor: '#FCF0DB', marginHorizontal: 20, borderRadius: 12, padding: 20, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  progressTitle: { fontSize: 16, fontWeight: '600', color: '#4A4135' },
+  progressBarContainer: { height: 8, backgroundColor: '#E8DBC6', borderRadius: 4, marginTop: 15, overflow: 'hidden' },
   progressBar: { height: '100%', backgroundColor: '#FFA500', borderRadius: 4 },
-  progressText: { textAlign: 'right', marginTop: 5, color: 'gray', fontSize: 12 },
-  menuContainer: { backgroundColor: 'white', marginHorizontal: 20, borderRadius: 12, overflow: 'hidden', marginBottom: 20 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  menuItemText: { flex: 1, marginLeft: 20, fontSize: 16, color: '#212121' },
-  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 40, paddingVertical: 15, backgroundColor: 'white', borderRadius: 12 },
+  progressText: { textAlign: 'right', marginTop: 5, color: '#A19A8F', fontSize: 12 },
+  menuContainer: { backgroundColor: '#FCF0DB', marginHorizontal: 20, borderRadius: 12, overflow: 'hidden', marginBottom: 20 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: '#E8DBC6' },
+  menuItemText: { flex: 1, marginLeft: 20, fontSize: 16, color: '#4A4135' },
+  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 40, paddingVertical: 15, backgroundColor: '#FCF0DB', borderRadius: 12 },
   logoutButtonText: { marginLeft: 10, fontSize: 16, color: '#FF4B4B', fontWeight: 'bold' },
 });
 

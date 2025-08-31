@@ -3,10 +3,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
   Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  FlatList,
+  View,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
@@ -19,8 +16,7 @@ import {
   TextInput,
   Button,
 } from 'react-native-paper';
-
-import { View as MotiView } from 'moti';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'GetStarted'>;
@@ -29,7 +25,12 @@ type Props = {
 const GetStartedScreen: React.FC<Props> = ({ navigation }) => {
   const [goal, setGoal] = useState('');
   const [contentPreference, setContentPreference] = useState('');
-  const [interest, setInterests] = useState('');
+  const [interest, setInterest] = useState('');
+
+  const handleInterestChange = (text: string) => {
+    console.log('Interest changed:', text);
+    setInterest(text);
+  };
   const [loading, setLoading] = useState(false);
 
   const goals = useMemo(
@@ -88,103 +89,81 @@ const GetStartedScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      keyboardShouldPersistTaps="always"
+      showsVerticalScrollIndicator={false}
+      extraScrollHeight={20}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Text style={styles.title}>Get Started</Text>
-          <ProgressBar
-            progress={0.6}
-            color={styles.progressFill.backgroundColor}
-            style={styles.progressBar}
-          />
-        </MotiView>
+      <View>
+        <Text style={styles.title}>Get Started</Text>
+        <ProgressBar
+          progress={0.6}
+          color={styles.progressFill.backgroundColor}
+          style={styles.progressBar}
+        />
+      </View>
 
-        {/* Goals */}
-        <MotiView
-          from={{ opacity: 0, translateX: -20 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          transition={{ delay: 100 }}
-        >
-          <Text style={styles.sectionTitle}>What's your primary goal?</Text>
-          <RadioButton.Group onValueChange={setGoal} value={goal}>
-            <FlatList
-              data={goals}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => renderRadioItem({ item, type: 'goal' })}
-            />
-          </RadioButton.Group>
-        </MotiView>
+      {/* Goals */}
+      <View>
+        <Text style={styles.sectionTitle}>What's your primary goal?</Text>
+        <RadioButton.Group onValueChange={setGoal} value={goal}>
+          {goals.map((item) => renderRadioItem({ item, type: 'goal' }))}
+        </RadioButton.Group>
+      </View>
 
-        {/* Course Preference */}
-        <MotiView
-          from={{ opacity: 0, translateX: -20 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          transition={{ delay: 200 }}
+      {/* Course Preference */}
+      <View>
+        <Text style={styles.sectionTitle}>
+          What type of course do you prefer?
+        </Text>
+        <RadioButton.Group
+          onValueChange={setContentPreference}
+          value={contentPreference}
         >
-          <Text style={styles.sectionTitle}>
-            What type of course do you prefer?
-          </Text>
-          <RadioButton.Group
-            onValueChange={setContentPreference}
-            value={contentPreference}
-          >
-            <FlatList
-              data={courseTypes}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) =>
-                renderRadioItem({ item, type: 'content' })
-              }
-            />
-          </RadioButton.Group>
-        </MotiView>
+          {courseTypes.map((item) => renderRadioItem({ item, type: 'content' }))}
+        </RadioButton.Group>
+      </View>
 
-        {/* Interest Input */}
-        <MotiView
-          from={{ opacity: 0, translateX: -20 }}
-          animate={{ opacity: 1, translateX: 0 }}
-          transition={{ delay: 300 }}
-        >
-          <Text style={styles.sectionTitle}>
-            What are your learning interests?
-          </Text>
-          <TextInput
-            label="Enter your interests"
-            placeholder="e.g., Design, Coding, Marketing"
-            value={interest}
-            onChangeText={setInterests}
-            mode="outlined"
-            style={styles.interestInput}
-            left={<TextInput.Icon icon="lightbulb-on-outline" />}
-          />
-        </MotiView>
+      {/* Interest Input */}
+      <View>
+        <Text style={styles.sectionTitle}>
+          What are your learning interests?
+        </Text>
+        <TextInput
+          label="Enter your interests"
+          placeholder="e.g., Design, Coding, Marketing"
+          value={interest}
+          onChangeText={handleInterestChange}
+          mode="outlined"
+          style={styles.interestInput}
+          left={<TextInput.Icon icon="lightbulb-on-outline" />}
+          autoCapitalize="words"
+          autoCorrect={false}
+          editable={true}
+          multiline={false}
+          keyboardType="default"
+          returnKeyType="done"
+          blurOnSubmit={true}
+        />
+      </View>
 
-        {/* Continue Button */}
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 400 }}
+      {/* Continue Button */}
+      <View>
+        <Button
+          mode="contained"
+          onPress={handleContinue}
+          loading={loading}
+          disabled={loading}
+          style={styles.continueButton}
+          labelStyle={styles.continueButtonText}
+          buttonColor={styles.continueButton.backgroundColor}
         >
-          <Button
-            mode="contained"
-            onPress={handleContinue}
-            loading={loading}
-            disabled={loading}
-            style={styles.continueButton}
-            labelStyle={styles.continueButtonText}
-            buttonColor={styles.continueButton.backgroundColor}
-          >
-            {loading ? 'Saving...' : 'Continue'}
-          </Button>
-        </MotiView>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {loading ? 'Saving...' : 'Continue'}
+        </Button>
+      </View>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -205,8 +184,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
     marginTop: 20,
-    color: '#000000',
-  },
+    color: '#000000' },
   option: {
     backgroundColor: '#FFFFFF',
     borderRadius: 8,

@@ -1,11 +1,10 @@
 // src/screens/LoginScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Alert, ScrollView, View } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import api from '../api';
 import { useAuth } from '../AuthContext';
-import { View as MotiView } from 'moti';
 import { TextInput, Button, Text, HelperText, useTheme } from 'react-native-paper';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
@@ -102,12 +101,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500 }}>
+      <View>
         <Text variant="displaySmall" style={styles.title}>Welcome Back!</Text>
         <Text variant="bodyLarge" style={styles.subtitle}>Login to your account</Text>
-      </MotiView>
+      </View>
 
-      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500, delay: 100 }}>
+      <View>
         <TextInput
           label="Email Address"
           value={email}
@@ -150,9 +149,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </Button>
         
         <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>
-      </MotiView>
+      </View>
 
-      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500, delay: 200 }}>
+      <View>
         <Button mode="contained" onPress={handleLogin} loading={loading} disabled={loading || googleLoading} style={styles.button}>
           {loading ? "Logging in..." : "Login"}
         </Button>
@@ -163,21 +162,21 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         <Button mode="text" onPress={() => navigation.navigate('CreateAccount')} disabled={loading || googleLoading} style={styles.linkButton}>
           Don't have an account? Sign Up
         </Button>
-      </MotiView>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#F5F5F5' },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#F5E8C7' },
   title: { fontWeight: 'bold', textAlign: 'center' },
   subtitle: { textAlign: 'center', marginBottom: 40, color: '#616161' },
   input: { marginBottom: 12 },
-  button: { paddingVertical: 8, marginTop: 10 },
+  button: { paddingVertical: 8, marginTop: 10, backgroundColor: '#D87A33' },
   googleButton: { marginTop: 15, paddingVertical: 8, borderColor: '#E0E0E0' },
   googleButtonText: { fontSize: 16, color: '#424242' },
   divider: { textAlign: 'center', marginVertical: 20, color: '#9E9EE0', fontSize: 14 },
-  linkButton: { marginTop: 15 },
+  linkButton: { marginTop: 15},
   errorText: { fontSize: 14, textAlign: 'center' },
   forgotPasswordButton: {
     alignSelf: 'flex-end',

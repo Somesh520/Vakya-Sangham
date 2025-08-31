@@ -4,7 +4,6 @@ import { StyleSheet, Alert, ScrollView, View, ActivityIndicator } from 'react-na
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import api from '../api';
-import { View as MotiView, AnimatePresence } from 'moti'; // Animations
 import {
   TextInput,
   Button,
@@ -75,19 +74,11 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <MotiView
-          from={{ opacity: 0, translateY: -20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 500 }}
-        >
+        <View>
           <Text variant="headlineLarge" style={styles.title}>Create Your Account</Text>
-        </MotiView>
+        </View>
         
-        <MotiView
-          from={{ opacity: 0, translateY: -20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 500, delay: 100 }}
-        >
+        <View>
           <TextInput
             label="Full Name"
             value={fullName}
@@ -130,13 +121,9 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
           <HelperText type="error" visible={!!error} style={styles.errorText}>
             {error}
           </HelperText>
-        </MotiView>
+        </View>
 
-        <MotiView
-          from={{ opacity: 0, translateY: -20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 500, delay: 200 }}
-        >
+        <View>
           <Button
             mode="contained"
             onPress={handleSignUp}
@@ -157,23 +144,16 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
           >
             Already have an account? Login
           </Button>
-        </MotiView>
+        </View>
       </ScrollView>
 
       {/* Overlay Loader */}
-      <AnimatePresence>
-        {loading && (
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={styles.loadingOverlay}
-          >
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loadingText}>Creating your account...</Text>
-          </MotiView>
-        )}
-      </AnimatePresence>
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>Creating your account...</Text>
+        </View>
+      )}
     </View>
   );
 };

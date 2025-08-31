@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 
 import {
     View, Text, StyleSheet, ScrollView, Alert, Image,
-    TouchableOpacity, PermissionsAndroid, Platform, ActivityIndicator, SafeAreaView
+    TouchableOpacity, PermissionsAndroid, Platform, ActivityIndicator, SafeAreaView,
+    TextInput
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import DocumentPicker from 'react-native-document-picker';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import api from '../../api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -13,7 +13,17 @@ import { useAuth } from '../../AuthContext'; // To get the user's name for the h
 
 // --- Custom Components for a better UI ---
 
-const InputField = ({ label, icon, value, onChangeText, placeholder, multiline = false, keyboardType = 'default' }) => (
+interface InputFieldProps {
+    label: string;
+    icon: string;
+    value: string;
+    onChangeText: (text: string) => void;
+    placeholder: string;
+    multiline?: boolean;
+    keyboardType?: 'default' | 'numeric' | 'email-address';
+}
+
+const InputField = ({ label, icon, value, onChangeText, placeholder, multiline = false, keyboardType = 'default' }: InputFieldProps) => (
     <View style={styles.inputContainer}>
         <Ionicons name={icon} size={22} color="#A0AEC0" style={styles.inputIcon} />
         <TextInput
@@ -28,7 +38,16 @@ const InputField = ({ label, icon, value, onChangeText, placeholder, multiline =
     </View>
 );
 
-const PickerField = ({ label, icon, selectedValue, onValueChange, items }) => (
+interface PickerItem { label: string; value: string; }
+interface PickerFieldProps {
+    label: string;
+    icon: string;
+    selectedValue: string;
+    onValueChange: (value: string) => void;
+    items: PickerItem[];
+}
+
+const PickerField = ({ label, icon, selectedValue, onValueChange, items }: PickerFieldProps) => (
     <View style={styles.inputContainer}>
         <Ionicons name={icon} size={22} color="#A0AEC0" style={styles.inputIcon} />
         <Picker
@@ -42,7 +61,7 @@ const PickerField = ({ label, icon, selectedValue, onValueChange, items }) => (
     </View>
 );
 
-const SectionHeader = ({ title }) => (
+const SectionHeader = ({ title }: { title: string }) => (
     <Text style={styles.sectionTitle}>{title}</Text>
 );
 
@@ -142,12 +161,7 @@ export default function EditProfileScreen() {
     };
 
     const handlePickResume = async () => {
-        try {
-            const res = await DocumentPicker.pickSingle({ type: [DocumentPicker.types.pdf] });
-            setResume(res);
-        } catch (err) {
-            if (!DocumentPicker.isCancel(err)) console.error("Resume picker error:", err);
-        }
+        Alert.alert("Resume Upload", "Document picker is temporarily unavailable on this build.");
     };
 
     // --- Save Logic ---

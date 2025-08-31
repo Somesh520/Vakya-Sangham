@@ -70,7 +70,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
 
       const { token, user } = response.data;
       if (token && user) {
-        await signIn(token, user);
+        await signIn(token, user, user.providerId ?? 'password');
       } else {
         throw new Error('Token or user data not received from server.');
       }

@@ -213,7 +213,7 @@ const CourseEditScreen = () => {
                     <InputField label="Course Description" icon="document-text-outline" value={description} onChangeText={setDescription} multiline placeholder="Describe what students will learn." />
                     <InputField label="Category" icon="grid-outline" value={category} onChangeText={setCategory} placeholder="e.g., Language, Spirituality" />
                     <InputField label="Language" icon="language-outline" value={language} onChangeText={setLanguage} placeholder="e.g., Sanskrit" />
-                    <PickerField label="Level" icon="bar-chart-outline" selectedValue={level} onValueChange={setLevel} items={[
+                    <PickerField label="Level" icon="bar-chart-outline" selectedValue={level} onValueChange={(v) => setLevel(v as any)} items={[
                         { label: "Beginner", value: "Beginner" },
                         { label: "Intermediate", value: "Intermediate" },
                         { label: "Advanced", value: "Advanced" },

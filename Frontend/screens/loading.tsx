@@ -1,7 +1,6 @@
 // src/screens/SplashScreen.tsx
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 
 const SplashScreen = () => {
@@ -19,22 +18,15 @@ const SplashScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* App Name Animation */}
-      <Animated.Text
-        style={styles.title}
-        entering={ZoomIn.duration(800)}
-        exiting={FadeOut}
-      >
+      {/* App Name */}
+      <Text style={styles.title}>
         VakyaSangam
-      </Animated.Text>
+      </Text>
 
       {/* Tagline */}
-      <Animated.Text
-        style={styles.subtitle}
-        entering={FadeIn.delay(800).duration(1000)}
-      >
+      <Text style={styles.subtitle}>
         Learn languages the fun way ✨
-      </Animated.Text>
+      </Text>
 
       {/* Loader */}
       <ActivityIndicator size="large" color="#FFA500" style={{ marginTop: 20 }} />

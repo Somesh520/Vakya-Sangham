@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "701020560421",
+    "project_id": "vakya-sangham-dev",
+    "storage_bucket": "vakya-sangham-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:701020560421:android:1234567890abcdef",
+        "android_client_info": {
+          "package_name": "com.vakyasangam"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummyKeyForDevelopmentOnly"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -160,11 +160,11 @@ const AdminDashboardScreen: React.FC = () => {
                 {user?.role === 'admin' && (
                     <ActionButton 
                         title="Create Course" 
-                        onPress={() => navigation.navigate('CreateCourse')} 
+                        onPress={() => navigation.navigate('Courses', { screen: 'CreateCourse' })} 
                         icon="add-circle-outline" 
                     />
                 )}
-                <ActionButton title="Manage Users" onPress={() => navigation.navigate('Users')} icon="people-circle-outline" />
+                <ActionButton title="Manage Users" onPress={() => navigation.navigate('Users', { screen: 'ManageUsers' })} icon="people-circle-outline" />
                 <ActionButton title="View Reports" onPress={() => Alert.alert('Coming Soon', 'This feature is under development.')} icon="stats-chart-outline" />
                  
                 {/* Recent Activity */}

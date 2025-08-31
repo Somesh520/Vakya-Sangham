@@ -1,14 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  ScrollView
+} from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import DocumentPicker from 'react-native-document-picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../AuthContext';
 import api from '../api';
 import { Text, TextInput, Button, Card, Avatar, ProgressBar, IconButton, ActivityIndicator } from 'react-native-paper';
-import { View as MotiView } from 'moti';
+import DocumentPicker from 'react-native-document-picker';
 
 interface ImageAsset { uri: string; type: string; fileName: string; }
 
@@ -61,10 +65,22 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handleSelectResume = useCallback(async () => {
     try {
-      const result = await DocumentPicker.pickSingle({ type: [DocumentPicker.types.pdf] });
-      setResume({ uri: result.uri, type: result.type || 'application/pdf', fileName: result.name || `resume_${Date.now()}.pdf` });
+      const result = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.pdf],
+      });
+      
+      if (result && result.uri && result.type && result.name) {
+        setResume({ uri: result.uri, type: result.type, fileName: result.name });
+      } else {
+          Alert.alert('Error', 'Could not get file information from the document picker.');
+      }
     } catch (err) {
-      if (!DocumentPicker.isCancel(err)) Alert.alert('Error', 'An unknown error occurred while picking document');
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User cancelled document picker');
+      } else {
+        console.error('Document Picker Error:', err);
+        Alert.alert('Error', 'Could not select the file.');
+      }
     }
   }, []);
 
@@ -94,14 +110,14 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <View>
         <Text style={styles.headerTitle}>Edit profile</Text>
-      </MotiView>
+      </View>
 
-      <MotiView from={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 100 }}>
+      <View>
         <View style={styles.profileSection}>
           <View style={{ position: 'relative' }}>
-            <Avatar.Image size={100} source={{ uri: profileImage?.uri || 'https://placehold.co/100x100/E0E0E0/333?text=VS' }} />
+            <Avatar.Image size={100} source={{ uri: profileImage?.uri || 'https://placehold.co/100x100/E8DBC6/4A4135?text=VS' }} />
             <IconButton icon="camera-plus-outline" style={styles.cameraIcon} size={24} onPress={handleSelectProfilePicture} />
           </View>
           <Text style={styles.profileName}>{fullName}</Text>
@@ -109,11 +125,11 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
 
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>5/5 - Profile Completed!</Text>
-          <ProgressBar progress={1} color="#c43232ff" style={styles.progressBar} />
+          <ProgressBar progress={1} color="#FFA500" style={styles.progressBar} />
         </View>
-      </MotiView>
+      </View>
 
-      <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 200 }}>
+      <View>
         <Card style={styles.card}>
           <Card.Content>
             <TextInput label="Bio" value={bio} onChangeText={setBio} mode="outlined" multiline numberOfLines={4} style={styles.input} />
@@ -121,9 +137,9 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
             <TextInput label="Preferred Language" value={preferredLanguage} onChangeText={setPreferredLanguage} mode="outlined" style={styles.input} />
           </Card.Content>
         </Card>
-      </MotiView>
+      </View>
 
-      <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 300 }}>
+      <View>
         <Card style={styles.card}>
           <Card.Content>
             <Button icon="file-pdf-box" mode="outlined" onPress={handleSelectResume} style={styles.uploadButton}>
@@ -131,33 +147,34 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
             </Button>
           </Card.Content>
         </Card>
-      </MotiView>
+      </View>
 
-      <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 400 }}>
+      <View>
         <Button mode="contained" onPress={handleSave} loading={loading} disabled={loading} style={styles.saveButton} labelStyle={styles.saveButtonText}>
           {loading ? 'Saving...' : 'Save and Complete'}
         </Button>
-      </MotiView>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#FDF6E9' },
-  container: { flex:1, backgroundColor:'#FDF6E9' },
+  loadingContainer: { flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#F5E8C7' },
+  loadingText: { marginTop: 10, color: '#4A4135' },
+  container: { flex:1, backgroundColor:'#F5E8C7' },
   contentContainer: { padding:10, paddingBottom:40 },
-  headerTitle: { fontSize:22, fontWeight:'bold', textAlign:'center', marginVertical:20, color:'#333' },
+  headerTitle: { fontSize:22, fontWeight:'bold', textAlign:'center', marginVertical:20, color:'#4A4135' },
   profileSection: { alignItems:'center', marginBottom:20 },
-  profileName: { fontSize:20, fontWeight:'bold', color:'#333', marginTop:10 },
-  cameraIcon: { position:'absolute', bottom:0, right:0, backgroundColor:'#F4A261', borderRadius:20 },
+  profileName: { fontSize:20, fontWeight:'bold', color:'#4A4135', marginTop:10 },
+  cameraIcon: { position:'absolute', bottom:0, right:0, backgroundColor:'#FFA500', borderRadius:20 },
   progressContainer: { paddingHorizontal:10, marginBottom:10 },
-  progressText: { fontSize:14, color:'#333', marginBottom:5, textAlign:'center' },
-  progressBar: { height:6, borderRadius:3 },
-  card: { marginVertical:10, marginHorizontal:10, backgroundColor:'#FFF' },
-  input: { marginBottom:15, backgroundColor:'#FFF' },
-  uploadButton: { paddingVertical:8, borderColor:'#F4A261' },
-  saveButton: { paddingVertical:8, borderRadius:25, margin:20, backgroundColor:'#F4A261' },
-  saveButtonText: { color:'#FFF', fontWeight:'bold', fontSize:16 },
+  progressText: { fontSize:14, color:'#4A4135', marginBottom:5, textAlign:'center' },
+  progressBar: { height:6, borderRadius:3, backgroundColor: '#E8DBC6' },
+  card: { marginVertical:10, marginHorizontal:10, backgroundColor:'#E8DBC6' },
+  input: { marginBottom:15, backgroundColor:'#FFFFFF' },
+  uploadButton: { paddingVertical:8, borderColor:'#FFA500' },
+  saveButton: { paddingVertical:8, borderRadius:25, margin:20, backgroundColor:'#FFA500' },
+  saveButtonText: { color:'#FFFFFF', fontWeight:'bold', fontSize:16 },
 });
 
 export default EditProfileScreen;

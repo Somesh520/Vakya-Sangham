@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import api from './api';
 
-// --- User Interface ---
 export interface User {
   _id: string;
   fullname: string;

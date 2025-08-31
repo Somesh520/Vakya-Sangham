@@ -6,7 +6,7 @@ import {
 import { useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import api from '../../api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import DocumentPicker, { types } from 'react-native-document-picker';
+
 import { TeacherStackParamList } from '../navigation/TeacherNavigator';
 import { Course } from '../types/types';
 
@@ -63,22 +63,14 @@ const CourseManageScreen = () => {
         }
     }, [courseId]);
 
-    useFocusEffect(fetchCourse);
+    useFocusEffect(
+        useCallback(() => {
+            fetchCourse();
+        }, [fetchCourse])
+    );
 
     const pickVideo = useCallback(async () => {
-        try {
-            const doc = await DocumentPicker.pickSingle({ type: [types.video] });
-            setLessonVideoFile({
-                uri: doc.uri,
-                type: doc.type || 'video/mp4',
-                name: doc.name || `lesson_${Date.now()}.mp4`,
-            });
-        } catch (err) {
-            if (!DocumentPicker.isCancel(err)) {
-                Alert.alert('Error', 'An unknown error occurred while picking the video.');
-                console.error(err);
-            }
-        }
+        Alert.alert('Video Upload', 'Document picker is temporarily unavailable. Please try again later.');
     }, []);
 
     const handleAddModule = async () => {
@@ -114,7 +106,7 @@ const CourseManageScreen = () => {
         // ✅ 2. Axios request mein 'onUploadProgress' config add karein
         const config = {
             headers: { 'Content-Type': 'multipart/form-data' },
-            onUploadProgress: (progressEvent) => {
+            onUploadProgress: (progressEvent: { loaded: number; total?: number }) => {
                 if (progressEvent.total) {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                     setUploadProgress(percentCompleted);

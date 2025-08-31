@@ -9,12 +9,13 @@ import {
     TouchableOpacity, 
     ActivityIndicator,
     StyleSheet,
-    Platform
+    Platform,
+    KeyboardAvoidingView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const API_BASE = 'http://192.168.9.127:8000'; // Your backend IP
+const API_BASE = 'http://192.168.9.127:8000';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -26,7 +27,6 @@ const AiTutorScreen: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // New state for language and lesson
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [lessonToTeach, setLessonToTeach] = useState('');
 
@@ -67,12 +67,10 @@ const AiTutorScreen: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', content: input }]);
     setLoading(true);
 
-    // Send language and lesson with the chat message
     socketRef.current.emit('chat', {
       query: input,
       language: selectedLanguage,
-      lesson_to_teach: lessonToTeach || null, // Send null if no lesson is specified
-      // You can still include previous messages if your backend supports it
+      lesson_to_teach: lessonToTeach || null,
       previous_query: messages[messages.length - 2]?.content || null,
       previous_response: messages[messages.length - 1]?.content || null,
     });
@@ -82,108 +80,101 @@ const AiTutorScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-        {/* --- Setup Section --- */}
-        <View style={styles.setupContainer}>
-            <Text style={styles.setupTitle}>AI Tutor Setup</Text>
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={selectedLanguage}
-                    onValueChange={(itemValue) => setSelectedLanguage(itemValue)}
-                    style={styles.picker}
-                    itemStyle={styles.pickerItem}
-                >
-                    <Picker.Item label="English" value="English" />
-                    <Picker.Item label="Hindi" value="Hindi" />
-                    <Picker.Item label="Spanish" value="Spanish" />
-                </Picker>
-            </View>
-            <TextInput
-                style={styles.lessonInput}
-                placeholder="Optional: What lesson should I teach?"
-                placeholderTextColor="#aaa"
-                value={lessonToTeach}
-                onChangeText={setLessonToTeach}
-            />
-        </View>
-
-        {/* --- Chat Section --- */}
-        <ScrollView
-            ref={scrollRef}
-            style={styles.chatScrollView}
-            contentContainerStyle={{ paddingBottom: 10 }}
-            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
         >
-            {messages.map((msg, idx) => (
-                <View key={idx} style={[styles.messageBubble, msg.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
-                    <Text style={styles.messageText}>
-                        {msg.content}
-                    </Text>
+            {/* --- Setup Section --- */}
+            <View style={styles.setupContainer}>
+                <Text style={styles.setupTitle}>AI Tutor Setup</Text>
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={selectedLanguage}
+                        onValueChange={(itemValue) => setSelectedLanguage(itemValue)}
+                        style={styles.picker}
+                    >
+                        <Picker.Item label="English" value="English" />
+                        <Picker.Item label="Hindi" value="Hindi" />
+                        <Picker.Item label="Spanish" value="Spanish" />
+                    </Picker>
                 </View>
-            ))}
-             {loading && messages[messages.length -1]?.role === 'user' && (
-                <View style={[styles.messageBubble, styles.assistantBubble]}>
-                    <ActivityIndicator size="small" color="#FFA500" />
-                </View>
-             )}
-        </ScrollView>
+                <TextInput
+                    style={styles.lessonInput}
+                    placeholder="Optional: Current Lesson?"
+                    placeholderTextColor="#777"
+                    value={lessonToTeach}
+                    onChangeText={setLessonToTeach}
+                />
+            </View>
 
-        {/* --- Input Section --- */}
-        <View style={styles.inputContainer}>
-            <TextInput
-                style={styles.input}
-                placeholder="Type your message..."
-                placeholderTextColor="#aaa"
-                value={input}
-                onChangeText={setInput}
-                multiline
-            />
-            <TouchableOpacity onPress={sendMessage} style={styles.sendButton} disabled={loading}>
-                <Ionicons name="send" size={24} color="#fff" />
-            </TouchableOpacity>
-        </View>
+            {/* --- Chat Section --- */}
+            <ScrollView
+                ref={scrollRef}
+                style={styles.chatScrollView}
+                contentContainerStyle={{ paddingBottom: 10, flexGrow: 1 }}
+                onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+            >
+                {messages.map((msg, idx) => (
+                    <View key={idx} style={[styles.messageBubble, msg.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
+                        <Text style={[styles.messageText, msg.role === 'user' ? styles.userMessageText : styles.assistantMessageText]}>
+                            {msg.content}
+                        </Text>
+                    </View>
+                ))}
+                {loading && messages[messages.length -1]?.role === 'user' && (
+                    <View style={[styles.messageBubble, styles.assistantBubble]}>
+                        <ActivityIndicator size="small" color="#FFA500" />
+                    </View>
+                )}
+            </ScrollView>
+
+            {/* --- Input Section --- */}
+            <View style={styles.inputContainer}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Type your message..."
+                    placeholderTextColor="#777"
+                    value={input}
+                    onChangeText={setInput}
+                    multiline
+                />
+                <TouchableOpacity onPress={sendMessage} style={styles.sendButton} disabled={loading}>
+                    <Ionicons name="send" size={24} color="#fff" />
+                </TouchableOpacity>
+            </View>
+        </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: '#F5E8C7' },
+    keyboardAvoidingView: { flex: 1 },
     setupContainer: {
         padding: 15,
+        paddingTop: 50,
         borderBottomWidth: 1,
-        borderBottomColor: '#333',
+        borderBottomColor: '#A19A8F',
     },
     setupTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#4A4135',
         marginBottom: 10,
     },
     pickerContainer: {
-        backgroundColor: '#333',
+        backgroundColor: '#FFFFFF', // Changed to white
         borderRadius: 8,
         marginBottom: 10,
-        ...Platform.select({
-            ios: {
-                padding: 0,
-            },
-            android: {
-                paddingHorizontal: 10,
-            }
-        })
     },
     picker: {
-        color: '#fff',
-        height: Platform.OS === 'ios' ? 120 : 50,
-    },
-    pickerItem: {
-        color: '#fff',
-        height: 120,
+        color: '#4A4135', // Dark text for white background
     },
     lessonInput: {
-        backgroundColor: '#333',
+        backgroundColor: '#FFFFFF', // Changed to white
         borderRadius: 8,
         padding: 12,
-        color: '#fff',
+        color: '#4A4135', // Dark text for white background
         fontSize: 16,
     },
     chatScrollView: {
@@ -202,26 +193,32 @@ const styles = StyleSheet.create({
     },
     assistantBubble: {
         alignSelf: 'flex-start',
-        backgroundColor: '#444',
+        backgroundColor: '#FFFFFF', // Changed to white
     },
     messageText: {
-        color: '#fff',
         fontSize: 16,
+    },
+    userMessageText: {
+        color: '#fff',
+    },
+    assistantMessageText: {
+        color: '#4A4135',
     },
     inputContainer: {
         flexDirection: 'row',
         padding: 10,
         borderTopWidth: 1,
-        borderTopColor: '#333',
+        borderTopColor: '#A19A8F',
         alignItems: 'center',
+        backgroundColor: '#FCF0DB',
     },
     input: {
         flex: 1,
-        backgroundColor: '#333',
+        backgroundColor: '#FFFFFF', // Changed to white
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 10,
-        color: '#fff',
+        color: '#4A4135',
         marginRight: 10,
         fontSize: 16,
     },

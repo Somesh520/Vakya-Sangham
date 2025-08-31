@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation, NavigationProp } from '@react-navigation
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../AuthContext'; // Adjust path if needed
 import api from '../../api';
-import { ProfileStackParamList } from '../../navigation/AppNavigator'; // ✅ Import your stack param list
+import { ProfileStackParamList } from '../../AppNavigator';
 
 interface Profile {
     fullname: string;
@@ -85,8 +85,8 @@ const TeacherProfileScreen = () => {
             <SafeAreaView style={styles.center}>
                 <Text style={styles.errorText}>Could not load profile.</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={() => {
-                    // ✅ Use the correctly typed navigation method
-                    navigation.replace('ProfileMain'); 
+                    // Fallback to navigate if replace is not available on this type
+                    (navigation as any).replace?.('ProfileMain') ?? (navigation as any).navigate('ProfileMain'); 
                 }}>
                     <Text style={styles.retryButtonText}>Try Again</Text>
                 </TouchableOpacity>

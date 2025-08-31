@@ -86,11 +86,11 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#F5F5F5' },
+  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#F5E8C7' },
   title: { textAlign: 'center', marginBottom: 10 },
   subtitle: { textAlign: 'center', marginBottom: 30, color: '#616161' },
   input: { marginBottom: 20 },
-  button: { paddingVertical: 8 },
+  button: { paddingVertical: 8 ,backgroundColor: '#D87A33'},
 });
 
 export default ForgotPasswordScreen;

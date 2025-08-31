@@ -23,7 +23,6 @@ import {
   Snackbar
 } from 'react-native-paper';
 
-import { View as MotiView, AnimatePresence } from 'moti';
 import statesData from '../statesDistricts.json';
 
 type AboutYouRouteProp = RouteProp<RootStackParamList, 'AboutYou'>;
@@ -110,17 +109,17 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <MotiView from={{opacity: 0, translateY: -20}} animate={{opacity: 1, translateY: 0}} transition={{type: "timing", duration: 600}}>
+        <View>
           <Text style={styles.title}>About you</Text>
           <ProgressBar progress={0.5} color={styles.progressFill.backgroundColor} style={styles.progressBar} />
-        </MotiView>
+        </View>
 
         {/* Education */}
-        <MotiView from={{opacity: 0, translateX: -30}} animate={{opacity: 1, translateX: 0}} transition={{delay: 150}}>
+        <View>
           <Text style={styles.sectionTitle}>What's your education level?</Text>
           <RadioButton.Group onValueChange={setEducation} value={education}>
             {educationLevels.map((level, i) => (
-              <MotiView key={level.value} from={{opacity: 0, scale: 0.9}} animate={{opacity: 1, scale: 1}} transition={{delay: 200 + i*80}}>
+              <View key={level.value}>
                 <RadioButton.Item 
                   label={level.label}
                   value={level.value}
@@ -128,13 +127,13 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
                   color={styles.radioSelected.backgroundColor}
                   style={education === level.value ? styles.selectedOption : styles.option}
                 />
-              </MotiView>
+              </View>
             ))}
           </RadioButton.Group>
-        </MotiView>
+        </View>
 
         {/* Location */}
-        <MotiView from={{opacity: 0, translateX: -30}} animate={{opacity: 1, translateX: 0}} transition={{delay: 400}}>
+        <View>
           <Text style={styles.sectionTitle}>Where are you located?</Text>
 
           <TouchableOpacity onPress={() => { setIsLocationModalVisible(true); setStep('state'); }}>
@@ -152,56 +151,54 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
               <TextInput label="District" value={district} mode="outlined" editable={false} right={<TextInput.Icon icon="menu-down" />} style={styles.input}/>
             </View>
           </TouchableOpacity>
-        </MotiView>
+        </View>
 
         {/* Continue Button */}
-        <MotiView from={{opacity: 0, translateY: 20}} animate={{opacity: 1, translateY: 0}} transition={{delay: 600}}>
-          <MotiView from={{scale: 1}} animate={{scale: [1,1.05,1]}} transition={{loop:true,type:'timing',duration:2000}}>
+        <View>
+          <View>
             <Button mode="contained" onPress={handleContinue} loading={loading} disabled={loading} style={styles.continueButton} labelStyle={styles.continueButtonText} buttonColor={styles.continueButton.backgroundColor}>
               {loading ? 'Saving...' : 'Continue'}
             </Button>
-          </MotiView>
-        </MotiView>
+          </View>
+        </View>
       </ScrollView>
 
       {/* Location Modal */}
-      <AnimatePresence>
-        {isLocationModalVisible && (
-          <MotiView from={{opacity:0, translateY:50}} animate={{opacity:1, translateY:0}} exit={{opacity:0, translateY:50}} style={styles.bottomSheetContainer}>
-            <View style={styles.bottomSheetContent}>
-              <Searchbar 
-                placeholder={step === 'state' ? 'Search state...' : 'Search district...'}
-                onChangeText={setSearchQuery}
-                value={searchQuery}
-                style={styles.searchbar}
-              />
+      {isLocationModalVisible && (
+        <View style={styles.bottomSheetContainer}>
+          <View style={styles.bottomSheetContent}>
+            <Searchbar 
+              placeholder={step === 'state' ? 'Search state...' : 'Search district...'}
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+              style={styles.searchbar}
+            />
 
-              <FlatList
-                data={step === 'state' ? filteredStates : filteredDistricts}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => step === 'state' ? onStateSelect(item) : onDistrictSelect(item)}
-                    style={[styles.listItem,
-                      (step === 'state' && state === item) || (step === 'district' && district === item)
-                        ? styles.selectedListItem : null]}
-                  >
-                    <Text style={styles.listItemText}>{item}</Text>
-                    {((step === 'state' && state === item) || (step === 'district' && district === item)) && (
-                      <Text style={styles.checkmark}>✔</Text>
-                    )}
-                  </TouchableOpacity>
-                )}
-                ItemSeparatorComponent={() => <Divider />}
-              />
+            <FlatList
+              data={step === 'state' ? filteredStates : filteredDistricts}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => step === 'state' ? onStateSelect(item) : onDistrictSelect(item)}
+                  style={[styles.listItem,
+                    (step === 'state' && state === item) || (step === 'district' && district === item)
+                      ? styles.selectedListItem : null]}
+                >
+                  <Text style={styles.listItemText}>{item}</Text>
+                  {((step === 'state' && state === item) || (step === 'district' && district === item)) && (
+                    <Text style={styles.checkmark}>✔</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <Divider />}
+            />
 
-              <Button mode="outlined" onPress={() => setIsLocationModalVisible(false)} style={styles.closeButton}>
-                Close
-              </Button>
-            </View>
-          </MotiView>
-        )}
-      </AnimatePresence>
+            <Button mode="outlined" onPress={() => setIsLocationModalVisible(false)} style={styles.closeButton}>
+              Close
+            </Button>
+          </View>
+        </View>
+      )}
 
       {/* Snackbar */}
       <Snackbar visible={snackbar.visible} onDismiss={() => setSnackbar({...snackbar,visible:false})} duration={2000} style={{backgroundColor:'#D87A33'}}>

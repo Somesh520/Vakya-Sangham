@@ -1,12 +1,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import { StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../AuthContext';
 import api from '../api';
 
 import { Text, ProgressBar, RadioButton, Button, SegmentedButtons } from 'react-native-paper';
-import { View as MotiView } from 'moti';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'SkillLevel'> };
 
@@ -76,28 +75,28 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
         {/* Progress */}
-        <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <View>
           <ProgressBar progress={0.8} color={styles.progressFill.backgroundColor} style={styles.progressBar} />
-        </MotiView>
+        </View>
 
         {/* Skill Level */}
-        <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 100 }}>
+        <View>
           <Text style={styles.sectionTitle}>What's your current skill level?</Text>
           <RadioButton.Group onValueChange={setSkillLevel} value={level}>
-            <FlatList data={['Beginner', 'Intermediate', 'Advanced']} keyExtractor={(item) => item} renderItem={renderRadioItem} />
+            {['Beginner', 'Intermediate', 'Advanced'].map((item) => renderRadioItem({ item }))}
           </RadioButton.Group>
-        </MotiView>
+        </View>
 
         {/* Time Availability */}
-        <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 200 }}>
+        <View>
           <Text style={styles.sectionTitle}>How much time do you have each week for learning?</Text>
           <RadioButton.Group onValueChange={setLearningTime} value={timeAvailability}>
-            <FlatList data={timeOptions} keyExtractor={(item) => item} renderItem={renderTimeItem} />
+            {timeOptions.map((item) => renderTimeItem({ item }))}
           </RadioButton.Group>
-        </MotiView>
+        </View>
 
         {/* Online Course Experience */}
-        <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 300 }}>
+        <View>
           <Text style={styles.sectionTitle}>Have you taken online courses before?</Text>
           <SegmentedButtons
             value={hasTakenOnlineCourses}
@@ -118,10 +117,10 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
               },
             ]}
           />
-        </MotiView>
+        </View>
 
         {/* Next Button */}
-        <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 400 }}>
+        <View>
           <Button
             mode="contained"
             onPress={handleContinue}
@@ -133,7 +132,7 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
           >
             {loading ? 'Finishing...' : 'Next'}
           </Button>
-        </MotiView>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -141,7 +140,7 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5E8C7' },
-  contentContainer: { padding: 20 },
+  contentContainer: { padding: 20, paddingTop: 60 }, // Changed this line
   progressBar: { height: 10, borderRadius: 5, marginBottom: 20 },
   progressFill: { backgroundColor: '#000000' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 15, color: '#000000' },
