@@ -161,12 +161,10 @@ const CourseEditScreen = () => {
             }
 
             if (courseToEdit) {
-                // ✅ Final, correct URL for updating a course
                 await api.patch(`/api/${courseToEdit._id}`, courseData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             } else {
-                // ✅ Final, correct URL for creating a new course
                 await api.post('/api/createcourse', courseData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
@@ -175,13 +173,31 @@ const CourseEditScreen = () => {
         } catch (error: any) {
              if (error.response) {
                 console.error("Server Error Response:", JSON.stringify(error.response.data, null, 2));
-            } else {
+             } else {
                 console.error("Failed to save course:", error);
-            }
-            const message = error.response?.data?.message || "Could not save the course.";
-            Alert.alert("Error", message);
+             }
+             const message = error.response?.data?.message || "Could not save the course.";
+             Alert.alert("Error", message);
         } finally {
             setIsLoading(false);
+        }
+    };
+    
+    // ✅ New function to format the price for the input field display
+    const formatPriceForDisplay = (value: string) => {
+        if (value === '0') {
+            return 'Free';
+        }
+        return value;
+    };
+
+    // ✅ New handler for the price input to manage state correctly
+    const handlePriceChange = (text: string) => {
+        if (text.toLowerCase() === 'free') {
+            setPrice('0');
+        } 
+        else if (/^\d*$/.test(text)) { 
+            setPrice(text);
         }
     };
     
@@ -218,7 +234,17 @@ const CourseEditScreen = () => {
                         { label: "Intermediate", value: "Intermediate" },
                         { label: "Advanced", value: "Advanced" },
                     ]} />
-                    <InputField label="Price (₹)" icon="cash-outline" value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="e.g., 499 (0 for free)" />
+
+                    {/* ✅ Updated Price InputField to use the new handlers */}
+                    <InputField 
+                        label="Price (₹)" 
+                        icon="cash-outline" 
+                        value={formatPriceForDisplay(price)} 
+                        onChangeText={handlePriceChange} 
+                        keyboardType="numeric" 
+                        placeholder="e.g., 499 (or type 'Free')" 
+                    />
+
                 </View>
             </ScrollView>
             <View style={styles.footer}>

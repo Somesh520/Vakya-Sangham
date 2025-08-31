@@ -1,5 +1,5 @@
 import express from "express";
-import { updateOnboarding ,getOnboardingInfo ,getUserProfile,getme } from "../controller/userController.js";
+import { updateOnboarding ,getOnboardingInfo ,getUserProfile,getme ,deleteUser } from "../controller/userController.js";
 import { verifyUser } from "../middleware/protect.js";
 import { handleChatStream } from "../controller/tutorController.js";
 
@@ -17,8 +17,8 @@ router.patch(
 );
 router.get('/onboarding', verifyUser, getOnboardingInfo);
 router.get('/profile', verifyUser, getUserProfile); 
-router.get('/me', verifyUser, getme); // Alias for /profile
+router.get('/me', verifyUser, getme); 
 router.post('/chat-stream', verifyUser, handleChatStream);
-
+router.delete('/me', verifyUser, deleteUser);
 
 export default router;

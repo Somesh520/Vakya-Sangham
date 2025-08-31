@@ -193,6 +193,31 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/CMakeFiles/cmake.verify_globs")
 endif()
 
+# react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/*.cpp")
+set(OLD_GLOB
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/rnpdf-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/CMakeFiles/cmake.verify_globs")
+endif()
+
+# react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/*.cpp")
+set(OLD_GLOB
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/ComponentDescriptors.cpp"
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/EventEmitters.cpp"
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/Props.cpp"
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/ShadowNodes.cpp"
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/States.cpp"
+  "C:/project/Frontend/node_modules/react-native-pdf/android/build/generated/source/codegen/jni/react/renderer/components/rnpdf/rnpdfJSI-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/x86/CMakeFiles/cmake.verify_globs")
+endif()
+
 # react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/*.cpp")
 set(OLD_GLOB

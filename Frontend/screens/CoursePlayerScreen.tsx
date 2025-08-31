@@ -14,6 +14,7 @@ import {
     Image
 } from 'react-native';
 import Video, { OnVideoErrorData } from 'react-native-video';
+import { WebView } from 'react-native-webview';
 import api from '../api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { RouteProp } from '@react-navigation/native';
@@ -25,11 +26,49 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 // --- Type Definitions ---
-interface Lesson { _id: string; title: string; videoURL: string; duration: number; }
+interface Lesson { 
+    _id: string; 
+    title: string; 
+    videoURL?: string; 
+    videoUrl?: string;
+    duration: number; 
+    lessonType?: 'video' | 'pdf' | 'youtube' | 'nptel';
+    pdfUrl?: string;
+    nptelUrl?: string;
+}
 interface Module { _id: string; title: string; lessons: Lesson[]; }
 interface Course { _id: string; title: string; thumbnailURL?: string; instructor: { fullname: string }; modules: Module[]; }
 type MainStackParamList = { MainTabs: undefined; CoursePlayer: { courseId: string }; };
 type CoursePlayerScreenProps = { route: RouteProp<MainStackParamList, 'CoursePlayer'>; navigation: NativeStackNavigationProp<MainStackParamList, 'CoursePlayer'>; };
+
+// --- Utility Functions ---
+const isYouTubeURL = (url: string): boolean => {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/i;
+    return youtubeRegex.test(url);
+};
+
+const isNPTELURL = (url: string): boolean => {
+    return url.includes('nptel.ac.in');
+};
+
+const getYouTubeEmbedURL = (url: string): string => {
+    try {
+        let videoId = '';
+        
+        if (url.includes('youtube.com/watch?v=')) {
+            videoId = url.split('v=')[1]?.split('&')[0];
+        } else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        } else if (url.includes('youtube.com/embed/')) {
+            videoId = url.split('embed/')[1]?.split('?')[0];
+        }
+        
+        return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&controls=1&modestbranding=1&playsinline=1` : '';
+    } catch (error) {
+        console.error('Error creating YouTube embed URL:', error);
+        return '';
+    }
+};
 
 // --- Main Component ---
 const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
@@ -76,23 +115,29 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
         });
     };
     
-    // ✅ This function finds and plays the first lesson
     const playFirstLesson = () => {
         if (course?.modules?.[0]?.lessons?.[0]) {
-            setSelectedLesson(course.modules[0].lessons[0]);
+            const firstLesson = course.modules[0].lessons[0];
+            setSelectedLesson(firstLesson);
         } else {
             Alert.alert("No Lessons", "This course doesn't have any lessons available yet.");
         }
     };
 
-    const markLessonAsComplete = async () => {
-        if (!selectedLesson || completedLessons.has(selectedLesson._id)) return;
+    const handleLessonPress = (lesson: Lesson) => {
+        setSelectedLesson(lesson);
+    };
+
+    const markLessonAsComplete = async (lessonId?: string) => {
+        const targetLessonId = lessonId || selectedLesson?._id;
+        if (!targetLessonId || completedLessons.has(targetLessonId)) return;
+        
         try {
             await api.post('/api/progress/complete-lesson', {
                 courseId: course?._id,
-                lessonId: selectedLesson._id,
+                lessonId: targetLessonId,
             });
-            setCompletedLessons(prev => new Set(prev).add(selectedLesson._id));
+            setCompletedLessons(prev => new Set(prev).add(targetLessonId));
         } catch (error) {
             console.error("Failed to mark lesson as complete:", error);
         }
@@ -106,6 +151,124 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
         return { totalLessons: total, progressPercentage: percentage };
     }, [course, completedLessons]);
 
+    // ✅ Get preview content for all lesson types
+    const getPreviewContent = () => {
+        if (!selectedLesson) return null;
+        
+        const videoUrl = selectedLesson.videoURL || selectedLesson.videoUrl || selectedLesson.nptelUrl;
+        
+        // NPTEL videos - Use WebView for course pages
+        if (selectedLesson.lessonType === 'nptel' || isNPTELURL(videoUrl || '')) {
+            return (
+                <WebView
+                    source={{ uri: videoUrl || '' }}
+                    style={styles.videoPlayer}
+                    allowsFullscreenVideo={true}
+                    allowsInlineMediaPlayback={true}
+                    mediaPlaybackRequiresUserAction={false}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    startInLoadingState={true}
+                    renderLoading={() => (
+                        <View style={styles.webViewLoading}>
+                            <ActivityIndicator size="large" color="#2563EB" />
+                            <Text style={styles.loadingText}>Loading NPTEL Course...</Text>
+                        </View>
+                    )}
+                    onLoadEnd={() => {
+                        setTimeout(() => markLessonAsComplete(), 5000);
+                    }}
+                    onError={(error) => {
+                        console.error('NPTEL WebView Error:', error);
+                        Alert.alert("Error", "Failed to load NPTEL course. Please check your internet connection.");
+                    }}
+                    bounces={false}
+                    scrollEnabled={true}
+                    showsHorizontalScrollIndicator={false}
+                    showsVerticalScrollIndicator={false}
+                    userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15"
+                    mixedContentMode="compatibility"
+                />
+            );
+        }
+        
+        // YouTube videos - WebView embed
+        else if (selectedLesson.lessonType === 'youtube' || (videoUrl && isYouTubeURL(videoUrl))) {
+            const embedUrl = getYouTubeEmbedURL(videoUrl);
+            return (
+                <WebView
+                    source={{ uri: embedUrl }}
+                    style={styles.videoPlayer}
+                    allowsFullscreenVideo={true}
+                    allowsInlineMediaPlayback={true}
+                    mediaPlaybackRequiresUserAction={false}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    startInLoadingState={true}
+                    renderLoading={() => (
+                        <View style={styles.webViewLoading}>
+                            <ActivityIndicator size="large" color="#FF0000" />
+                            <Text style={styles.loadingText}>Loading YouTube Video...</Text>
+                        </View>
+                    )}
+                    onLoadEnd={() => {
+                        setTimeout(() => markLessonAsComplete(), 3000);
+                    }}
+                    onError={(error) => {
+                        console.error('YouTube WebView Error:', error);
+                        Alert.alert("Error", "Failed to load YouTube video.");
+                    }}
+                    bounces={false}
+                    scrollEnabled={false}
+                    showsHorizontalScrollIndicator={false}
+                    showsVerticalScrollIndicator={false}
+                />
+            );
+        }
+        
+        // PDF files
+        else if (selectedLesson.lessonType === 'pdf') {
+            return (
+                <WebView
+                    source={{ uri: selectedLesson.pdfUrl }}
+                    style={styles.videoPlayer}
+                    startInLoadingState={true}
+                    renderLoading={() => (
+                        <View style={styles.webViewLoading}>
+                            <ActivityIndicator size="large" color="#4A90E2" />
+                            <Text style={styles.loadingText}>Loading PDF...</Text>
+                        </View>
+                    )}
+                    onError={(error) => {
+                        console.error('PDF WebView Error:', error);
+                        Alert.alert("Error", "Failed to load PDF file.");
+                    }}
+                />
+            );
+        }
+        
+        // Regular videos (Direct URLs - Cloudinary, etc.)
+        else if (videoUrl) {
+            return (
+                <Video
+                    source={{ uri: videoUrl }}
+                    style={styles.videoPlayer}
+                    controls={true}
+                    resizeMode="contain"
+                    onEnd={() => markLessonAsComplete()}
+                    onError={(e: OnVideoErrorData) => console.error("Video Error:", JSON.stringify(e))}
+                />
+            );
+        }
+        
+        return (
+            <View style={styles.noContentContainer}>
+                <Ionicons name="alert-circle-outline" size={60} color="#718096" />
+                <Text style={styles.noContentText}>Content not available</Text>
+            </View>
+        );
+    };
+
     if (loading) {
         return <SafeAreaView style={styles.center}><ActivityIndicator size="large" color="#4A90E2" /></SafeAreaView>;
     }
@@ -114,16 +277,8 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
         <SafeAreaView style={styles.container}>
             <View style={styles.playerArea}>
                 {selectedLesson ? (
-                    <Video
-                        source={{ uri: selectedLesson.videoURL }}
-                        style={styles.videoPlayer}
-                        controls={true}
-                        resizeMode="contain"
-                        onEnd={markLessonAsComplete}
-                        onError={(e: OnVideoErrorData) => console.error("Video Error:", JSON.stringify(e))}
-                    />
+                    getPreviewContent()
                 ) : (
-                    // ✅ This is now a TouchableOpacity that calls playFirstLesson
                     <TouchableOpacity style={styles.thumbnailContainer} onPress={playFirstLesson} activeOpacity={0.8}>
                         <Image 
                             source={{ uri: course?.thumbnailURL || 'https://placehold.co/600x400/000000/FFFFFF?text=Course' }} 
@@ -172,17 +327,51 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                                     {module.lessons.map(lesson => {
                                         const isCompleted = completedLessons.has(lesson._id);
                                         const isSelected = selectedLesson?._id === lesson._id;
-                                        const iconName = isCompleted ? "checkmark-circle" : (isSelected ? "play-circle" : "play-circle-outline");
-                                        const iconColor = isCompleted ? "#28a745" : (isSelected ? "#4A90E2" : "#718096");
+                                        const videoUrl = lesson.videoURL || lesson.videoUrl || lesson.nptelUrl;
+                                        
+                                        // Icon based on lesson type
+                                        let iconName = "play-circle-outline";
+                                        let iconColor = "#718096";
+                                        
+                                        if (isCompleted) {
+                                            iconName = "checkmark-circle";
+                                            iconColor = "#28a745";
+                                        } else if (lesson.lessonType === 'youtube' || (videoUrl && isYouTubeURL(videoUrl))) {
+                                            iconName = "logo-youtube";
+                                            iconColor = isSelected ? "#FF0000" : "#FF6666";
+                                        } else if (lesson.lessonType === 'nptel' || isNPTELURL(videoUrl || '')) {
+                                            iconName = "school";
+                                            iconColor = isSelected ? "#2563EB" : "#3B82F6";
+                                        } else if (lesson.lessonType === 'pdf') {
+                                            iconName = "document-text";
+                                            iconColor = isSelected ? "#4A90E2" : "#718096";
+                                        } else if (isSelected) {
+                                            iconName = "play-circle";
+                                            iconColor = "#4A90E2";
+                                        }
 
                                         return (
                                             <TouchableOpacity 
                                                 key={lesson._id} 
                                                 style={[styles.lessonItem, isSelected && styles.selectedLessonItem]}
-                                                onPress={() => setSelectedLesson(lesson)}
+                                                onPress={() => handleLessonPress(lesson)}
                                             >
                                                 <Ionicons name={iconName} size={26} color={iconColor} />
-                                                <Text style={[styles.lessonTitle, isSelected && styles.selectedLessonTitle]}>{lesson.title}</Text>
+                                                <View style={styles.lessonInfo}>
+                                                    <Text style={[styles.lessonTitle, isSelected && styles.selectedLessonTitle]}>
+                                                        {lesson.title}
+                                                    </Text>
+                                                    {/* Show lesson type indicator */}
+                                                    {lesson.lessonType === 'youtube' || (videoUrl && isYouTubeURL(videoUrl)) ? (
+                                                        <Text style={styles.lessonTypeIndicator}>YouTube Video</Text>
+                                                    ) : lesson.lessonType === 'nptel' || isNPTELURL(videoUrl || '') ? (
+                                                        <Text style={styles.lessonTypeIndicator}>NPTEL Course</Text>
+                                                    ) : lesson.lessonType === 'pdf' ? (
+                                                        <Text style={styles.lessonTypeIndicator}>PDF Document</Text>
+                                                    ) : (
+                                                        <Text style={styles.lessonTypeIndicator}>Video</Text>
+                                                    )}
+                                                </View>
                                             </TouchableOpacity>
                                         );
                                     })}
@@ -228,6 +417,32 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 8,
+    },
+
+    // WebView loading styles
+    webViewLoading: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'black',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        color: 'white',
+        fontSize: 14,
+        marginTop: 10,
+    },
+    
+    // No content styles
+    noContentContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+    },
+    noContentText: {
+        fontSize: 16,
+        color: '#718096',
+        marginTop: 10,
     },
 
     contentContainer: { flex: 1 },
@@ -284,8 +499,28 @@ const styles = StyleSheet.create({
         borderBottomColor: '#F7F8FA',
     },
     selectedLessonItem: { backgroundColor: '#EBF8FF' },
-    lessonTitle: { marginLeft: 15, fontSize: 15, flex: 1, color: '#4A5568' },
-    selectedLessonTitle: { color: '#2C5282', fontWeight: 'bold' },
+    
+    // Lesson info container
+    lessonInfo: { 
+        marginLeft: 15, 
+        flex: 1,
+    },
+    lessonTitle: { 
+        fontSize: 15, 
+        color: '#4A5568',
+        fontWeight: '500',
+    },
+    selectedLessonTitle: { 
+        color: '#2C5282', 
+        fontWeight: 'bold' 
+    },
+    // Lesson type indicator
+    lessonTypeIndicator: {
+        fontSize: 12,
+        color: '#718096',
+        marginTop: 2,
+        fontStyle: 'italic',
+    },
 });
 
 export default CoursePlayerScreen;

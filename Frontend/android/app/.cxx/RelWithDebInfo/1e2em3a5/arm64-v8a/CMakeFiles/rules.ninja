@@ -122,6 +122,16 @@ rule CXX_COMPILER__react_codegen_RNImagePickerSpec_RelWithDebInfo
 #############################################
 # Rule for compiling CXX files.
 
+rule CXX_COMPILER__react_codegen_rnpdf_RelWithDebInfo
+  depfile = $DEP_FILE
+  deps = gcc
+  command = C:\Users\anjut\AppData\Local\Android\Sdk\ndk\27.1.12297006\toolchains\llvm\prebuilt\windows-x86_64\bin\clang++.exe --target=aarch64-none-linux-android24 --sysroot=C:/Users/anjut/AppData/Local/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/windows-x86_64/sysroot $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  description = Building CXX object $out
+
+
+#############################################
+# Rule for compiling CXX files.
+
 rule CXX_COMPILER__react_codegen_RNPermissionsSpec_RelWithDebInfo
   depfile = $DEP_FILE
   deps = gcc

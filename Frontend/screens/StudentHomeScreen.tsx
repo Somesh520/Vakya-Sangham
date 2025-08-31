@@ -52,14 +52,14 @@ const StudentHomeScreen = () => {
         }
     }, []);
 
-    useFocusEffect(useCallback(() => { 
+    useFocusEffect(useCallback(() => {
         setLoading(true);
-        fetchData(); 
+        fetchData();
     }, [fetchData]));
 
-    const onRefresh = useCallback(() => { 
-        setRefreshing(true); 
-        fetchData(); 
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        fetchData();
     }, [fetchData]);
 
     // --- Navigation Handlers ---
@@ -89,9 +89,13 @@ const StudentHomeScreen = () => {
                         <Text style={styles.greeting}>Hello, {firstName}!</Text>
                         <Text style={styles.subtitle}>Let's start learning</Text>
                     </View>
+<<<<<<< HEAD
                     <TouchableOpacity style={styles.notificationButton}>
                         <Ionicons name="notifications-outline" size={26} color="#4A4135" />
                     </TouchableOpacity>
+=======
+                    {/* Notification Button Removed From Here */}
+>>>>>>> origin/master
                 </View>
             </View>
         );
@@ -102,9 +106,15 @@ const StudentHomeScreen = () => {
             style={styles.featuredCard}
             onPress={() => navigateToCourseDetail(item._id, item.title)}
         >
+<<<<<<< HEAD
             <Image 
                 source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E8DBC6/4A4135?text=Course' }} 
                 style={styles.featuredThumbnail} 
+=======
+            <Image
+                source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E2E8F0/333?text=Course' }}
+                style={styles.featuredThumbnail}
+>>>>>>> origin/master
             />
             <View style={styles.featuredCardContent}>
                 <Text style={styles.featuredTitle} numberOfLines={2}>{item.title}</Text>
@@ -118,9 +128,15 @@ const StudentHomeScreen = () => {
             style={styles.learningItem}
             onPress={() => navigateToCoursePlayer(item._id)}
         >
+<<<<<<< HEAD
             <Image 
                 source={{ uri: item.thumbnailURL || 'https://placehold.co/200x200/E8DBC6/4A4135?text=...' }} 
                 style={styles.learningThumbnail} 
+=======
+            <Image
+                source={{ uri: item.thumbnailURL || 'https://placehold.co/200x200/E2E8F0/333?text=...' }}
+                style={styles.learningThumbnail}
+>>>>>>> origin/master
             />
             <View style={styles.learningTextContainer}>
                 <Text style={styles.learningTitle} numberOfLines={2}>{item.title}</Text>
@@ -205,9 +221,16 @@ const styles = StyleSheet.create({
     // Header
     headerContainer: { backgroundColor: '#E8DBC6', paddingBottom: 20,paddingTop:40, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }, // Updated
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20 },
+<<<<<<< HEAD
     greeting: { fontSize: 28, fontWeight: 'bold', color: '#4A4135' }, // Updated
     subtitle: { fontSize: 16, color: '#A19A8F', marginTop: 4 }, // Updated
     notificationButton: { padding: 8, backgroundColor: '#E8DBC6', borderRadius: 20 }, // Updated and changed to a complementary color
+=======
+    greeting: { fontSize: 28, fontWeight: 'bold', color: '#1A202C' },
+    subtitle: { fontSize: 16, color: '#4A5568', marginTop: 4 },
+    // You can also remove the notificationButton style if it's no longer used anywhere else
+    // notificationButton: { padding: 8, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 },
+>>>>>>> origin/master
 
     // Section Title
     sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#4A4135', marginHorizontal: 20, marginTop: 30, marginBottom: 15 }, // Updated
