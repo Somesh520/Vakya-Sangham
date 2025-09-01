@@ -1,0 +1,1 @@
+C:\project\Frontend\android\app\build\intermediates\cxx\RelWithDebInfo\1e2em3a5\obj\x86

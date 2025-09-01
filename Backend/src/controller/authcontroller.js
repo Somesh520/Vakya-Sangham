@@ -1,5 +1,5 @@
 
-
+import jwt from 'jsonwebtoken';
 import User from '../models/usermodel.js';
 import { generatetoken } from '../utils/generatetoken.js';
 import { sendMail } from '../utils/sendEmail.js';
@@ -8,6 +8,7 @@ import redisClient from '../config/redisClient.js';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // ✅ Signup Controller
 export const signup = async (req, res) => {
  const { fullname, email, password, phone, referralCode } = req.body;
@@ -35,7 +36,7 @@ if (!passwordRegex.test(password)) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 
     const newUser = new User({
-      fullName: fullname,
+      fullname: fullname,
       email,
       password: hashedPassword,
       phoneNumber: phone,
@@ -91,33 +92,54 @@ export const verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
-    if (user.isVerified) return res.status(400).json({ message: "User is already verified." });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
-    const storedOtp = await redisClient.get(`otp:${email}`);
-    if (!storedOtp || storedOtp !== otp) {
-      return res.status(400).json({ message: "Invalid or expired OTP." });
+    if (!user) {
+      console.log('❌ User not found for email:', normalizedEmail);
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'User is already verified.' });
+    }
+
+    const storedOtp = await redisClient.get(`otp:${normalizedEmail}`);
+
+    console.log('📩 Stored OTP:', storedOtp, typeof storedOtp);
+    console.log('📥 Entered OTP:', otp, typeof otp);
+
+    if (!storedOtp || storedOtp !== otp.toString()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
 
     user.isVerified = true;
     await user.save();
-    await redisClient.del(`otp:${email}`);
+    await redisClient.del(`otp:${normalizedEmail}`);
 
-    generatetoken(user._id, res);
+    // UPDATED: Assume generatetoken returns the token string
+    const token = generatetoken(user._id, res); 
 
+    // UPDATED: Send back a complete user object and the token in the body
     res.status(200).json({
-      message: "Email verified successfully.",
+      message: 'Email verified successfully.',
       user: {
-        fullName: user.fullName,
+        id: user._id, // It's good practice to send the ID
+        name: user.fullName, // Make sure your user model has 'fullName'
         email: user.email,
+        isOnboarded: user.isOnboarded, // 👈 CRITICAL: Added this field
       },
+      token: token, // 👈 CRITICAL: Added the generated token
     });
   } catch (error) {
-    console.error("❌ OTP Verification Error:", error.message);
-    res.status(500).json({ message: "OTP verification failed." });
+    console.error('❌ OTP Verification Error:', error.message);
+    res.status(500).json({ message: 'OTP verification failed.' });
   }
 };
+
+
+
+
 
 // ✅ Login Controller
 export const login = async (req, res) => {
@@ -138,14 +160,19 @@ export const login = async (req, res) => {
       return res.status(403).json({ message: "Please verify your email before login." });
     }
 
-    generatetoken(user._id, res);
-
+    // generatetoken(user._id, res);
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
     res.status(200).json({
       message: "Login successful.",
+       token: token,
       user: {
-        fullName: user.fullName,
+         fullname: user.fullname,
         email: user.email,
          role: user.role, 
+        isOnboarded: user.isOnboarded,
+         profileImageURL: user.profileImageURL
       },
     });
   } catch (error) {
@@ -252,6 +279,8 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+
+
 // ✅ Resend OTP Controller
 export const resendOTP = async (req, res) => {
   const { email } = req.body;
@@ -296,64 +325,160 @@ export const resendOTP = async (req, res) => {
     res.status(500).json({ message: "Failed to resend OTP." });
   }
 };
-//google login 
 
+
+// export const googleLogin = async (req, res) => {
+//   const { token } = req.body;
+
+//   if (!token) return res.status(400).json({ message: "Token is required." });
+
+//   try {
+//     const ticket = await client.verifyIdToken({
+//       idToken: token,
+//       audience: process.env.GOOGLE_CLIENT_ID,
+//     });
+
+//     const { sub: googleId, email, name: fullName } = ticket.getPayload();
+
+//     let user = await User.findOne({ googleId });
+
+//     if (!user) {
+//       user = await User.findOne({ email });
+//       if (user) {
+//         user.googleId = googleId;
+//       } else {
+//         user = new User({
+//           fullName,
+//           email,
+//           googleId,
+//           isVerified: true,
+//         });
+//       }
+//       await user.save();
+//     }
+
+//     // Generate JWT token (your function)
+//     const jwtToken = generatetoken(user._id);
+
+//     res.status(200).json({
+//       message: "Google login successful.",
+//       token: jwtToken,
+//       user: {
+//         fullName: user.fullName,
+//         email: user.email,
+//         googleId: user.googleId,
+//         role: user.role || "student",
+//       },
+//     });
+//   } catch (error) {
+//     res.status(401).json({ message: "Invalid Google token." });
+//   }
+// };
 
 export const googleLogin = async (req, res) => {
-  const { token } = req.body; // Get the token from the frontend
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required." });
+  }
 
   try {
-    // 1. Verify the token from Google
+    // Verify Google token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    const payload = ticket.getPayload();
-    const { sub: googleId, email, name: fullName, picture: profileImageURL } = payload;
 
-    // 2. Check if the user already exists in your database
+    // console.log("Server GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name: fullName, picture } = payload;
+
+    // console.log("Google payload:", payload);
+
     let user = await User.findOne({ googleId });
 
     if (!user) {
-      // 3. If user doesn't exist, check if they signed up with the same email
       user = await User.findOne({ email });
-      
+
       if (user) {
-        // If they exist via email, link the Google ID to their account
+        // Link Google account
         user.googleId = googleId;
-        user.profileImageURL = user.profileImageURL || profileImageURL; // Update image if they don't have one
+        user.profilePicture = picture;
+        await user.save();
       } else {
-        // 4. If they are a completely new user, create a new account
+        // New user
         user = new User({
-          fullName,
+          fullname: fullName,
           email,
           googleId,
-          profileImageURL,
-          isVerified: true, // Google accounts are already verified
-          isOnboarded: false, // They still need to complete your app's onboarding
+          profilePicture: picture,
+          isVerified: true,
+          authProvider: "google",
+          isOnboarded: false,
+           // ✅ Fix: must be false initially
         });
+        await user.save();
       }
-      
-      await user.save();
     }
 
-    // 5. Generate your application's token and send it back
-    generatetoken(user._id, res);
+    // Generate JWT
+    const jwtToken = generatetoken(user._id, res);
 
     res.status(200).json({
       message: "Google login successful.",
+      token: jwtToken,
       user: {
-        _id: user._id,
-        fullName: user.fullName,
+        id: user._id,
+        fullname: user.fullname, // ✅ Fix name field
         email: user.email,
-        role: user.role,
-        profileImageURL: user.profileImageURL,
+        profilePicture: user.profilePicture,
+        role: user.role || "student",
+        isOnboarded: user.isOnboarded, // ✅ include onboarding flag
       },
     });
 
   } catch (error) {
-    console.error("❌ Google Login Error:", error.message);
-    res.status(401).json({ message: "Invalid Google token or server error." });
+    console.error("Google login error:", error);
+
+    if (error.message.includes("Token used too late")) {
+      return res.status(401).json({ message: "Token expired. Please try again." });
+    }
+
+    res.status(401).json({
+      message: "Invalid Google token.",
+      error: error.message,
+    });
   }
 };
 
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id; // JWT se aayega
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Both fields are required" });
+    }
+
+    // user find karo
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // current password check karo
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // new password hash karke save karo
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    return res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

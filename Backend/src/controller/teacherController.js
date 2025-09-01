@@ -6,9 +6,9 @@ export const getMyCourses = async (req, res) => {
     try {
         const teacherId = req.user.id;
 
-        const courses = await Course.find({ instructor: teacherId });
+        const courses = await Course.find({ instructor: teacherId })
+            .populate("instructor", "fullname email");
 
-     
         const coursesWithDetails = await Promise.all(
             courses.map(async (course) => {
                 const studentCount = await Enrollment.countDocuments({ course: course._id });
@@ -28,6 +28,7 @@ export const getMyCourses = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
+
 
 // ========== GET: A single course owned by the teacher ==========
 
@@ -103,3 +104,4 @@ export const uploadCourseMaterial = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
+

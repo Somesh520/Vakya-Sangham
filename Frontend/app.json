@@ -1,4 +1,7 @@
 {
   "name": "VakyaSangam",
-  "displayName": "Vakya Sangam"
+  "displayName": "VakyaSangam",
+  "android": {
+    "package": "com.anonymous.vakyasangam"
+  }
 }

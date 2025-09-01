@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "prefabPath": "C:\\Users\\anjut\\.gradle\\caches\\modules-2\\files-2.1\\com.google.prefab\\cli\\2.1.0\\aa32fec809c44fa531f01dcfb739b5b3304d3050\\cli-2.1.0-all.jar",
+  "packages": [
+    "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab",
+    "C:\\project\\Frontend\\node_modules\\react-native-reanimated\\android\\build\\intermediates\\prefab_package\\debug\\prefab",
+    "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\65f0b5da5c9a14423e8b560995351496\\transformed\\jetified-hermes-android-0.80.1-debug\\prefab",
+    "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\6ee9ecd87a535b52689f7549aad30756\\transformed\\jetified-fbjni-0.7.0\\prefab"
+  ]
+}

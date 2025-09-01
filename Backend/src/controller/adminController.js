@@ -1,22 +1,23 @@
-import User from "../models/usermodel.js";
-import Course from "../models/courseModel.js"; 
-import Activity from "../models/activityModel.js"; 
-// ========== GET: Enhanced Dashboard Stats ==========
 
+
+import User from "../models/usermodel.js";
+import Course from "../models/courseModel.js";
+import Activity from "../models/activityModel.js";
+
+// ========== GET: Enhanced Dashboard Stats ==========
+// यह फंक्शन सही है, इसमें कोई बदलाव नहीं।
 export const getDashboardStats = async (req, res) => {
     try {
-        
         const [totalUsers, totalCourses, totalTeachers] = await Promise.all([
             User.countDocuments(),
             Course.countDocuments(),
             User.countDocuments({ role: "teacher" })
         ]);
-
         res.status(200).json({
             success: true,
             stats: {
                 totalUsers,
-                activeCourses: totalCourses, // Assumes all courses in DB are active
+                activeCourses: totalCourses,
                 totalTeachers,
                 systemHealth: "Online",
             }
@@ -30,11 +31,27 @@ export const getDashboardStats = async (req, res) => {
 // ========== GET: True Recent Activities ==========
 export const getRecentActivities = async (req, res) => {
     try {
-        // Fetches the last 5 activities of any type
-        const activities = await Activity.find({})
+        // .lean() का उपयोग करने से क्वेरी तेज होती है और हमें सादे जावास्क्रिप्ट ऑब्जेक्ट मिलते हैं
+        let activities = await Activity.find({})
             .sort({ createdAt: -1 })
-            .limit(5)
-            .populate("user", "fullName profileImageURL"); // Get user's name and image
+            .limit(7) // थोड़ा ज़्यादा डेटा भेजें ताकि विविधता दिखे
+            .populate("user", "fullname profileImageURL") // आपके मॉडल के अनुसार 'fullname'
+            .lean(); 
+
+        // ✅ IMPROVEMENT: डिलीट हो चुके यूज़र्स को शालीनता से हैंडल करें
+        activities = activities.map(activity => {
+            // अगर यूज़र डिलीट हो गया है, तो populate करने पर user null होगा
+            if (activity.user === null) {
+                return { 
+                    ...activity, 
+                    user: { 
+                        fullname: 'A Deleted User', 
+                        profileImageURL: '' // खाली इमेज URL
+                    } 
+                };
+            }
+            return activity;
+        });
 
         res.status(200).json({ success: true, activities });
     } catch (error) {
@@ -50,14 +67,14 @@ export const getAllUsers = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
+        // ✅ FIX: 'fullName' को 'fullname' किया गया
         const users = await User.find()
-            .select("-password -otp")
+            .select("fullname email role phoneNumber profileImageURL isOnboarded progress createdAt")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
         const totalUsers = await User.countDocuments();
-
         res.status(200).json({
             success: true,
             pagination: {
@@ -77,18 +94,20 @@ export const getAllUsers = async (req, res) => {
 export const searchUsers = async (req, res) => {
     try {
         const query = req.query.q || "";
-
         if (!query) {
             return res.status(400).json({ success: false, message: "Search query is required." });
         }
 
         const users = await User.find({
             $or: [
-                { fullName: { $regex: query, $options: "i" } }, // Case-insensitive search
+                 // ✅ FIX: 'fullName' को 'fullname' किया गया
+                { fullname: { $regex: query, $options: "i" } },
                 { email: { $regex: query, $options: "i" } }
             ]
-        }).select("-password -otp").limit(20);
-
+        })
+        // ✅ FIX: यहाँ भी 'fullName' को 'fullname' किया गया
+        .select("fullname email role phoneNumber profileImageURL isOnboarded progress createdAt")
+        .limit(20);
         res.status(200).json({ success: true, users });
     } catch (error) {
         console.error("Search Users Error:", error);
@@ -96,7 +115,59 @@ export const searchUsers = async (req, res) => {
     }
 };
 
-// ========== PATCH: Promote User to Teacher ==========
+// ========== GET: Single User by ID ==========
+export const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+           
+            .select("fullname email role phoneNumber profileImageURL isOnboarded progress createdAt");
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        res.status(200).json({ success: true, user });
+    } catch (error) {
+        console.error("Get User By ID Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
+
+// ========== PATCH: Update User ==========
+export const updateUser = async (req, res) => {
+    try {
+        const allowedUpdates = {
+            // ✅ FIX: 'fullName' को 'fullname' किया गया
+            fullname: req.body.fullname,
+            email: req.body.email,
+            phoneNumber: req.body.phoneNumber,
+            role: req.body.role,
+            isVerified: req.body.isVerified,
+            isOnboarded: req.body.isOnboarded
+        };
+
+        Object.keys(allowedUpdates).forEach(key => {
+            if (allowedUpdates[key] === undefined) {
+                delete allowedUpdates[key];
+            }
+        });
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: allowedUpdates },
+            { new: true, runValidators: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+        res.status(200).json({ success: true, message: "User updated successfully.", user: updatedUser });
+    } catch (error) {
+        console.error("Update User Error:", error);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};
+
+
 export const promoteToTeacher = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -125,85 +196,27 @@ export const promoteToTeacher = async (req, res) => {
 
 
 
-// ========== GET: Single User by ID ==========
-export const getUserById = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id).select("-password -otp");
-
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found.' });
-        }
-
-        res.status(200).json({ success: true, user });
-    } catch (error) {
-        console.error("Get User By ID Error:", error);
-        res.status(500).json({ success: false, message: "Server error." });
-    }
-};
-
-
-export const updateUser = async (req, res) => {
-    try {
-        // For security, we explicitly list all fields an admin is allowed to change.
-        // This prevents accidental updates to sensitive fields like passwords.
-        const allowedUpdates = {
-            // fullName: req.body.fullName,
-            email: req.body.email,
-            phoneNumber: req.body.phoneNumber,
-            role: req.body.role,
-            isVerified: req.body.isVerified,
-            // dateOfBirth: req.body.dateOfBirth,
-            // education: req.body.education,
-            // state: req.body.state,
-            // city: req.body.city,
-            // District: req.body.District,
-            // goal: req.body.goal,
-            // contentPreference: req.body.contentPreference,
-            // interest: req.body.interest,
-            // timeAvailability: req.body.timeAvailability,
-            // level: req.body.level,
-            // bio: req.body.bio,
-            // socialLinks: req.body.socialLinks,
-            // preferredLanguage: req.body.preferredLanguage,
-            // avatar: req.body.avatar,
-            // hasTakenOnlineCourses: req.body.hasTakenOnlineCourses,
-            isOnboarded: req.body.isOnboarded
-        };
-
-        // This part of your code is smart - it removes any fields that weren't included in the request
-        Object.keys(allowedUpdates).forEach(key => {
-            if (allowedUpdates[key] === undefined) {
-                delete allowedUpdates[key];
-            }
-        });
-
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            allowedUpdates,
-            { new: true, runValidators: true }
-        ).select("-password -otp");
-
-        if (!updatedUser) {
-            return res.status(404).json({ success: false, message: "User not found." });
-        }
-
-        res.status(200).json({ success: true, message: "User updated successfully.", user: updatedUser });
-    } catch (error) {
-        console.error("Update User Error:", error);
-        res.status(500).json({ success: false, message: "Server error." });
-    }
-};
 
 
 export const deleteUser = async (req, res) => {
     try {
+        // डिलीट किया गया यूज़र 'user' वेरिएबल में सेव होता है
         const user = await User.findByIdAndDelete(req.params.id);
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
+        // एक्टिविटी बनाने के लिए 'user' वेरिएबल का इस्तेमाल करें
+        await Activity.create({
+            // ✅ FIX: यहाँ 'userToDelete' को 'user' से बदल दिया गया है
+            description: `User '${user.fullname}' was deleted by an admin.`,
+            type: 'user_deletion',
+            user: req.user.id 
+        });
+
         res.status(200).json({ success: true, message: "User deleted successfully." });
+        
     } catch (error) {
         console.error("Delete User Error:", error);
         res.status(500).json({ success: false, message: "Server error." });
