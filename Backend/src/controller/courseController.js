@@ -266,7 +266,6 @@ export const createCourseReview = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
-
 // controller/coursecontroller.js
 
 // ... (aapke purane functions waise hi rahenge)
