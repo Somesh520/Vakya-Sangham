@@ -118,6 +118,31 @@ if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/armeabi-v7a/CMakeFiles/cmake.verify_globs")
 endif()
 
+# react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/*.cpp")
+set(OLD_GLOB
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/ReactNativeBlobUtilSpec-generated.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/armeabi-v7a/CMakeFiles/cmake.verify_globs")
+endif()
+
+# react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
+file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/*.cpp")
+set(OLD_GLOB
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/ComponentDescriptors.cpp"
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/EventEmitters.cpp"
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/Props.cpp"
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/ReactNativeBlobUtilSpecJSI-generated.cpp"
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/ShadowNodes.cpp"
+  "C:/project/Frontend/node_modules/react-native-blob-util/android/build/generated/source/codegen/jni/react/renderer/components/ReactNativeBlobUtilSpec/States.cpp"
+  )
+if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
+  message("-- GLOB mismatch!")
+  file(TOUCH_NOCREATE "C:/project/Frontend/android/app/.cxx/RelWithDebInfo/1e2em3a5/armeabi-v7a/CMakeFiles/cmake.verify_globs")
+endif()
+
 # react_codegen_SRCS at C:/project/Frontend/node_modules/react-native-document-picker/android/build/generated/source/codegen/jni/CMakeLists.txt:9 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/project/Frontend/node_modules/react-native-document-picker/android/build/generated/source/codegen/jni/*.cpp")
 set(OLD_GLOB

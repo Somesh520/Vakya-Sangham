@@ -23,6 +23,22 @@ type GeminiContent = { role: 'user' | 'model'; parts: [{ text: string }] };
 
 const { width } = Dimensions.get('window');
 
+// ✅ CHANGED: System instructions to define the AI's personality and knowledge
+const SYSTEM_INSTRUCTIONS = `
+You are the official AI assistant for the "Sarvagya Learning" app. Your name is Guru.
+
+Your core identity and knowledge:
+1.  **Founder:** The app was created by Harsh.
+2.  **Organization:** It is a product of the Sarvagya Community.
+3.  **Key Feature:** The app includes a powerful "AI Tutor" that provides step-by-step, interactive lessons in various languages.
+4.  **Your Role:** Your primary purpose is to answer user questions about the app, its features, courses, and the Sarvagya Community.
+
+Your rules of conversation:
+- Always be friendly, encouraging, and helpful.
+- If a user asks a general knowledge question (e.g., "What is the capital of France?"), gently guide them back to the app's purpose. Say something like, "As the AI assistant for Sarvagya Learning, I can best help with questions about our courses and features. How can I assist you with your learning journey today?"
+- Never break character. You are Guru, the helpful guide for this app.
+`;
+
 // --- Memoized Message Component ---
 const MessageItem = memo(({ item }: { item: Message }) => {
   const isUser = item.sender === 'user';
@@ -40,7 +56,13 @@ const MessageItem = memo(({ item }: { item: Message }) => {
 // --- Main Screen Component ---
 const DoubtClearingScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [geminiHistory, setGeminiHistory] = useState<GeminiContent[]>([]);
+  
+  // ✅ CHANGED: Initialize Gemini history with the system prompt
+  const [geminiHistory, setGeminiHistory] = useState<GeminiContent[]>([
+    { role: 'user', parts: [{ text: SYSTEM_INSTRUCTIONS }] },
+    { role: 'model', parts: [{ text: 'Okay, I understand my role. I am Guru, the AI assistant for the Sarvagya Learning app, created by Harsh. I am ready to help users with their questions about the app and its features, like the AI Tutor.' }] },
+  ]);
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList<Message>>(null);
@@ -61,8 +83,7 @@ const DoubtClearingScreen = () => {
     ];
 
     try {
-      // IMPORTANT: Replace with your secure API key method
-      const apiKey = 'AIzaSyDmu5mRdCikoYJA9RBtLBHuyVKc91XpwCo'; // const apiKey = Config.GEMINI_API_KEY;
+      const apiKey = 'AIzaSyCRvVTvoAcatKJTdFt0A_gvCGP96dsU8yM'; // Replace with your secure key
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
       const response = await fetch(apiUrl, {
@@ -121,7 +142,7 @@ const DoubtClearingScreen = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="help-circle-outline" size={60} color="#BDBDBD" />
-              <Text style={styles.emptyText}>Ask me anything!</Text>
+              <Text style={styles.emptyText}>Ask me anything about the app!</Text>
             </View>
           }
         />
@@ -130,7 +151,7 @@ const DoubtClearingScreen = () => {
             {loading && (
                 <View style={styles.typingIndicator}>
                     <ActivityIndicator size="small" color="#FFA500" />
-                    <Text style={styles.typingText}>Tutor is thinking...</Text>
+                    <Text style={styles.typingText}>Guru is thinking...</Text>
                 </View>
             )}
         </View>
@@ -138,7 +159,7 @@ const DoubtClearingScreen = () => {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Type your question here..."
+            placeholder="Ask about Sarvagya Learning..."
             value={input}
             onChangeText={setInput}
             multiline

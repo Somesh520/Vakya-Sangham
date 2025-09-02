@@ -25,6 +25,7 @@ import courseController from './src/Routes/courseRoute.js';
 import userRoutes from './src/Routes/usercourseRoutes.js';
 import CourseEnrollment from './src/Routes/CourseEnrollment.js';
 import progressRoutes from './src/Routes/progressRoutes.js';
+import preferencesRoutes from './src/Routes/AIroute.js';
  // User's courses and learning progress
 // ------------------- ⚙️ Initial Setup -------------------
 dotenv.config();
@@ -107,6 +108,7 @@ app.use('/api', courseController); // Course related routes
 // app.use('/api/reviews', reviewController); // Review related routess
 app.use('/api/users', userRoutes); 
 app.use('/api/enrollment', CourseEnrollment); // User's courses and learning progress
+app.use("/ai", preferencesRoutes);
 app.use(errorHandler);
 
 export default app;

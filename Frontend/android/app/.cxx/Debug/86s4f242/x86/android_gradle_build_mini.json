@@ -4,6 +4,7 @@
     "C:\\project\\Frontend\\node_modules\\@react-native-community\\datetimepicker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\@react-native-google-signin\\google-signin\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\@react-native-picker\\picker\\android\\src\\main\\jni\\CMakeLists.txt",
+    "C:\\project\\Frontend\\node_modules\\react-native-blob-util\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-document-picker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-gesture-handler\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
     "C:\\project\\Frontend\\node_modules\\react-native-image-picker\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
@@ -42,9 +43,9 @@
       "abi": "x86",
       "output": "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_safeareacontext.so",
       "runtimeFiles": [
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\6ee9ecd87a535b52689f7549aad30756\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\8c0994e1ab3cd006c1dbc30296196325\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
       ]
     },
     "react_codegen_RNPermissionsSpec::@7ad697819b753921c957": {
@@ -76,10 +77,15 @@
         "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_safeareacontext.so",
         "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_rnscreens.so",
         "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_rnsvg.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\6ee9ecd87a535b52689f7549aad30756\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\8c0994e1ab3cd006c1dbc30296196325\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so"
       ]
+    },
+    "react_codegen_ReactNativeBlobUtilSpec::@7d3cc6108106e04bb830": {
+      "artifactName": "react_codegen_ReactNativeBlobUtilSpec",
+      "abi": "x86",
+      "runtimeFiles": []
     },
     "react_codegen_rndocumentpicker::@1e246c1f1267e461f98b": {
       "artifactName": "react_codegen_rndocumentpicker",
@@ -91,9 +97,9 @@
       "abi": "x86",
       "output": "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_rnsvg.so",
       "runtimeFiles": [
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\6ee9ecd87a535b52689f7549aad30756\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\8c0994e1ab3cd006c1dbc30296196325\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
       ]
     },
     "react_codegen_RNGoogleSignInCGen::@337b7b353bd94a4215c0": {
@@ -126,9 +132,9 @@
       "abi": "x86",
       "output": "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_rnscreens.so",
       "runtimeFiles": [
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\6ee9ecd87a535b52689f7549aad30756\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\8c0994e1ab3cd006c1dbc30296196325\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
       ]
     },
     "react_codegen_rnpicker::@e8bb2e9e833f47d0d516": {
@@ -136,9 +142,9 @@
       "abi": "x86",
       "output": "C:\\project\\Frontend\\android\\app\\build\\intermediates\\cxx\\Debug\\86s4f242\\obj\\x86\\libreact_codegen_rnpicker.so",
       "runtimeFiles": [
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\abddd9e1c1aab3564dc2a0b1f6510be4\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
-        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\6ee9ecd87a535b52689f7549aad30756\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\reactnative\\libs\\android.x86\\libreactnative.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\93b64b13a6c2c0bd1bce36f79fb5b75c\\transformed\\jetified-react-android-0.80.1-debug\\prefab\\modules\\jsi\\libs\\android.x86\\libjsi.so",
+        "C:\\Users\\anjut\\.gradle\\caches\\8.14.1\\transforms\\8c0994e1ab3cd006c1dbc30296196325\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.x86\\libfbjni.so"
       ]
     }
   }
