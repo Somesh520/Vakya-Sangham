@@ -59,12 +59,25 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   }, []);
 
+  // ✅ UPDATED: Using the more robust resume selection logic from the dev's file
   const handleSelectResume = useCallback(async () => {
     try {
-      const result = await DocumentPicker.pickSingle({ type: [DocumentPicker.types.pdf] });
-      setResume({ uri: result.uri, type: result.type || 'application/pdf', fileName: result.name || `resume_${Date.now()}.pdf` });
+      const result = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.pdf],
+      });
+      
+      if (result && result.uri && result.type && result.name) {
+        setResume({ uri: result.uri, type: result.type, fileName: result.name });
+      } else {
+          Alert.alert('Error', 'Could not get file information from the document picker.');
+      }
     } catch (err) {
-      if (!DocumentPicker.isCancel(err)) Alert.alert('Error', 'An unknown error occurred while picking document');
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User cancelled document picker');
+      } else {
+        console.error('Document Picker Error:', err);
+        Alert.alert('Error', 'Could not select the file.');
+      }
     }
   }, []);
 
@@ -87,8 +100,8 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (pageLoading) return (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#F4A261" />
-      <Text style={{ marginTop: 10 }}>Loading Profile...</Text>
+      <ActivityIndicator size="large" color="#FFA500" />
+      <Text style={styles.loadingText}>Loading Profile...</Text>
     </View>
   );
 
@@ -101,15 +114,17 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
       <MotiView from={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 100 }}>
         <View style={styles.profileSection}>
           <View style={{ position: 'relative' }}>
-            <Avatar.Image size={100} source={{ uri: profileImage?.uri || 'https://placehold.co/100x100/E0E0E0/333?text=VS' }} />
-            <IconButton icon="camera-plus-outline" style={styles.cameraIcon} size={24} onPress={handleSelectProfilePicture} />
+             {/* ✅ UPDATED: Avatar placeholder to match theme */}
+            <Avatar.Image size={100} source={{ uri: profileImage?.uri || 'https://placehold.co/100x100/E8DBC6/4A4135?text=VS' }} />
+            <IconButton icon="camera-plus-outline" style={styles.cameraIcon} iconColor='#FFFFFF' size={24} onPress={handleSelectProfilePicture} />
           </View>
           <Text style={styles.profileName}>{fullName}</Text>
         </View>
 
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>5/5 - Profile Completed!</Text>
-          <ProgressBar progress={1} color="#c43232ff" style={styles.progressBar} />
+           {/* ✅ UPDATED: Progress bar color to match theme */}
+          <ProgressBar progress={1} color="#FFA500" style={styles.progressBar} />
         </View>
       </MotiView>
 
@@ -142,22 +157,24 @@ const EditProfileScreen: React.FC<Props> = ({ route, navigation }) => {
   );
 };
 
+// ✅ UPDATED: Stylesheet from the dev's file
 const styles = StyleSheet.create({
-  loadingContainer: { flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#FDF6E9' },
-  container: { flex:1, backgroundColor:'#FDF6E9' },
+  loadingContainer: { flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#F5E8C7' },
+  loadingText: { marginTop: 10, color: '#4A4135' },
+  container: { flex:1, backgroundColor:'#F5E8C7' },
   contentContainer: { padding:10, paddingBottom:40 },
-  headerTitle: { fontSize:22, fontWeight:'bold', textAlign:'center', marginVertical:20, color:'#333' },
+  headerTitle: { fontSize:22, fontWeight:'bold', textAlign:'center', marginVertical:20, color:'#4A4135' },
   profileSection: { alignItems:'center', marginBottom:20 },
-  profileName: { fontSize:20, fontWeight:'bold', color:'#333', marginTop:10 },
-  cameraIcon: { position:'absolute', bottom:0, right:0, backgroundColor:'#F4A261', borderRadius:20 },
+  profileName: { fontSize:20, fontWeight:'bold', color:'#4A4135', marginTop:10 },
+  cameraIcon: { position:'absolute', bottom:-5, right:-5, backgroundColor:'#FFA500', borderRadius:20 },
   progressContainer: { paddingHorizontal:10, marginBottom:10 },
-  progressText: { fontSize:14, color:'#333', marginBottom:5, textAlign:'center' },
-  progressBar: { height:6, borderRadius:3 },
-  card: { marginVertical:10, marginHorizontal:10, backgroundColor:'#FFF' },
-  input: { marginBottom:15, backgroundColor:'#FFF' },
-  uploadButton: { paddingVertical:8, borderColor:'#F4A261' },
-  saveButton: { paddingVertical:8, borderRadius:25, margin:20, backgroundColor:'#F4A261' },
-  saveButtonText: { color:'#FFF', fontWeight:'bold', fontSize:16 },
+  progressText: { fontSize:14, color:'#4A4135', marginBottom:5, textAlign:'center' },
+  progressBar: { height:8, borderRadius:4, backgroundColor: '#E8DBC6' },
+  card: { marginVertical:10, marginHorizontal:10, backgroundColor:'#FCF0DB' },
+  input: { marginBottom:15, backgroundColor:'#FFFFFF' },
+  uploadButton: { paddingVertical:8, borderColor:'#FFA500' },
+  saveButton: { paddingVertical:8, borderRadius:25, margin:20, backgroundColor:'#FFA500' },
+  saveButtonText: { color:'#FFFFFF', fontWeight:'bold', fontSize:16 },
 });
 
 export default EditProfileScreen;

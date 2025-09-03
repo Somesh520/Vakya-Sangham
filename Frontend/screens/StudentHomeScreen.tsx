@@ -7,7 +7,9 @@ import { useAuth } from '../AuthContext';
 import api from '../api';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { AppTabParamList } from '../AppNavigator'; // Adjust path if needed
+// ✅ UPDATED: More robust navigation imports and types from the dev's file
+import { AppTabParamList, MainStackParamList } from '../AppNavigator';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // --- Type Definitions ---
@@ -21,13 +23,15 @@ interface Course {
     progress?: number;
 }
 
-type HomeScreenNavigationProp = BottomTabNavigationProp<AppTabParamList, 'Home'>;
+// ✅ UPDATED: Using composite navigation prop for better type safety
+type HomeTabsNavigationProp = BottomTabNavigationProp<AppTabParamList, 'Home'>;
+type RootStackNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 const { width } = Dimensions.get('window');
 
 // --- Main Component ---
 const StudentHomeScreen = () => {
     const { user } = useAuth();
-    const navigation = useNavigation<HomeScreenNavigationProp>();
+    const navigation = useNavigation<HomeTabsNavigationProp & RootStackNavigationProp>();
     const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
     const [myLearning, setMyLearning] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
@@ -35,7 +39,6 @@ const StudentHomeScreen = () => {
 
     const fetchData = useCallback(async () => {
         try {
-            // Use Promise.all to fetch data in parallel for better performance
             const [featuredRes, myLearningRes] = await Promise.all([
                 api.get("/api/featured"),
                 api.get("/api/users/my-learning")
@@ -62,15 +65,14 @@ const StudentHomeScreen = () => {
 
     // --- Navigation Handlers ---
     const navigateToCourseDetail = (courseId: string, courseTitle: string) => {
-        navigation.navigate('Courses', {
+        (navigation as any).navigate('Courses', {
             screen: 'CourseDetail',
             params: { courseId, courseTitle },
         });
     };
 
     const navigateToCoursePlayer = (courseId: string) => {
-        // This navigates to the player screen which sits on top of the tabs
-        navigation.navigate('CoursePlayer', { courseId });
+        (navigation as any).navigate('CoursePlayer', { courseId });
     };
 
     const navigateToCourseList = () => {
@@ -87,7 +89,10 @@ const StudentHomeScreen = () => {
                         <Text style={styles.greeting}>Hello, {firstName}!</Text>
                         <Text style={styles.subtitle}>Let's start learning</Text>
                     </View>
-                    {/* Notification Button Removed From Here */}
+                    {/* ✅ UPDATED: Notification button from dev's file is included */}
+                    <TouchableOpacity style={styles.notificationButton}>
+                        <Ionicons name="notifications-outline" size={26} color="#4A4135" />
+                    </TouchableOpacity>
                 </View>
             </View>
         );
@@ -98,8 +103,9 @@ const StudentHomeScreen = () => {
             style={styles.featuredCard}
             onPress={() => navigateToCourseDetail(item._id, item.title)}
         >
+            {/* ✅ UPDATED: Placeholder image to match the new theme */}
             <Image
-                source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E2E8F0/333?text=Course' }}
+                source={{ uri: item.thumbnailURL || 'https://placehold.co/600x400/E8DBC6/4A4135?text=Course' }}
                 style={styles.featuredThumbnail}
             />
             <View style={styles.featuredCardContent}>
@@ -114,8 +120,9 @@ const StudentHomeScreen = () => {
             style={styles.learningItem}
             onPress={() => navigateToCoursePlayer(item._id)}
         >
+            {/* ✅ UPDATED: Placeholder image to match the new theme */}
             <Image
-                source={{ uri: item.thumbnailURL || 'https://placehold.co/200x200/E2E8F0/333?text=...' }}
+                source={{ uri: item.thumbnailURL || 'https://placehold.co/200x200/E8DBC6/4A4135?text=...' }}
                 style={styles.learningThumbnail}
             />
             <View style={styles.learningTextContainer}>
@@ -139,12 +146,12 @@ const StudentHomeScreen = () => {
                     data={myLearning}
                     renderItem={renderLearningItem}
                     keyExtractor={(item) => item._id}
-                    scrollEnabled={false} // The parent FlatList handles scrolling
+                    scrollEnabled={false}
                     contentContainerStyle={{ paddingHorizontal: 20 }}
                 />
             ) : (
                 <View style={styles.emptyContainer}>
-                    <Ionicons name="rocket-outline" size={50} color="#4A90E2" />
+                    <Ionicons name="rocket-outline" size={50} color="#FFA500" />
                     <Text style={styles.emptyTitle}>Ready to learn?</Text>
                     <Text style={styles.emptySubtitle}>You haven't enrolled in any courses yet.</Text>
                     <TouchableOpacity style={styles.browseButton} onPress={navigateToCourseList}>
@@ -154,7 +161,7 @@ const StudentHomeScreen = () => {
             )}
         </View>
     );
-    
+
     const renderFeaturedSection = () => (
         <View>
             <Text style={styles.sectionTitle}>Featured Courses</Text>
@@ -170,16 +177,16 @@ const StudentHomeScreen = () => {
     );
 
     if (loading) {
-        return <SafeAreaView style={styles.center}><ActivityIndicator size="large" color="#4A90E2" /></SafeAreaView>;
+        return <SafeAreaView style={styles.center}><ActivityIndicator size="large" color="#FFA500" /></SafeAreaView>;
     }
 
     return (
         <SafeAreaView style={styles.container}>
             <FlatList
-                data={[{ key: 'content' }]} // Dummy data to enable the list structure
+                data={[{ key: 'content' }]}
                 keyExtractor={item => item.key}
                 showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4A90E2']} />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#FFA500']} />}
                 ListHeaderComponent={renderHeader}
                 renderItem={() => (
                     <>
@@ -193,45 +200,44 @@ const StudentHomeScreen = () => {
     );
 };
 
-// --- Styles ---
+// --- ✅ UPDATED: Stylesheet from the dev's file ---
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F7F8FA' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    
+    container: { flex: 1, backgroundColor: '#F5E8C7' },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5E8C7' },
+
     // Header
-    headerContainer: { backgroundColor: '#E3F2FD', paddingBottom: 20, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
+    headerContainer: { backgroundColor: '#E8DBC6', paddingBottom: 20, paddingTop: 40, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20 },
-    greeting: { fontSize: 28, fontWeight: 'bold', color: '#1A202C' },
-    subtitle: { fontSize: 16, color: '#4A5568', marginTop: 4 },
-    // You can also remove the notificationButton style if it's no longer used anywhere else
-    // notificationButton: { padding: 8, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 },
+    greeting: { fontSize: 28, fontWeight: 'bold', color: '#4A4135' },
+    subtitle: { fontSize: 16, color: '#A19A8F', marginTop: 4 },
+    notificationButton: { padding: 8, backgroundColor: 'rgba(252, 240, 219, 0.8)', borderRadius: 20 },
 
     // Section Title
-    sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#1A202C', marginHorizontal: 20, marginTop: 30, marginBottom: 15 },
+    sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#4A4135', marginHorizontal: 20, marginTop: 30, marginBottom: 15 },
 
     // Featured Course Card
-    featuredCard: { width: width * 0.7, marginRight: 15, backgroundColor: '#FFFFFF', borderRadius: 16, elevation: 4, shadowColor: '#9DA3B7', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
+    featuredCard: { width: width * 0.7, marginRight: 15, backgroundColor: '#FCF0DB', borderRadius: 16, elevation: 4, shadowColor: '#4A4135', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
     featuredThumbnail: { width: '100%', height: 150, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
     featuredCardContent: { padding: 14 },
-    featuredTitle: { fontSize: 16, fontWeight: '600', color: '#2D3748', marginBottom: 4 },
-    featuredInstructor: { fontSize: 13, color: '#718096' },
+    featuredTitle: { fontSize: 16, fontWeight: '600', color: '#4A4135', marginBottom: 4 },
+    featuredInstructor: { fontSize: 13, color: '#A19A8F' },
 
     // My Learning Item
-    learningItem: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 12, marginBottom: 15, elevation: 2, shadowColor: '#9DA3B7', shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, alignItems: 'center' },
+    learningItem: { flexDirection: 'row', backgroundColor: '#FCF0DB', borderRadius: 12, marginBottom: 15, elevation: 2, shadowColor: '#4A4135', shadowOpacity: 0.1, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, alignItems: 'center' },
     learningThumbnail: { width: 80, height: 80, borderRadius: 10, margin: 10 },
     learningTextContainer: { flex: 1, paddingVertical: 12, paddingRight: 12 },
-    learningTitle: { fontSize: 16, fontWeight: 'bold', color: '#2D3748' },
-    learningInstructor: { fontSize: 13, color: '#718096', marginTop: 4, marginBottom: 8 },
+    learningTitle: { fontSize: 16, fontWeight: 'bold', color: '#4A4135' },
+    learningInstructor: { fontSize: 13, color: '#A19A8F', marginTop: 4, marginBottom: 8 },
     progressContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 'auto' },
-    progressBarBackground: { flex: 1, height: 8, backgroundColor: '#E2E8F0', borderRadius: 4, overflow: 'hidden' },
-    progressBarForeground: { height: '100%', backgroundColor: '#4A90E2', borderRadius: 4 },
-    progressText: { fontSize: 12, color: '#4A5568', marginLeft: 8, fontWeight: '600' },
+    progressBarBackground: { flex: 1, height: 8, backgroundColor: '#E8DBC6', borderRadius: 4, overflow: 'hidden' },
+    progressBarForeground: { height: '100%', backgroundColor: '#FFA500', borderRadius: 4 },
+    progressText: { fontSize: 12, color: '#4A4135', marginLeft: 8, fontWeight: '600' },
 
     // Empty State
-    emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, marginHorizontal: 20, backgroundColor: '#FFFFFF', borderRadius: 16 },
-    emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#2D3748', marginTop: 15 },
-    emptySubtitle: { textAlign: 'center', color: '#718096', marginTop: 5, marginBottom: 20 },
-    browseButton: { backgroundColor: '#4A90E2', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25 },
+    emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, marginHorizontal: 20, backgroundColor: '#FCF0DB', borderRadius: 16 },
+    emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#4A4135', marginTop: 15 },
+    emptySubtitle: { textAlign: 'center', color: '#A19A8F', marginTop: 5, marginBottom: 20 },
+    browseButton: { backgroundColor: '#FFA500', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25 },
     browseButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
 });
 

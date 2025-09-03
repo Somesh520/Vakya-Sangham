@@ -24,6 +24,9 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ NEW: State for showing/hiding the password
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   const validateForm = () => {
     if (!fullName.trim() || !email.trim() || !phone.trim() || !password.trim()) {
       setError('All fields are required.');
@@ -117,14 +120,21 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.input}
             left={<TextInput.Icon icon="phone-outline" />}
           />
+          {/* ✅ UPDATED: Password input with show/hide functionality */}
           <TextInput
             label="Password (min. 8 characters)"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!isPasswordVisible}
             mode="outlined"
             style={styles.input}
             left={<TextInput.Icon icon="lock-outline" />}
+            right={
+              <TextInput.Icon 
+                icon={isPasswordVisible ? 'eye-off' : 'eye'}
+                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              />
+            }
           />
 
           <HelperText type="error" visible={!!error} style={styles.errorText}>
@@ -143,7 +153,8 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
             disabled={loading}
             style={styles.button}
             labelStyle={styles.buttonText}
-            buttonColor={styles.button.backgroundColor}
+            // ✅ UPDATED: A better way to set button color with React Native Paper
+            buttonColor={'#D87A33'} 
           >
             Create Account
           </Button>
@@ -160,7 +171,7 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
         </MotiView>
       </ScrollView>
 
-      {/* Overlay Loader */}
+      {/* Overlay Loader with Animation */}
       <AnimatePresence>
         {loading && (
           <MotiView
@@ -178,6 +189,7 @@ const CreateAccountScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
+// ✅ UPDATED: Stylesheet from dev file, but with improved button color
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -197,7 +209,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 8,
     marginTop: 10,
-    backgroundColor: '#ff0033ff',
+    // The buttonColor prop is now used for the background color
   },
   buttonText: {
     color: '#FFF',

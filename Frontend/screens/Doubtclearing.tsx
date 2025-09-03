@@ -23,19 +23,19 @@ type GeminiContent = { role: 'user' | 'model'; parts: [{ text: string }] };
 
 const { width } = Dimensions.get('window');
 
-// ✅ CHANGED: System instructions to define the AI's personality and knowledge
+// ✅ UPDATED: System instructions with more details about the team and app purpose.
 const SYSTEM_INSTRUCTIONS = `
 You are the official AI assistant for the "Sarvagya Learning" app. Your name is Guru.
 
 Your core identity and knowledge:
-1.  **Founder:** The app was created by Harsh.
-2.  **Organization:** It is a product of the Sarvagya Community.
-3.  **Key Feature:** The app includes a powerful "AI Tutor" that provides step-by-step, interactive lessons in various languages.
+1.  **Founder and Team:** The app was founded by Harsh Parashar and developed by the dedicated team at the Sarvagya Community.
+2.  **App's Purpose:** The primary goal of the app is to help users learn regional Indian languages through powerful, step-by-step, interactive lessons.
+3.  **Key Feature:** The app includes an "AI Tutor" (which is you, Guru!) that provides this interactive learning experience.
 4.  **Your Role:** Your primary purpose is to answer user questions about the app, its features, courses, and the Sarvagya Community.
 
 Your rules of conversation:
 - Always be friendly, encouraging, and helpful.
-- If a user asks a general knowledge question (e.g., "What is the capital of France?"), gently guide them back to the app's purpose. Say something like, "As the AI assistant for Sarvagya Learning, I can best help with questions about our courses and features. How can I assist you with your learning journey today?"
+- If a user asks a general knowledge question (e.g., "What is the capital of France?"), gently guide them back to the app's purpose. Say something like, "As Guru, the AI assistant for Sarvagya Learning, I can best help you with questions about our courses and features for learning regional languages. How can I assist you with your learning journey today?"
 - Never break character. You are Guru, the helpful guide for this app.
 `;
 
@@ -55,12 +55,19 @@ const MessageItem = memo(({ item }: { item: Message }) => {
 
 // --- Main Screen Component ---
 const DoubtClearingScreen = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  
-  // ✅ CHANGED: Initialize Gemini history with the system prompt
+    
+  // ✅ UPDATED: Added a default welcome message from Guru.
+  const [messages, setMessages] = useState<Message[]>([
+    {
+        id: 'initial-message',
+        text: 'Hello! I am Guru, your AI assistant for Sarvagya Learning. How can I help you today?',
+        sender: 'tutor'
+    }
+  ]);
+
   const [geminiHistory, setGeminiHistory] = useState<GeminiContent[]>([
     { role: 'user', parts: [{ text: SYSTEM_INSTRUCTIONS }] },
-    { role: 'model', parts: [{ text: 'Okay, I understand my role. I am Guru, the AI assistant for the Sarvagya Learning app, created by Harsh. I am ready to help users with their questions about the app and its features, like the AI Tutor.' }] },
+    { role: 'model', parts: [{ text: 'Okay, I understand. I am Guru, the AI assistant for the Sarvagya Learning app. The app was founded by Harsh Parashar and developed by the Sarvagya Community to help people learn regional languages. I am ready to help users!' }] },
   ]);
 
   const [input, setInput] = useState('');
@@ -83,7 +90,8 @@ const DoubtClearingScreen = () => {
     ];
 
     try {
-      const apiKey = 'AIzaSyCRvVTvoAcatKJTdFt0A_gvCGP96dsU8yM'; // Replace with your secure key
+      // ⚠️ IMPORTANT: Replace with your secure key from a .env file
+      const apiKey = 'AIzaSyCRvVTvoAcatKJTdFt0A_gvCGP96dsU8yM'; 
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
       const response = await fetch(apiUrl, {
@@ -114,7 +122,7 @@ const DoubtClearingScreen = () => {
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          text: `Error: ${errorMessage}`,
+          text: `Error: I seem to be having trouble connecting. Please try again later.`,
           sender: 'tutor',
         },
       ]);
@@ -127,9 +135,10 @@ const DoubtClearingScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* ✅ FIXED: Changed behavior for Android to undefined, which is more reliable than 'height'. */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flexContainer}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <FlatList
@@ -139,12 +148,7 @@ const DoubtClearingScreen = () => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.messageList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="help-circle-outline" size={60} color="#BDBDBD" />
-              <Text style={styles.emptyText}>Ask me anything about the app!</Text>
-            </View>
-          }
+          // Removed the ListEmptyComponent since we now have an initial message.
         />
 
         <View style={styles.typingIndicatorContainer}>
@@ -160,11 +164,12 @@ const DoubtClearingScreen = () => {
           <TextInput
             style={styles.input}
             placeholder="Ask about Sarvagya Learning..."
+            placeholderTextColor="#888"
             value={input}
             onChangeText={setInput}
             multiline
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={loading}>
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={loading || !input.trim()}>
             <Ionicons name="send" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -189,6 +194,8 @@ const markdownStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
+  // ✅ ADDED: A new style for KeyboardAvoidingView to ensure it fills the space.
+  flexContainer: { flex: 1 },
   messageList: { flexGrow: 1, padding: 10 },
   messageBubble: { padding: 12, borderRadius: 20, marginBottom: 10, maxWidth: width * 0.8 },
   userMessage: { backgroundColor: '#FFA500', alignSelf: 'flex-end', borderBottomRightRadius: 5 },
@@ -208,10 +215,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
     borderRadius: 25,
     paddingHorizontal: 15,
-    paddingTop: Platform.OS === 'ios' ? 10 : 8,
-    paddingBottom: Platform.OS === 'ios' ? 10 : 8,
+    paddingTop: Platform.OS === 'ios' ? 12 : 10,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 10,
     fontSize: 16,
     maxHeight: 120,
+    color: '#333',
   },
   sendButton: {
     marginLeft: 10,
@@ -228,8 +236,6 @@ const styles = StyleSheet.create({
   },
   typingIndicator: { flexDirection: 'row', alignItems: 'center', paddingLeft: 20 },
   typingText: { marginLeft: 10, color: '#888', fontStyle: 'italic' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { marginTop: 10, fontSize: 20, fontWeight: 'bold', color: '#BDBDBD' },
 });
 
 export default DoubtClearingScreen;

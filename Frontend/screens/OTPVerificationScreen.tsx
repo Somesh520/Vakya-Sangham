@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Keyboard,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -29,31 +30,46 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ NEW: State to track which OTP input is focused for better styling
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
+
   const inputs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
+    // Automatically focus the first input when the screen loads
     inputs.current[0]?.focus();
   }, []);
 
   const handleOtpChange = (text: string, index: number) => {
-    if (!/^\d*$/.test(text)) return;
+    if (!/^\d*$/.test(text)) return; // Only allow numbers
     const newOtp = [...otp];
-    newOtp[index] = text.slice(-1); // only last digit
+    newOtp[index] = text.slice(-1); // Ensure only the last typed digit is kept
     setOtp(newOtp);
 
+    // If a digit is entered, move focus to the next box
     if (text && index < 5) {
       inputs.current[index + 1]?.focus();
+    }
+
+    // ✅ NEW: Automatically submit when the last digit is entered
+    if (text && index === 5) {
+      const finalOtp = [...newOtp].join('');
+      if (finalOtp.length === 6) {
+        handleVerifyOtp(finalOtp);
+        Keyboard.dismiss(); // Hide the keyboard
+      }
     }
   };
 
   const handleBackspace = (index: number) => {
+    // If the current box is empty and backspace is pressed, move focus to the previous box
     if (otp[index] === '' && index > 0) {
       inputs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerifyOtp = async () => {
-    const enteredOtp = otp.join('').trim();
+  const handleVerifyOtp = async (finalOtp?: string) => {
+    const enteredOtp = finalOtp || otp.join('').trim();
     if (enteredOtp.length !== 6) {
       setError('Please enter the 6-digit OTP.');
       return;
@@ -70,7 +86,8 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
 
       const { token, user } = response.data;
       if (token && user) {
-        await signIn(token, user);
+        // ✅ UPDATED: The more robust signIn call from the dev's file
+        await signIn(token, user, user.providerId ?? 'password');
       } else {
         throw new Error('Token or user data not received from server.');
       }
@@ -84,10 +101,10 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const handleResendOtp = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       await api.post('/user/auth/resend-otp', { email: email.toLowerCase() });
-      Alert.alert('Success', 'OTP resent successfully.');
+      Alert.alert('Success', 'A new OTP has been sent to your email.');
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to resend OTP.';
       Alert.alert('Error', msg);
@@ -104,31 +121,39 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
       </Text>
 
       <View style={styles.otpContainer}>
-        {otp.map((digit, index) => (
-          <TextInput
-            key={index}
-            style={styles.otpInput}
-            value={digit || ''} // ensure visible
-            onChangeText={(text) => handleOtpChange(text, index)}
-            onKeyPress={({ nativeEvent }) => {
-              if (nativeEvent.key === 'Backspace') {
-                handleBackspace(index);
-              }
-            }}
-            keyboardType="numeric"
-            maxLength={1}
-            ref={(ref) => {
-              inputs.current[index] = ref;
-            }}
-          />
-        ))}
+        {otp.map((digit, index) => {
+          // ✅ NEW: Check if the current input is focused
+          const isFocused = focusedIndex === index;
+          return (
+            <TextInput
+              key={index}
+              // ✅ UPDATED: Apply focused style conditionally
+              style={[styles.otpInput, isFocused && styles.otpInputFocused]}
+              value={digit || ''}
+              onChangeText={(text) => handleOtpChange(text, index)}
+              onKeyPress={({ nativeEvent }) => {
+                if (nativeEvent.key === 'Backspace') {
+                  handleBackspace(index);
+                }
+              }}
+              keyboardType="numeric"
+              maxLength={1}
+              ref={(ref) => {
+                inputs.current[index] = ref;
+              }}
+              // ✅ NEW: Track focus state
+              onFocus={() => setFocusedIndex(index)}
+              onBlur={() => setFocusedIndex(-1)}
+            />
+          );
+        })}
       </View>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <TouchableOpacity
         style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleVerifyOtp}
+        onPress={() => handleVerifyOtp()}
         disabled={loading}
       >
         <Text style={styles.buttonText}>
@@ -136,7 +161,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ route, navigation }) => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleResendOtp} style={styles.linkButton}>
+      <TouchableOpacity onPress={handleResendOtp} disabled={loading} style={styles.linkButton}>
         <Text style={styles.linkText}>Didn't receive the code? Resend</Text>
       </TouchableOpacity>
     </View>
@@ -182,7 +207,16 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     backgroundColor: '#FFF',
-    color: '#333', // ✅ text color added
+    color: '#333',
+  },
+  // ✅ NEW: Style for the focused OTP input box
+  otpInputFocused: {
+    borderColor: '#A7727D',
+    shadowColor: "#A7727D",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   button: {
     backgroundColor: '#A7727D',
@@ -209,6 +243,7 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginBottom: 10,
+    fontSize: 14,
   },
 });
 

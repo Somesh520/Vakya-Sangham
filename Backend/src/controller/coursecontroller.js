@@ -308,7 +308,7 @@ export const addModuleToCourse = async (req, res) => {
 export const addLessonToModule = async (req, res) => {
     try {
         const { courseId, moduleId } = req.params;
-        // ✅ BADLAV 1: Frontend se lessonType aur videoUrl bhi aayega
+     
         const { title, duration, lessonType, videoUrl } = req.body;
 
         if (!title || !duration || !lessonType) {

@@ -1,5 +1,3 @@
-// File: screens/AdminDashboardScreen.tsx
-
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet, ScrollView,
@@ -111,19 +109,17 @@ const AdminDashboardScreen: React.FC = () => {
 
     useFocusEffect(
         useCallback(() => {
-            if (isDataDirty) {
+            if (isDataDirty || !stats) { // Refetch if data is dirty or not loaded yet
                 fetchData();
-                setDataDirty(false);
-            } else if (loading) {
-                fetchData();
+                if(isDataDirty) setDataDirty(false);
             }
-        }, [isDataDirty, fetchData, setDataDirty, loading])
+        }, [isDataDirty, stats, fetchData, setDataDirty])
     );
 
     const onRefresh = useCallback(() => {
         setIsRefreshing(true);
-        setDataDirty(true);
-    }, [setDataDirty]);
+        fetchData();
+    }, [fetchData]);
 
     if (loading) {
         return <SafeAreaView style={styles.center}><ActivityIndicator size="large" color="#FFA500" /></SafeAreaView>;
@@ -157,16 +153,10 @@ const AdminDashboardScreen: React.FC = () => {
 
                 {/* Quick Actions */}
                 <Text style={styles.sectionTitle}>Quick Actions</Text>
-                {user?.role === 'admin' && (
-                    <ActionButton 
-                        title="Create Course" 
-                        onPress={() => navigation.navigate('CreateCourse')} 
-                        icon="add-circle-outline" 
-                    />
-                )}
+                
+                {/* ✅ REMOVED: "Create Course" and "View Reports" buttons */}
                 <ActionButton title="Manage Users" onPress={() => navigation.navigate('Users')} icon="people-circle-outline" />
-                <ActionButton title="View Reports" onPress={() => Alert.alert('Coming Soon', 'This feature is under development.')} icon="stats-chart-outline" />
-                 
+                    
                 {/* Recent Activity */}
                 <Text style={styles.sectionTitle}>Recent Activity</Text>
                 <View style={styles.activityListContainer}>
@@ -180,6 +170,7 @@ const AdminDashboardScreen: React.FC = () => {
         </SafeAreaView>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },

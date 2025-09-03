@@ -1,72 +1,55 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
-import { useFocusEffect, useNavigation, NavigationProp } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../AuthContext'; // Adjust path if needed
 import api from '../../api';
-import { ProfileStackParamList } from '../../navigation/AppNavigator'; // ✅ Import your stack param list
 
+// --- Type Definitions ---
 interface Profile {
     fullname: string;
     email: string;
     profileImageURL?: string;
 }
 
-// ✅ Define props type for MenuItem
-interface MenuItemProps {
-    icon: string;
-    title: string;
-    onPress: () => void;
-    isLogout?: boolean;
-}
-
-// ✅ Optimization 1: Memoize the MenuItem component to prevent unnecessary re-renders.
-const MenuItem = React.memo(({ icon, title, onPress, isLogout = false }: MenuItemProps) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-        <View style={styles.menuIconContainer}>
-            <Ionicons name={icon} size={22} color={isLogout ? "#E53935" : "#FFA500"} />
-        </View>
-        <Text style={[styles.menuItemText, isLogout && styles.logoutText]}>{title}</Text>
-        {!isLogout && <Ionicons name="chevron-forward-outline" size={22} color="#BDBDBD" />}
-    </TouchableOpacity>
-));
-
 const TeacherProfileScreen = () => {
-    const { signOut } = useAuth();
-    // ✅ Type the navigation hook to get correct route names and methods
-    const navigation = useNavigation<NavigationProp<ProfileStackParamList>>();
+    const { user, signOut } = useAuth();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // ✅ Optimization 2: Use an AbortController to cancel the API request 
+    const fetchProfileData = useCallback(async (abortController: AbortController) => {
+        if (!user?._id) {
+            setLoading(false);
+            return;
+        }
+        try {
+            setLoading(true);
+            const { data } = await api.get(`/user/info/profile`, {
+                signal: abortController.signal
+            });
+            if (data.success) {
+                setProfile(data.data);
+            } else {
+                setProfile(null);
+            }
+        } catch (error: any) {
+            if (error.name !== 'CanceledError') {
+                console.error("Profile fetch error:", error);
+                setProfile(null);
+            }
+        } finally {
+            if (!abortController.signal.aborted) {
+                setLoading(false);
+            }
+        }
+    }, [user?._id]);
+
     useFocusEffect(
         useCallback(() => {
             const abortController = new AbortController();
-
-            const fetchProfileData = async () => {
-                try {
-                    setLoading(true);
-                    const { data } = await api.get('/user/info/profile', {
-                        signal: abortController.signal
-                    });
-                    setProfile(data);
-                } catch (error: any) { // ✅ Type the error
-                    if (error.name !== 'CanceledError') {
-                        console.error("Profile fetch error:", error);
-                    }
-                } finally {
-                    if (!abortController.signal.aborted) {
-                        setLoading(false);
-                    }
-                }
-            };
-
-            fetchProfileData();
-
-            return () => {
-                abortController.abort();
-            };
-        }, [])
+            fetchProfileData(abortController);
+            return () => abortController.abort();
+        }, [fetchProfileData])
     );
 
     const handleLogout = () => {
@@ -77,17 +60,15 @@ const TeacherProfileScreen = () => {
     };
 
     if (loading) {
-        return <ActivityIndicator size="large" style={styles.loader} />;
+        return <View style={styles.center}><ActivityIndicator size="large" color="#FFA500" /></View>;
     }
 
     if (!profile) {
         return (
             <SafeAreaView style={styles.center}>
+                <Ionicons name="cloud-offline-outline" size={60} color="#9E9E9E" />
                 <Text style={styles.errorText}>Could not load profile.</Text>
-                <TouchableOpacity style={styles.retryButton} onPress={() => {
-                    // ✅ Use the correctly typed navigation method
-                    navigation.replace('ProfileMain'); 
-                }}>
+                <TouchableOpacity style={styles.retryButton} onPress={() => fetchProfileData(new AbortController())}>
                     <Text style={styles.retryButtonText}>Try Again</Text>
                 </TouchableOpacity>
             </SafeAreaView>
@@ -99,113 +80,73 @@ const TeacherProfileScreen = () => {
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.profileHeader}>
                     <Image 
-                        source={{ uri: profile?.profileImageURL || `https://ui-avatars.com/api/?name=${(profile?.fullname || 'Default User').replace(' ', '+')}&background=FFA500&color=fff&size=128` }}
+                        source={{ uri: profile.profileImageURL || `https://ui-avatars.com/api/?name=${(profile.fullname || 'Teacher').replace(' ', '+')}&background=FFA500&color=fff&size=128` }}
                         style={styles.avatar}
                     />
-                    <Text style={styles.userName}>{profile?.fullname || 'Guest User'}</Text>
-                    <Text style={styles.userEmail}>{profile?.email}</Text>
+                    <Text style={styles.userName}>{profile.fullname}</Text>
+                    <Text style={styles.userEmail}>{profile.email}</Text>
                 </View>
                 
-                <View style={styles.menuCard}>
-                    <MenuItem 
-                        icon="person-outline" 
-                        title="Edit Profile" 
-                        onPress={() => navigation.navigate('EditProfile')} 
-                    />
-                    <MenuItem 
-                        icon="settings-outline" 
-                        title="Settings" 
-                        onPress={() => navigation.navigate('Settings')} 
-                    />
-                </View>
-
-                <View style={styles.menuCard}>
-                    <MenuItem 
-                        icon="help-circle-outline" 
-                        title="Help & Support" 
-                        onPress={() => Alert.alert("Help", "Coming Soon!")} 
-                    />
-                    <MenuItem 
-                        icon="log-out-outline" 
-                        title="Logout" 
-                        onPress={handleLogout}
-                        isLogout={true}
-                    />
-                </View>
+                {/* ✅ SIMPLIFIED: Only the logout button remains */}
+                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <Ionicons name="log-out-outline" size={24} color="#D32F2F" />
+                    <Text style={styles.logoutButtonText}>Logout</Text>
+                </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f0f2f5' },
-    loader: { flex: 1, justifyContent: 'center', backgroundColor: '#f0f2f5' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-    errorText: { fontSize: 18, color: '#666' },
-    retryButton: { backgroundColor: '#FFA500', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, marginTop: 20 },
+    container: { flex: 1, backgroundColor: '#F0F2F5' },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#F0F2F5' },
+    errorText: { fontSize: 18, color: '#666', marginTop: 10 },
+    retryButton: { backgroundColor: '#FFA500', paddingVertical: 12, paddingHorizontal: 25, borderRadius: 8, marginTop: 20 },
     retryButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    
-    scrollContainer: { paddingBottom: 20 },
-    
+    scrollContainer: { paddingBottom: 20, flexGrow: 1 },
     profileHeader: { 
         alignItems: 'center', 
-        paddingVertical: 24, 
+        paddingVertical: 32, 
         backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0'
     },
     avatar: { 
-        width: 100, 
-        height: 100, 
-        borderRadius: 50, 
-        borderWidth: 3, 
+        width: 120, 
+        height: 120, 
+        borderRadius: 60, 
+        borderWidth: 4, 
         borderColor: '#FFA500' 
     },
     userName: { 
-        fontSize: 22, 
+        fontSize: 24, 
         fontWeight: 'bold', 
-        marginTop: 12,
+        marginTop: 16,
         color: '#121212'
     },
     userEmail: { 
         fontSize: 16, 
         color: 'gray', 
-        marginTop: 4 
+        marginTop: 6 
     },
-
-    menuCard: {
+    logoutButton: {
         backgroundColor: 'white',
         borderRadius: 12,
         marginHorizontal: 16,
-        marginTop: 20,
-        overflow: 'hidden',
-        elevation: 1,
-    },
-    menuItem: {
+        marginTop: 30,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f5f5f5',
-    },
-    menuIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#FFF8E1',
         justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 15,
+        paddingVertical: 15,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
     },
-    menuItemText: {
-        flex: 1,
+    logoutButtonText: {
+        color: '#D32F2F',
+        fontWeight: 'bold',
         fontSize: 16,
-        color: '#333',
-    },
-    logoutText: {
-        color: '#E53935',
-        fontWeight: '600'
+        marginLeft: 10,
     }
 });
 

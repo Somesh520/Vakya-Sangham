@@ -1,23 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { useAuth } from '../AuthContext'; 
-import { useNavigation } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'; 
-import { AdminTabParamList } from '../AdminNavigator';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-type SettingsNavigationProp = BottomTabNavigationProp<AdminTabParamList, 'Settings'>;
-
-
-const SettingsItem: React.FC<{ label: string; icon: string; onPress: () => void; color?: string }> = ({ label, icon, onPress, color = '#333' }) => (
-    <TouchableOpacity style={styles.settingsItem} onPress={onPress}>
-        <Ionicons name={icon as any} size={24} color={color} style={styles.settingsIcon} />
-        <Text style={[styles.settingsLabel, { color }]}>{label}</Text>
-        <Ionicons name="chevron-forward-outline" size={22} color="#C7C7CC" />
-    </TouchableOpacity>
-);
 
 const SettingsScreen = () => {
-    const navigation = useNavigation<SettingsNavigationProp>();
     const { user, signOut } = useAuth();
 
     const handleLogout = () => {
@@ -39,64 +25,24 @@ const SettingsScreen = () => {
         return <SafeAreaView style={styles.container} />;
     }
 
-    // ✅ FIX 2: "Edit Profile" के लिए नेविगेशन को ठीक किया गया
-    const handleEditProfile = () => {
-        // पहले 'Users' टैब पर जाओ, फिर उसके अंदर 'EditProfile' स्क्रीन पर जाओ
-        navigation.navigate('Users', { 
-            screen: 'EditProfile', 
-            params: { userId: user._id } 
-        });
-    };
-
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView>
-                <View style={styles.profileContainer}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.profileHeader}>
                     <Image 
-                        // ❗ ज़रूरी नोट: सुनिश्चित करें कि AuthContext में user.fullname है, user.fullName नहीं।
-                        source={{ uri: user.profileImageURL || `https://ui-avatars.com/api/?name=${user.fullname}&background=FFA500&color=FFF` }}
+                        source={{ uri: user.profileImageURL || `https://ui-avatars.com/api/?name=${(user.fullname || 'Student').replace(' ', '+')}&background=FFA500&color=FFF&size=128` }}
                         style={styles.avatar}
                     />
                     <Text style={styles.userName}>{user.fullname}</Text>
                     <Text style={styles.userEmail}>{user.email}</Text>
                 </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Account</Text>
-                    <SettingsItem 
-                        label="Edit Profile" 
-                        icon="person-outline"
-                        onPress={handleEditProfile} // ✅ नए फंक्शन का उपयोग करें
-                    />
-                    <SettingsItem 
-                        label="Change Password" 
-                        icon="lock-closed-outline"
-                        onPress={() => Alert.alert("Coming Soon!")}
-                    />
-                </View>
                 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>App</Text>
-                    <SettingsItem 
-                        label="Notifications" 
-                        icon="notifications-outline"
-                        onPress={() => Alert.alert("Coming Soon!")}
-                    />
-                     <View style={styles.settingsItem}>
-                        <Ionicons name="information-circle-outline" size={24} color="#333" style={styles.settingsIcon} />
-                        <Text style={styles.settingsLabel}>App Version</Text>
-                        <Text style={styles.versionText}>1.0.0</Text>
-                    </View>
-                </View>
+                {/* ✅ UPDATED: Logout button is now a solid red button */}
+                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <Ionicons name="log-out-outline" size={22} color={"#FFFFFF"} />
+                    <Text style={styles.logoutButtonText}>Logout</Text>
+                </TouchableOpacity>
 
-                <View style={styles.section}>
-                    <SettingsItem 
-                        label="Logout" 
-                        icon="log-out-outline"
-                        onPress={handleLogout}
-                        color="#DC3545"
-                    />
-                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -105,65 +51,58 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
     container: { 
         flex: 1, 
-        backgroundColor: '#F2F2F7' 
+        backgroundColor: '#F0F2F5'
     },
-    profileContainer: {
-        backgroundColor: '#FFFFFF',
-        paddingVertical: 30,
-        alignItems: 'center',
+    scrollContainer: {
+        paddingBottom: 20,
+    },
+    profileHeader: { 
+        alignItems: 'center', 
+        paddingVertical: 32, 
+        backgroundColor: '#fff',
         borderBottomWidth: 1,
-        borderBottomColor: '#E5E5EA',
+        borderBottomColor: '#E5E5EA'
     },
-    avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        marginBottom: 15,
+    avatar: { 
+        width: 120, 
+        height: 120, 
+        borderRadius: 60, 
+        borderWidth: 4, 
+        borderColor: '#FFA500' 
     },
-    userName: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#000',
+    userName: { 
+        fontSize: 24, 
+        fontWeight: 'bold', 
+        marginTop: 16,
+        color: '#121212'
     },
-    userEmail: {
-        fontSize: 16,
-        color: '#8E8E93',
-        marginTop: 4,
+    userEmail: { 
+        fontSize: 16, 
+        color: 'gray', 
+        marginTop: 6 
     },
-    section: {
-        marginTop: 30,
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderBottomWidth: 1,
-        borderColor: '#E5E5EA',
-    },
-    sectionTitle: {
-        fontSize: 14,
-        color: '#6D6D72',
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 8,
-        textTransform: 'uppercase'
-    },
-    settingsItem: {
+    // ✅ UPDATED: Styles for the new logout button
+    logoutButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderTopWidth: 1,
-        borderColor: '#E5E5EA',
+        justifyContent: 'center',
+        backgroundColor: '#D32F2F', // Red background
+        borderRadius: 12,
+        marginHorizontal: 16,
+        marginTop: 30,
+        paddingVertical: 15,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
     },
-    settingsIcon: {
-        marginRight: 16,
+    logoutButtonText: {
+        color: '#FFFFFF', // White text
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 10,
     },
-    settingsLabel: {
-        flex: 1,
-        fontSize: 17,
-    },
-    versionText: {
-        fontSize: 17,
-        color: '#8E8E93'
-    }
 });
 
 export default SettingsScreen;

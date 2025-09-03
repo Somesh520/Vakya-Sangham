@@ -119,7 +119,20 @@ const AppTabs = () => {
             })}
         >
             <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Courses" component={CourseNavigator} />
+           <Tab.Screen 
+    name="Courses" 
+    component={CourseNavigator} 
+    listeners={({ navigation }) => ({
+        tabPress: e => {
+            // Prevent default action
+            e.preventDefault();
+
+            // Reset the stack to the first screen using its ROUTE NAME
+            // The first screen in your CourseNavigator is named 'CourseList'
+            navigation.navigate('Courses', { screen: 'CourseList' }); // ✅ THIS IS THE FIX
+        },
+    })}
+/>
             <Tab.Screen name="DoubtClearing" component={DoubtClearingScreen} options={{ tabBarLabel: 'Doubts' }} />
             <Tab.Screen name="AiTutor" component={AiTutorScreen} options={{ tabBarLabel: 'AI Tutor' }} />
             <Tab.Screen name="Profile" component={ProfileNavigator} />

@@ -20,7 +20,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // ✅ Naya state password ko show/hide karne ke liye
+  // State for showing/hiding the password
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const { signIn } = useAuth();
@@ -120,16 +120,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           error={!!error}
         />
         
-        {/* ✅ Password field ko update kiya gaya hai */}
         <TextInput
           label="Password"
           value={password}
           onChangeText={(text) => { setPassword(text); setError(null); }}
           style={styles.input}
-          secureTextEntry={!isPasswordVisible} // State se control ho raha hai
+          secureTextEntry={!isPasswordVisible}
           mode="outlined"
           left={<TextInput.Icon icon="lock-outline" />}
-          // Icon ko show/hide karne ke liye right prop add kiya gaya hai
           right={
             <TextInput.Icon 
               icon={isPasswordVisible ? 'eye-off' : 'eye'}
@@ -168,16 +166,17 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
+// ✅ UPDATED: Stylesheet from the dev's file
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#F5F5F5' },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#F5E8C7' },
   title: { fontWeight: 'bold', textAlign: 'center' },
   subtitle: { textAlign: 'center', marginBottom: 40, color: '#616161' },
   input: { marginBottom: 12 },
-  button: { paddingVertical: 8, marginTop: 10 },
+  button: { paddingVertical: 8, marginTop: 10, backgroundColor: '#D87A33' },
   googleButton: { marginTop: 15, paddingVertical: 8, borderColor: '#E0E0E0' },
   googleButtonText: { fontSize: 16, color: '#424242' },
-  divider: { textAlign: 'center', marginVertical: 20, color: '#9E9EE0', fontSize: 14 },
-  linkButton: { marginTop: 15 },
+  divider: { textAlign: 'center', marginVertical: 20, color: '#9E9E9E', fontSize: 14 },
+  linkButton: { marginTop: 15},
   errorText: { fontSize: 14, textAlign: 'center' },
   forgotPasswordButton: {
     alignSelf: 'flex-end',
