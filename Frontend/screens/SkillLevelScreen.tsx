@@ -1,4 +1,3 @@
-// src/screens/SkillLevelScreen.tsx
 import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -7,7 +6,6 @@ import { useAuth } from '../AuthContext';
 import api from '../api';
 
 import { Text, ProgressBar, RadioButton, Button, SegmentedButtons } from 'react-native-paper';
-import { View as MotiView } from 'moti';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'SkillLevel'> };
 
@@ -18,7 +16,6 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
   const [hasTakenOnlineCourses, setHasExperience] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const skillLevels = useMemo(() => ['Beginner', 'Intermediate', 'Advanced'], []);
   const timeOptions = useMemo(() => ['<15 minutes', '15-30 minutes', '30-60 minutes', '>1 hour'], []);
 
   const handleContinue = useCallback(async () => {
@@ -35,9 +32,7 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
         hasTakenOnlineCourses: hasTakenOnlineCourses === 'yes',
       };
       await api.patch('/user/info/onboarding', payload);
-      // ✅ NOTE: This now navigates to the Home tab as onboarding is complete.
-      // You can change 'MainTabs' if your tab navigator has a different name.
-      navigation.navigate('MainTabs', { screen: 'Home' });
+      navigation.navigate('EditProfile');
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'An error occurred. Please try again.';
       Alert.alert('Onboarding Failed', errorMessage);
@@ -46,53 +41,62 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [level, timeAvailability, hasTakenOnlineCourses, navigation]);
 
-  // Cleaner way to render radio items for short lists
-  const renderRadioItem = (item: string, type: 'skill' | 'time') => (
-    <MotiView 
-        from={{opacity: 0, scale: 0.9}} 
-        animate={{opacity: 1, scale: 1}} 
-        transition={{delay: 100, type: 'timing'}}
+  const renderRadioItem = useCallback(
+    ({ item }: { item: string }) => (
+      <RadioButton.Item
         key={item}
-    >
-        <RadioButton.Item
-            label={item}
-            value={item}
-            labelStyle={styles.optionText}
-            color={styles.radioSelected.backgroundColor}
-            style={(type === 'skill' ? level : timeAvailability) === item ? styles.optionSelected : styles.option}
-        />
-    </MotiView>
+        label={item}
+        value={item}
+        labelStyle={styles.optionText}
+        color={styles.radioSelected.backgroundColor}
+        style={level === item ? styles.optionSelected : styles.option}
+        onPress={() => setSkillLevel(item)}
+      />
+    ),
+    [level]
+  );
+
+  const renderTimeItem = useCallback(
+    ({ item }: { item: string }) => (
+      <RadioButton.Item
+        key={item}
+        label={item}
+        value={item}
+        labelStyle={styles.optionText}
+        color={styles.radioSelected.backgroundColor}
+        style={timeAvailability === item ? styles.optionSelected : styles.option}
+        onPress={() => setLearningTime(item)}
+      />
+    ),
+    [timeAvailability]
   );
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
         {/* Progress */}
-        <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Text style={styles.title}>Final Step!</Text>
+        <View>
           <ProgressBar progress={0.8} color={styles.progressFill.backgroundColor} style={styles.progressBar} />
-        </MotiView>
+        </View>
 
         {/* Skill Level */}
-        <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 100 }}>
+        <View>
           <Text style={styles.sectionTitle}>What's your current skill level?</Text>
           <RadioButton.Group onValueChange={setSkillLevel} value={level}>
-             {/* ✅ UPDATED: Using .map() for cleaner code, as FlatList is not needed for a short list */}
-            {skillLevels.map(item => renderRadioItem(item, 'skill'))}
+            {['Beginner', 'Intermediate', 'Advanced'].map((item) => renderRadioItem({ item }))}
           </RadioButton.Group>
-        </MotiView>
+        </View>
 
         {/* Time Availability */}
-        <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 200 }}>
-          <Text style={styles.sectionTitle}>How much time do you have each week?</Text>
+        <View>
+          <Text style={styles.sectionTitle}>How much time do you have each week for learning?</Text>
           <RadioButton.Group onValueChange={setLearningTime} value={timeAvailability}>
-             {/* ✅ UPDATED: Using .map() for cleaner code */}
-            {timeOptions.map(item => renderRadioItem(item, 'time'))}
+            {timeOptions.map((item) => renderTimeItem({ item }))}
           </RadioButton.Group>
-        </MotiView>
+        </View>
 
         {/* Online Course Experience */}
-        <MotiView from={{ opacity: 0, translateX: -20 }} animate={{ opacity: 1, translateX: 0 }} transition={{ delay: 300 }}>
+        <View>
           <Text style={styles.sectionTitle}>Have you taken online courses before?</Text>
           <SegmentedButtons
             value={hasTakenOnlineCourses}
@@ -113,10 +117,10 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
               },
             ]}
           />
-        </MotiView>
+        </View>
 
         {/* Next Button */}
-        <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 400 }}>
+        <View>
           <Button
             mode="contained"
             onPress={handleContinue}
@@ -126,9 +130,9 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
             labelStyle={styles.nextButtonText}
             buttonColor={styles.nextButton.backgroundColor}
           >
-            {loading ? 'Finishing...' : 'Complete Profile'}
+            {loading ? 'Finishing...' : 'Next'}
           </Button>
-        </MotiView>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -136,9 +140,7 @@ const SkillLevelScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5E8C7' },
-  // ✅ UPDATED: Added paddingTop from the dev's file for better spacing
-  contentContainer: { padding: 20, paddingTop: 60, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#000000'},
+  contentContainer: { padding: 20, paddingTop: 60 }, // Changed this line
   progressBar: { height: 10, borderRadius: 5, marginBottom: 20 },
   progressFill: { backgroundColor: '#000000' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 15, color: '#000000' },
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
   radioSelected: { backgroundColor: '#000000' },
   segmentedButtonContainer: { marginTop: 10 },
   segmentButton: { backgroundColor: '#FFFFFF', borderColor: '#DDDDDD' },
-  segmentButtonSelected: { backgroundColor: '#D87A33', borderColor: '#D87A33' }, // Note: text color is handled by the component
+  segmentButtonSelected: { backgroundColor: '#D87A33', borderColor: '#D87A33', color: '#FFFFFF' },
   nextButton: { paddingVertical: 8, borderRadius: 25, marginTop: 40, backgroundColor: '#D87A33' },
   nextButtonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
 });

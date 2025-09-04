@@ -40,8 +40,8 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
   const [district, setDistrict] = useState('');
   const [districts, setDistricts] = useState<string[]>([]);
 
-  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
-  const [step, setStep] = useState<'state' | 'district'>('state');
+  const [stateModalVisible, setStateModalVisible] = useState(false);
+  const [districtModalVisible, setDistrictModalVisible] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -72,15 +72,14 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
     setState(selectedState);
     setDistricts(statesData[selectedState as keyof typeof statesData] || []);
     setDistrict('');
+    setStateModalVisible(false);
     setSearchQuery('');
-    setStep('district');
   };
 
   const onDistrictSelect = (selectedDistrict: string) => {
     setDistrict(selectedDistrict);
-    setIsLocationModalVisible(false);
+    setDistrictModalVisible(false);
     setSearchQuery('');
-    setStep('state');
   };
 
   const handleContinue = async () => {
@@ -137,7 +136,7 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
         <MotiView from={{opacity: 0, translateX: -30}} animate={{opacity: 1, translateX: 0}} transition={{delay: 400}}>
           <Text style={styles.sectionTitle}>Where are you located?</Text>
 
-          <TouchableOpacity onPress={() => { setIsLocationModalVisible(true); setStep('state'); }}>
+          <TouchableOpacity onPress={() => { setStateModalVisible(true); }}>
             <View pointerEvents="none">
               <TextInput label="State" value={state} mode="outlined" editable={false} right={<TextInput.Icon icon="menu-down" />} style={styles.input}/>
             </View>
@@ -145,8 +144,7 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
 
           <TouchableOpacity onPress={() => {
             if (!state) return setSnackbar({ visible: true, message: 'Select a state first ✨' });
-            setIsLocationModalVisible(true);
-            setStep('district');
+            setDistrictModalVisible(true);
           }}>
             <View pointerEvents="none">
               <TextInput label="District" value={district} mode="outlined" editable={false} right={<TextInput.Icon icon="menu-down" />} style={styles.input}/>
@@ -164,38 +162,69 @@ const AboutYouScreen: React.FC<Props> = ({ navigation, route }) => {
         </MotiView>
       </ScrollView>
 
-      {/* Location Modal */}
+      {/* State Modal */}
       <AnimatePresence>
-        {isLocationModalVisible && (
+        {stateModalVisible && (
           <MotiView from={{opacity:0, translateY:50}} animate={{opacity:1, translateY:0}} exit={{opacity:0, translateY:50}} style={styles.bottomSheetContainer}>
             <View style={styles.bottomSheetContent}>
               <Searchbar 
-                placeholder={step === 'state' ? 'Search state...' : 'Search district...'}
+                placeholder="Search state..."
                 onChangeText={setSearchQuery}
                 value={searchQuery}
                 style={styles.searchbar}
               />
 
               <FlatList
-                data={step === 'state' ? filteredStates : filteredDistricts}
+                data={filteredStates}
                 keyExtractor={(item) => item}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    onPress={() => step === 'state' ? onStateSelect(item) : onDistrictSelect(item)}
-                    style={[styles.listItem,
-                      (step === 'state' && state === item) || (step === 'district' && district === item)
-                        ? styles.selectedListItem : null]}
+                    onPress={() => onStateSelect(item)}
+                    style={[styles.listItem, state === item ? styles.selectedListItem : null]}
                   >
                     <Text style={styles.listItemText}>{item}</Text>
-                    {((step === 'state' && state === item) || (step === 'district' && district === item)) && (
-                      <Text style={styles.checkmark}>✔</Text>
-                    )}
+                    {state === item && <Text style={styles.checkmark}>✔</Text>}
                   </TouchableOpacity>
                 )}
                 ItemSeparatorComponent={() => <Divider />}
               />
 
-              <Button mode="outlined" onPress={() => setIsLocationModalVisible(false)} style={styles.closeButton}>
+              <Button mode="outlined" onPress={() => setStateModalVisible(false)} style={styles.closeButton}>
+                Close
+              </Button>
+            </View>
+          </MotiView>
+        )}
+      </AnimatePresence>
+
+      {/* District Modal */}
+      <AnimatePresence>
+        {districtModalVisible && (
+          <MotiView from={{opacity:0, translateY:50}} animate={{opacity:1, translateY:0}} exit={{opacity:0, translateY:50}} style={styles.bottomSheetContainer}>
+            <View style={styles.bottomSheetContent}>
+              <Searchbar 
+                placeholder="Search district..."
+                onChangeText={setSearchQuery}
+                value={searchQuery}
+                style={styles.searchbar}
+              />
+
+              <FlatList
+                data={filteredDistricts}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => onDistrictSelect(item)}
+                    style={[styles.listItem, district === item ? styles.selectedListItem : null]}
+                  >
+                    <Text style={styles.listItemText}>{item}</Text>
+                    {district === item && <Text style={styles.checkmark}>✔</Text>}
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <Divider />}
+              />
+
+              <Button mode="outlined" onPress={() => setDistrictModalVisible(false)} style={styles.closeButton}>
                 Close
               </Button>
             </View>

@@ -18,7 +18,7 @@ const COLORS = {
 };
 
 // --- Configuration ---
-const PYTHON_API_BASE_URL = "http://192.168.10.134:8000";
+const PYTHON_API_BASE_URL = "https://ai-turtor-1.onrender.com";
 
 const AVAILABLE_LANGUAGES = [
   { label: 'Sanskrit', value: 'Sanskrit' },

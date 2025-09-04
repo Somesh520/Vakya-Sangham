@@ -1,12 +1,17 @@
-// src/screens/LoginScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Alert, ScrollView, Image, View } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import api from '../api';
 import { useAuth } from '../AuthContext';
 import { View as MotiView } from 'moti';
-import { TextInput, Button, Text, HelperText, useTheme } from 'react-native-paper';
+import {
+  TextInput,
+  Button,
+  Text,
+  HelperText,
+  useTheme,
+} from 'react-native-paper';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 type Props = {
@@ -19,8 +24,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // State for showing/hiding the password
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const { signIn } = useAuth();
@@ -28,7 +31,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: "701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com",
+      webClientId:
+        '701020560421-l1a32m1vvhd1u349egj3od9m1sbmfnb2.apps.googleusercontent.com',
       offlineAccess: true,
     });
   }, []);
@@ -47,19 +51,22 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       });
 
       const { token, user: backendUser } = response.data;
-      
+
       if (token && backendUser) {
         const userForContext = {
-            ...backendUser,
-            _id: backendUser.id 
+          ...backendUser,
+          _id: backendUser.id,
         };
         await signIn(token, userForContext, 'password');
-        console.log("Regular login successful");
+        console.log('Regular login successful');
       } else {
-        throw new Error('Login successful, but token or user data was not received.');
+        throw new Error(
+          'Login successful, but token or user data was not received.'
+        );
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Invalid credentials. Please try again.';
+      const errorMessage =
+        err.response?.data?.message || 'Invalid credentials. Please try again.';
       setError(errorMessage);
       Alert.alert('Login Failed', errorMessage);
     } finally {
@@ -73,9 +80,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       await GoogleSignin.hasPlayServices();
       await GoogleSignin.signIn();
       const { idToken } = await GoogleSignin.getTokens();
-      
+
       if (!idToken) {
-        Alert.alert("Google Sign-In Failed", "No ID token returned.");
+        Alert.alert('Google Sign-In Failed', 'No ID token returned.');
         return;
       }
 
@@ -84,34 +91,57 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
       if (jwtToken && backendUser) {
         const userForContext = {
-            ...backendUser,
-            _id: backendUser.id
+          ...backendUser,
+          _id: backendUser.id,
         };
         await signIn(jwtToken, userForContext, 'google.com');
-        console.log("Google login successful");
+        console.log('Google login successful');
       } else {
-        throw new Error("Backend did not return token/user");
+        throw new Error('Backend did not return token/user');
       }
     } catch (error: any) {
-      console.error("Google sign in error:", error);
-      Alert.alert("Google Sign-In Error", error.message || "Something went wrong");
+      console.error('Google sign in error:', error);
+      Alert.alert('Google Sign-In Error', error.message || 'Something went wrong');
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500 }}>
-        <Text variant="displaySmall" style={styles.title}>Welcome Back!</Text>
-        <Text variant="bodyLarge" style={styles.subtitle}>Login to your account</Text>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Welcome Section */}
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500 }}
+      >
+        <Text
+          variant="displaySmall"
+          style={[styles.title, { color: '#212121' }]}
+        >
+          Welcome Back!
+        </Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Login to your account
+        </Text>
       </MotiView>
 
-      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500, delay: 100 }}>
+      {/* Email + Password Section */}
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500, delay: 100 }}
+      >
         <TextInput
           label="Email Address"
           value={email}
-          onChangeText={(text) => { setEmail(text); setError(null); }}
+          onChangeText={(text) => {
+            setEmail(text);
+            setError(null);
+          }}
           style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -119,26 +149,29 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           left={<TextInput.Icon icon="email-outline" />}
           error={!!error}
         />
-        
+
         <TextInput
           label="Password"
           value={password}
-          onChangeText={(text) => { setPassword(text); setError(null); }}
+          onChangeText={(text) => {
+            setPassword(text);
+            setError(null);
+          }}
           style={styles.input}
           secureTextEntry={!isPasswordVisible}
           mode="outlined"
           left={<TextInput.Icon icon="lock-outline" />}
           right={
-            <TextInput.Icon 
+            <TextInput.Icon
               icon={isPasswordVisible ? 'eye-off' : 'eye'}
               onPress={() => setIsPasswordVisible(!isPasswordVisible)}
             />
           }
           error={!!error}
         />
-        
-        <Button 
-          mode="text" 
+
+        <Button
+          mode="text"
           onPress={() => navigation.navigate('ForgotPassword')}
           style={styles.forgotPasswordButton}
           labelStyle={styles.forgotPasswordLabel}
@@ -146,19 +179,58 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         >
           Forgot Password?
         </Button>
-        
-        <HelperText type="error" visible={!!error} style={styles.errorText}>{error}</HelperText>
+
+        <HelperText type="error" visible={!!error} style={styles.errorText}>
+          {error}
+        </HelperText>
       </MotiView>
 
-      <MotiView from={{ opacity: 0, translateY: -20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: 'timing', duration: 500, delay: 200 }}>
-        <Button mode="contained" onPress={handleLogin} loading={loading} disabled={loading || googleLoading} style={styles.button}>
-          {loading ? "Logging in..." : "Login"}
+      {/* Action Buttons */}
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500, delay: 200 }}
+      >
+        {/* Normal Login */}
+        <Button
+          mode="contained"
+          onPress={handleLogin}
+          loading={loading}
+          disabled={loading || googleLoading}
+          style={styles.button}
+        >
+          {loading ? 'Logging in...' : 'Login'}
         </Button>
+
         <Text style={styles.divider}>OR</Text>
-        <Button mode="outlined" onPress={handleGoogleSignIn} loading={googleLoading} disabled={loading || googleLoading} style={styles.googleButton} icon="google" labelStyle={styles.googleButtonText}>
-          {googleLoading ? "Signing in..." : "Sign in with Google"}
+
+        {/* Google Login */}
+        <Button
+          mode="contained"
+          onPress={handleGoogleSignIn}
+          loading={googleLoading}
+          disabled={loading || googleLoading}
+          style={styles.googleButton}
+          contentStyle={styles.googleButtonContent}
+        >
+          <View style={styles.googleInner}>
+            <Image
+              source={require('../assets/google-logo.png')}
+              style={styles.googleIcon}
+            />
+            <Text style={styles.googleButtonText}>
+              {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+            </Text>
+          </View>
         </Button>
-        <Button mode="text" onPress={() => navigation.navigate('CreateAccount')} disabled={loading || googleLoading} style={styles.linkButton}>
+
+        {/* Sign Up link */}
+        <Button
+          mode="text"
+          onPress={() => navigation.navigate('CreateAccount')}
+          disabled={loading || googleLoading}
+          style={styles.linkButton}
+        >
           Don't have an account? Sign Up
         </Button>
       </MotiView>
@@ -166,17 +238,36 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-// ✅ UPDATED: Stylesheet from the dev's file
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20, backgroundColor: '#F5E8C7' },
-  title: { fontWeight: 'bold', textAlign: 'center' },
-  subtitle: { textAlign: 'center', marginBottom: 40, color: '#616161' },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#F5E8C7',
+  },
+  title: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    textAlign: 'center',
+    marginBottom: 40,
+    color: '#616161',
+  },
   input: { marginBottom: 12 },
-  button: { paddingVertical: 8, marginTop: 10, backgroundColor: '#D87A33' },
-  googleButton: { marginTop: 15, paddingVertical: 8, borderColor: '#E0E0E0' },
-  googleButtonText: { fontSize: 16, color: '#424242' },
-  divider: { textAlign: 'center', marginVertical: 20, color: '#9E9E9E', fontSize: 14 },
-  linkButton: { marginTop: 15},
+  button: {
+    paddingVertical: 8,
+    marginTop: 10,
+    backgroundColor: '#D87A33',
+  },
+  divider: {
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#9E9E9E',
+    fontSize: 14,
+  },
+  linkButton: { marginTop: 15 },
   errorText: { fontSize: 14, textAlign: 'center' },
   forgotPasswordButton: {
     alignSelf: 'flex-end',
@@ -185,6 +276,38 @@ const styles = StyleSheet.create({
   },
   forgotPasswordLabel: {
     fontSize: 14,
+  },
+  googleButton: {
+    marginTop: 15,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E0E0E0',
+    borderWidth: 1,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  googleButtonContent: {
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  googleInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    resizeMode: 'contain',
+  },
+  googleButtonText: {
+    fontSize: 15,
+    color: '#424242',
+    fontWeight: '600',
   },
 });
 
