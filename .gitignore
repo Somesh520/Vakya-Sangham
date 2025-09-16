@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# Node / logs
+node_modules/
+*.log
+
+# React Native / Android
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+
+# iOS
+ios/Pods/
+ios/build/
+ios/*.xcworkspace/
+ios/*.xcodeproj/*
+!ios/*.xcodeproj/project.pbxproj
+!ios/*.xcodeproj/xcshareddata/
+
+# Caches / temp
+.expo/
+.expo-shared/
+.haste-cache/
+.tmp/
+temp/
+tmp/
+.cache/
+dist/
+
+# VSCode
+.vscode/
