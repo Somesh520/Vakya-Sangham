@@ -81,7 +81,7 @@ const CourseEditScreen = () => {
     const [category, setCategory] = useState(courseToEdit?.category || '');
     const [price, setPrice] = useState(courseToEdit?.price?.toString() || '');
     const [language, setLanguage] = useState(courseToEdit?.language || '');
-    const [level, setLevel] = useState(courseToEdit?.level || 'Beginner');
+    const [level, setLevel] = useState<string>(courseToEdit?.level || 'Beginner');
     const [isLoading, setIsLoading] = useState(false);
     const [thumbnail, setThumbnail] = useState<Asset | null>(null);
     const [isFormValid, setIsFormValid] = useState(false);

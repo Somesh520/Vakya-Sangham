@@ -162,7 +162,7 @@ const ProfileScreen = () => {
 
 // --- STYLESHEET UPDATED WITH THE NEW THEME ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5E8C7' },
+  container: { flex: 1, backgroundColor: '#F5E8C7', paddingTop: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5E8C7' },
   profileHeader: { alignItems: 'center', paddingVertical: 30 },
   avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: '#FFA500' },

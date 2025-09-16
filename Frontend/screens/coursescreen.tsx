@@ -33,9 +33,14 @@ interface Course {
   language?: string;
 }
 
-// --- Category/Language Card ---
-// NOTE: Renamed to FilterCard and applied the orange theme
-const FilterCard = ({ icon, label, value, isSelected, onSelect }) => (
+interface FilterCardProps {
+  icon: string;
+  label: string;
+  value: string | undefined;
+  isSelected: boolean;
+  onSelect: (value: string | undefined) => void;
+}
+const FilterCard: React.FC<FilterCardProps> = ({ icon, label, value, isSelected, onSelect }) => (
   <TouchableOpacity
     style={[styles.categoryCard, isSelected && styles.categoryCardSelected]}
     onPress={() => onSelect(value)}
@@ -148,12 +153,12 @@ const CourseScreen = () => {
     );
   };
 
-  const languageFilters = [
-    { label: 'Hindi', value: 'hindi', icon: 'language-outline' },
-    { label: 'Telugu', value: 'telugu', icon: 'language-outline' },
-    { label: 'Marathi', value: 'marathi', icon: 'language-outline' },
-    { label: 'Punjabi', value: 'punjabi', icon: 'language-outline' },
-    { label: 'Kannada', value: 'kannada', icon: 'language-outline' },
+  const languageFilters: FilterCardProps[] = [
+    { label: 'Hindi', value: 'hindi', icon: 'language-outline', isSelected: false, onSelect: () => {} },
+    { label: 'Telugu', value: 'telugu', icon: 'language-outline', isSelected: false, onSelect: () => {} },
+    { label: 'Marathi', value: 'marathi', icon: 'language-outline', isSelected: false, onSelect: () => {} },
+    { label: 'Punjabi', value: 'punjabi', icon: 'language-outline', isSelected: false, onSelect: () => {} },
+    { label: 'Kannada', value: 'kannada', icon: 'language-outline', isSelected: false, onSelect: () => {} },
   ];
 
   const renderHeader = () => (
@@ -181,7 +186,14 @@ const CourseScreen = () => {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollView}>
           <FilterCard icon="grid-outline" label="All" value={undefined} isSelected={!activeFilters.language} onSelect={handleFilterSelect} />
           {languageFilters.map(filter => (
-            <FilterCard key={filter.value} {...filter} isSelected={activeFilters.language === filter.value} onSelect={handleFilterSelect} />
+            <FilterCard
+              key={filter.value}
+              icon={filter.icon}
+              label={filter.label}
+              value={filter.value}
+              isSelected={activeFilters.language === filter.value}
+              onSelect={handleFilterSelect}
+            />
           ))}
         </ScrollView>
       </View>
@@ -224,7 +236,7 @@ const CourseScreen = () => {
 
 // --- STYLESHEET UPDATED WITH ORANGE/BEIGE THEME ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5E8C7' },
+  container: { flex: 1, backgroundColor: '#F5E8C7', paddingTop: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { marginTop: 10, fontSize: 16, color: '#FFA500', fontWeight: '600' },
 

@@ -7,12 +7,13 @@ import {
   StyleSheet, 
   Alert,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  StatusBar
 } from "react-native";
-import { useAuth } from "../../AuthContext"; // <-- apka AuthContext
+import { useAuth } from "../../AuthContext";
 
 const ChangePasswordScreen = () => {
-  const { changePassword } = useAuth(); // <-- AuthContext me ek method banani hogi
+  const { changePassword } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,7 @@ const ChangePasswordScreen = () => {
 
     setLoading(true);
     try {
-      await changePassword(currentPassword, newPassword); 
+      await changePassword(currentPassword, newPassword);
       Alert.alert("Success", "Password updated successfully!");
       setCurrentPassword("");
       setNewPassword("");
@@ -38,6 +39,9 @@ const ChangePasswordScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Status bar color to match theme */}
+      <StatusBar backgroundColor="#F5E8C7" barStyle="dark-content" />
+      
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Change Password</Text>
 
@@ -49,6 +53,7 @@ const ChangePasswordScreen = () => {
           onChangeText={setCurrentPassword}
           secureTextEntry
           placeholder="Enter current password"
+          placeholderTextColor="#888"
         />
 
         {/* New Password */}
@@ -59,6 +64,7 @@ const ChangePasswordScreen = () => {
           onChangeText={setNewPassword}
           secureTextEntry
           placeholder="Enter new password"
+          placeholderTextColor="#888"
         />
 
         <TouchableOpacity 
@@ -78,24 +84,27 @@ const ChangePasswordScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#F5E8C7", 
+    paddingTop:20, 
   },
   scrollContent: {
     padding: 20,
+    paddingTop: 40,              
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 20,
-    color: "#333",
+    color: "#4A4135",
+    textAlign: "center",         // ✅ center for consistency
   },
   label: {
     fontSize: 16,
     marginBottom: 8,
-    color: "#555",
+    color: "#4A4135",
   },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
@@ -104,10 +113,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: "#FFA500",   // ✅ matches your theme
     padding: 15,
     borderRadius: 12,
     alignItems: "center",
+    marginTop: 10,
   },
   buttonText: {
     color: "#fff",

@@ -155,7 +155,7 @@ const AdminDashboardScreen: React.FC = () => {
                 <Text style={styles.sectionTitle}>Quick Actions</Text>
                 
                 {/* ✅ REMOVED: "Create Course" and "View Reports" buttons */}
-                <ActionButton title="Manage Users" onPress={() => navigation.navigate('Users')} icon="people-circle-outline" />
+                <ActionButton title="Manage Users" onPress={() => navigation.navigate('Users' as never)} icon="people-circle-outline" />
                     
                 {/* Recent Activity */}
                 <Text style={styles.sectionTitle}>Recent Activity</Text>

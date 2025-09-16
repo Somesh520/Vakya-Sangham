@@ -30,8 +30,8 @@ const AVAILABLE_LANGUAGES = [
 ];
 
 // --- Helper function to assign icons to lessons ---
-const getIconForLesson = (lessonNumber) => {
-    const icons = [
+const getIconForLesson = (lessonNumber: number): string => {
+  const icons = [
         'chatbubble-ellipses-outline', // Day 1: Greetings
         'list-outline',                // Day 2: Numbers
         'person-outline',              // Day 3: Pronouns
@@ -94,7 +94,7 @@ export default function AiTutorScreen() {
 
   // Effect to fetch lessons from the backend whenever the selected language changes
   useEffect(() => {
-    const fetchLessons = async (language) => {
+    const fetchLessons = async (language: string | null) => {
       if (!language) return;
       
       setLessonsLoading(true);
@@ -102,7 +102,7 @@ export default function AiTutorScreen() {
         const response = await fetch(`${PYTHON_API_BASE_URL}/lessons?language=${language}`);
         const data = await response.json();
         
-        const formattedLessons = data.lessons.map(lesson => ({
+        const formattedLessons = data.lessons.map((lesson: any) => ({
           id: lesson.number,
           title: lesson.title,
           icon: getIconForLesson(lesson.number),
@@ -265,7 +265,7 @@ export default function AiTutorScreen() {
             style={[styles.langCard, pickedLanguage === lang.value && styles.langCardSelected]}
             onPress={() => setPickedLanguage(lang.value)}
           >
-            <Text style={[styles.langCardText, pickedLanguage === lang.value && styles.langCardTextSelected]}>
+            <Text style={[styles.langCardText, pickedLanguage === lang.value && styles.langCardSelected]}>
               {lang.label}
             </Text>
           </TouchableOpacity>
@@ -320,28 +320,28 @@ export default function AiTutorScreen() {
             </View>
         ) : (
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-                {lessonsList.map(lesson => {
-                    const isCompleted = lesson.id < currentLessonNumber;
-                    const isCurrent = lesson.id === currentLessonNumber;
-                    const isLocked = lesson.id > currentLessonNumber;
-                    return (
-                        <TouchableOpacity
-                            key={lesson.id}
-                            style={[styles.lessonCard, isLocked && styles.lessonCardLocked, isCurrent && styles.lessonCardCurrent]}
-                            disabled={isLocked}
-                            onPress={() => handleStartLesson(lesson)}
-                        >
-                            <Ionicons name={isLocked ? "lock-closed" : lesson.icon} size={28} color={isLocked ? COLORS.grey : isCurrent ? COLORS.white : COLORS.dark} />
-                            <View style={styles.lessonCardTextContainer}>
-                                <Text style={[styles.lessonCardTitle, (isLocked || isCurrent) && styles.lessonCardTitleAlt]}>{lesson.title}</Text>
-                                {isCompleted && <Text style={styles.lessonCardStatusComplete}>Completed</Text>}
-                                {isCurrent && <Text style={styles.lessonCardStatusCurrent}>Start Here!</Text>}
-                                {isLocked && <Text style={styles.lessonCardStatusLocked}>Complete previous lesson to unlock</Text>}
-                            </View>
-                            {!isLocked && <Ionicons name="chevron-forward-outline" size={24} color={isCurrent ? COLORS.white : COLORS.dark} />}
-                        </TouchableOpacity>
-                    );
-                })}
+          {lessonsList.map((lesson: { id: number; title: string; icon: string }) => {
+            const isCompleted = lesson.id < currentLessonNumber;
+            const isCurrent = lesson.id === currentLessonNumber;
+            const isLocked = lesson.id > currentLessonNumber;
+            return (
+              <TouchableOpacity
+                key={lesson.id}
+                style={[styles.lessonCard, isLocked && styles.lessonCardLocked, isCurrent && styles.lessonCardCurrent]}
+                disabled={isLocked}
+                onPress={() => handleStartLesson(lesson)}
+              >
+                <Ionicons name={isLocked ? "lock-closed" : lesson.icon} size={28} color={isLocked ? COLORS.grey : isCurrent ? COLORS.white : COLORS.dark} />
+                <View style={styles.lessonCardTextContainer}>
+                  <Text style={[styles.lessonCardTitle, (isLocked || isCurrent) && styles.lessonCardTitleAlt]}>{lesson.title}</Text>
+                  {isCompleted && <Text style={styles.lessonCardStatusComplete}>Completed</Text>}
+                  {isCurrent && <Text style={styles.lessonCardStatusCurrent}>Start Here!</Text>}
+                  {isLocked && <Text style={styles.lessonCardStatusLocked}>Complete previous lesson to unlock</Text>}
+                </View>
+                {!isLocked && <Ionicons name="chevron-forward-outline" size={24} color={isCurrent ? COLORS.white : COLORS.dark} />}
+              </TouchableOpacity>
+            );
+          })}
             </ScrollView>
         )}
         
@@ -420,14 +420,32 @@ export default function AiTutorScreen() {
 
 // --- StyleSheet ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.light },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  overviewContainer: { flex: 1, backgroundColor: COLORS.light },
-  overviewHeader: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F5E8C7',   // ✅ same as rest of app
+    paddingTop: 16,                // ✅ add top padding
+  },
+  centerContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 20 
+  },
+  overviewContainer: { 
+    flex: 1, 
+    backgroundColor: '#F5E8C7',    // ✅ match background
+    paddingTop: 16,                // ✅ top padding
+  },
+  overviewHeader: { 
+    paddingHorizontal: 20, 
+    paddingTop: 20, 
+    paddingBottom: 10 
+  },
   title: { fontSize: 28, fontWeight: 'bold', color: COLORS.dark, textAlign: 'center' },
   subtitle: { fontSize: 16, color: COLORS.dark, textAlign: 'center', marginTop: 8, opacity: 0.7 },
   loadingText: { marginTop: 10, color: COLORS.dark, fontSize: 16, fontWeight: '500' },
   cardContainer: { width: '100%', padding: 10, marginTop: 20 },
+
   
   // Progress Indicator Styles
   progressContainer: { marginTop: 15, paddingHorizontal: 10 },

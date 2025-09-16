@@ -194,7 +194,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
         
         // YouTube videos - WebView embed
         else if (selectedLesson.lessonType === 'youtube' || (videoUrl && isYouTubeURL(videoUrl))) {
-            const embedUrl = getYouTubeEmbedURL(videoUrl);
+            const embedUrl = getYouTubeEmbedURL(videoUrl || '');
             return (
                 <WebView
                     source={{ uri: embedUrl }}
@@ -230,7 +230,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
         else if (selectedLesson.lessonType === 'pdf') {
             return (
                 <WebView
-                    source={{ uri: selectedLesson.pdfUrl }}
+                    source={{ uri: selectedLesson.pdfUrl || '' }}
                     style={styles.videoPlayer}
                     startInLoadingState={true}
                     renderLoading={() => (
@@ -324,7 +324,7 @@ const CoursePlayerScreen = ({ route, navigation }: CoursePlayerScreenProps) => {
                             
                             {isOpen && (
                                 <View style={styles.lessonsList}>
-                                    {module.lessons.map(lesson => {
+                                    {module.lessons.map((lesson: Lesson) => {
                                         const isCompleted = completedLessons.has(lesson._id);
                                         const isSelected = selectedLesson?._id === lesson._id;
                                         const videoUrl = lesson.videoURL || lesson.videoUrl || lesson.nptelUrl;

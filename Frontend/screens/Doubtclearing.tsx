@@ -11,19 +11,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Markdown from 'react-native-markdown-display';
-// Don't forget to set up react-native-dotenv for security
-// import Config from "react-native-dotenv";
 
-// --- Type Definitions ---
 type Message = { id: string; text: string; sender: 'user' | 'tutor' };
 type GeminiContent = { role: 'user' | 'model'; parts: [{ text: string }] };
 
 const { width } = Dimensions.get('window');
 
-// ✅ UPDATED: System instructions with more details about the team and app purpose.
 const SYSTEM_INSTRUCTIONS = `
 You are the official AI assistant for the "Sarvagya Learning" app. Your name is Guru.
 
@@ -55,19 +52,25 @@ const MessageItem = memo(({ item }: { item: Message }) => {
 
 // --- Main Screen Component ---
 const DoubtClearingScreen = () => {
-    
-  // ✅ UPDATED: Added a default welcome message from Guru.
   const [messages, setMessages] = useState<Message[]>([
     {
-        id: 'initial-message',
-        text: 'Hello! I am Guru, your AI assistant for Sarvagya Learning. How can I help you today?',
-        sender: 'tutor'
-    }
+      id: 'initial-message',
+      text: 'Hello! I am Guru, your AI assistant for Sarvagya Learning. How can I help you today?',
+      sender: 'tutor',
+    },
   ]);
 
   const [geminiHistory, setGeminiHistory] = useState<GeminiContent[]>([
     { role: 'user', parts: [{ text: SYSTEM_INSTRUCTIONS }] },
-    { role: 'model', parts: [{ text: 'Okay, I understand. I am Guru, the AI assistant for the Sarvagya Learning app. The app was founded by Harsh Parashar and developed by the Sarvagya Community to help people learn regional languages. I am ready to help users!' }] },
+    {
+      role: 'model',
+      parts: [
+        {
+          text:
+            'Okay, I understand. I am Guru, the AI assistant for the Sarvagya Learning app. The app was founded by Harsh Parashar and developed by the Sarvagya Community to help people learn regional languages. I am ready to help users!',
+        },
+      ],
+    },
   ]);
 
   const [input, setInput] = useState('');
@@ -80,18 +83,15 @@ const DoubtClearingScreen = () => {
     const userMessageText = input.trim();
     const userMessage: Message = { id: Date.now().toString(), text: userMessageText, sender: 'user' };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
 
-    const updatedHistory: GeminiContent[] = [
-      ...geminiHistory,
-      { role: 'user', parts: [{ text: userMessageText }] },
-    ];
+    const updatedHistory: GeminiContent[] = [...geminiHistory, { role: 'user', parts: [{ text: userMessageText }] }];
 
     try {
-      // ⚠️ IMPORTANT: Replace with your secure key from a .env file
-      const apiKey = 'AIzaSyCRvVTvoAcatKJTdFt0A_gvCGP96dsU8yM'; 
+      // TODO: move the key to .env
+      const apiKey = 'AIzaSyCRvVTvoAcatKJTdFt0A_gvCGP96dsU8yM';
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
       const response = await fetch(apiUrl, {
@@ -109,16 +109,16 @@ const DoubtClearingScreen = () => {
       const tutorResponseText =
         result?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not understand that.';
 
-      const tutorMessage: Message = { id: (Date.now() + 1).toString(), text: tutorResponseText, sender: 'tutor' };
+      const tutorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: tutorResponseText,
+        sender: 'tutor',
+      };
 
-      setMessages((prev) => [...prev, tutorMessage]);
-      setGeminiHistory([
-        ...updatedHistory,
-        { role: 'model', parts: [{ text: tutorResponseText }] },
-      ]);
+      setMessages(prev => [...prev, tutorMessage]);
+      setGeminiHistory([...updatedHistory, { role: 'model', parts: [{ text: tutorResponseText }] }]);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-      setMessages((prev) => [
+      setMessages(prev => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
@@ -135,7 +135,7 @@ const DoubtClearingScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ✅ FIXED: Changed behavior for Android to undefined, which is more reliable than 'height'. */}
+      <StatusBar backgroundColor="#F5E8C7" barStyle="dark-content" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flexContainer}
@@ -145,19 +145,18 @@ const DoubtClearingScreen = () => {
           ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.messageList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          // Removed the ListEmptyComponent since we now have an initial message.
         />
 
         <View style={styles.typingIndicatorContainer}>
-            {loading && (
-                <View style={styles.typingIndicator}>
-                    <ActivityIndicator size="small" color="#FFA500" />
-                    <Text style={styles.typingText}>Guru is thinking...</Text>
-                </View>
-            )}
+          {loading && (
+            <View style={styles.typingIndicator}>
+              <ActivityIndicator size="small" color="#FFA500" />
+              <Text style={styles.typingText}>Guru is thinking...</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.inputContainer}>
@@ -193,14 +192,20 @@ const markdownStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  // ✅ ADDED: A new style for KeyboardAvoidingView to ensure it fills the space.
+  // ✅ same background as rest + top padding
+  container: { flex: 1, backgroundColor: '#F5E8C7', paddingTop: 45 },
+
+  // fills the available space
   flexContainer: { flex: 1 },
-  messageList: { flexGrow: 1, padding: 10 },
+
+  // add space inside the message area
+  messageList: { flexGrow: 1, padding: 10, paddingTop: 6 },
+
   messageBubble: { padding: 12, borderRadius: 20, marginBottom: 10, maxWidth: width * 0.8 },
   userMessage: { backgroundColor: '#FFA500', alignSelf: 'flex-end', borderBottomRightRadius: 5 },
-  tutorMessage: { backgroundColor: '#F0F0F0', alignSelf: 'flex-start', borderBottomLeftRadius: 5 },
+  tutorMessage: { backgroundColor: '#FCF0DB', alignSelf: 'flex-start', borderBottomLeftRadius: 5, borderWidth: 1, borderColor: '#E8DBC6' },
   userMessageText: { color: '#fff', fontSize: 16 },
+
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -208,7 +213,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF', // keep input bar white for contrast
   },
   input: {
     flex: 1,
@@ -230,10 +235,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  typingIndicatorContainer: {
-    height: 30,
-    justifyContent: 'center',
-  },
+
+  typingIndicatorContainer: { height: 30, justifyContent: 'center' },
   typingIndicator: { flexDirection: 'row', alignItems: 'center', paddingLeft: 20 },
   typingText: { marginLeft: 10, color: '#888', fontStyle: 'italic' },
 });

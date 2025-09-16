@@ -42,7 +42,7 @@ const TeacherDashboardScreen = () => {
             
             Alert.alert('Success', 'Course has been deleted.');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Delete error:", error.response?.data);
             Alert.alert('Error', 'Failed to delete the course.');
         }
